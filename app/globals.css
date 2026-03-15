@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060b14;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,15 +12,84 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ピクセルキャラクター アニメーション */
+
+/* 走る（忙しい） */
+@keyframes run {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(3px) translateY(-2px); }
+  50% { transform: translateX(6px) translateY(0); }
+  75% { transform: translateX(3px) translateY(-2px); }
+}
+.animate-run {
+  animation: run 0.4s ease-in-out infinite;
+}
+
+/* 寝る（暇） */
+@keyframes sleep {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(2px) rotate(-5deg); }
+}
+.animate-sleep {
+  animation: sleep 2s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+/* 作業中（タイピング） */
+@keyframes work {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1px); }
+}
+.animate-work {
+  animation: work 1s ease-in-out infinite;
+}
+
+/* 会議中（話す） */
+@keyframes talk {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.animate-talk {
+  animation: talk 0.8s ease-in-out infinite;
+}
+
+/* Zzz アニメーション */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-6px) scale(1.2); opacity: 0.6; }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* 砂埃（走ってる時） */
+@keyframes dust-1 {
+  0% { transform: translateX(0) translateY(0); opacity: 0.5; }
+  100% { transform: translateX(-8px) translateY(-4px); opacity: 0; }
+}
+@keyframes dust-2 {
+  0% { transform: translateX(0) translateY(0); opacity: 0.5; }
+  100% { transform: translateX(-6px) translateY(-6px); opacity: 0; }
+}
+@keyframes dust-3 {
+  0% { transform: translateX(0) translateY(0); opacity: 0.5; }
+  100% { transform: translateX(-10px) translateY(-2px); opacity: 0; }
+}
+.animate-dust-1 { animation: dust-1 0.6s ease-out infinite; }
+.animate-dust-2 { animation: dust-2 0.6s ease-out 0.1s infinite; }
+.animate-dust-3 { animation: dust-3 0.6s ease-out 0.2s infinite; }
+
+/* 汗（忙しい人の額） */
+@keyframes sweat {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(8px); opacity: 0; }
+}
+.animate-sweat {
+  animation: sweat 1s ease-in infinite;
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { departments, cloudUsage, allEmployeesList } from './lib/data'
 import type { Employee, Department } from './lib/data'
+import PixelCharacter from './components/PixelCharacter'
 
 function StatusBadge({ status }: { status: Employee['status'] }) {
   const config = {
@@ -34,13 +35,17 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
 function EmployeeCard({ emp }: { emp: Employee }) {
   return (
     <div className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3 border border-gray-800">
-      <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
-        style={{ backgroundColor: emp.color + '22', border: `1px solid ${emp.color}44` }}
-      >
-        {emp.avatar}
+      <div className="flex-shrink-0 relative">
+        <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={56} />
+        {/* 名前バッジ */}
+        <div
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[8px] font-bold whitespace-nowrap"
+          style={{ backgroundColor: emp.color + '33', color: emp.color, border: `1px solid ${emp.color}55` }}
+        >
+          {emp.name}
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pt-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-bold text-sm" style={{ color: emp.color }}>
             【{emp.name}】
