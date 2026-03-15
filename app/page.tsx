@@ -1,65 +1,351 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect } from 'react'
+import { departments, cloudUsage, allEmployeesList } from './lib/data'
+import type { Employee, Department } from './lib/data'
+
+function StatusBadge({ status }: { status: Employee['status'] }) {
+  const config = {
+    busy: { label: '激忙中', color: 'text-red-400', icon: '🔥' },
+    working: { label: '作業中', color: 'text-green-400', icon: '💻' },
+    idle: { label: '待機中', color: 'text-gray-400', icon: '💤' },
+    meeting: { label: '会議中', color: 'text-yellow-400', icon: '📞' },
+  }
+  const c = config[status]
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <span className={`text-xs ${c.color} font-mono`}>
+      {c.icon} {c.label}
+    </span>
+  )
+}
+
+function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = Math.min((value / max) * 100, 100)
+  return (
+    <div className="flex items-center gap-2 w-full">
+      <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <span className="text-xs text-gray-400 font-mono w-10 text-right">{Math.round(pct)}%</span>
     </div>
-  );
+  )
+}
+
+function EmployeeCard({ emp }: { emp: Employee }) {
+  return (
+    <div className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3 border border-gray-800">
+      <div
+        className="w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
+        style={{ backgroundColor: emp.color + '22', border: `1px solid ${emp.color}44` }}
+      >
+        {emp.avatar}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-bold text-sm" style={{ color: emp.color }}>
+            【{emp.name}】
+          </span>
+          <StatusBadge status={emp.status} />
+        </div>
+        <p className="text-xs text-gray-500 mt-0.5">{emp.role}</p>
+        <p className="text-xs text-cyan-400 mt-1 truncate">{emp.currentTask}</p>
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+          {Object.entries(emp.stats).map(([key, val]) => (
+            <span key={key} className="text-[10px] text-gray-500">
+              <span className="text-gray-600">{key}:</span>{' '}
+              <span className="text-green-400 font-mono">{val}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DepartmentCard({ dept }: { dept: Department }) {
+  const [expanded, setExpanded] = useState(dept.id === 'executive')
+  const busyCount = dept.employees.filter(e => e.status === 'busy').length
+  const workingCount = dept.employees.filter(e => e.status === 'working').length
+
+  return (
+    <div
+      className="rounded-xl border-2 overflow-hidden transition-all"
+      style={{ borderColor: dept.borderColor + '88', backgroundColor: '#0a0f1a' }}
+    >
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-900/50 transition"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{dept.icon}</span>
+          <div className="text-left">
+            <h3 className="font-bold text-sm" style={{ color: dept.color }}>
+              {dept.name}
+            </h3>
+            <p className="text-[10px] text-gray-500">部長: {dept.manager}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {busyCount > 0 && (
+            <span className="text-xs text-red-400 font-mono">🔥 {busyCount}</span>
+          )}
+          {workingCount > 0 && (
+            <span className="text-xs text-green-400 font-mono">💻 {workingCount}</span>
+          )}
+          <span className="text-xs text-gray-600 font-mono">{dept.employees.length}名</span>
+          <span className="text-gray-600">{expanded ? '▲' : '▼'}</span>
+        </div>
+      </button>
+
+      {dept.apps.length > 0 && (
+        <div className="px-4 pb-2 flex flex-wrap gap-1">
+          {dept.apps.map(app => (
+            <span key={app} className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 border border-gray-700">
+              {app}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {expanded && (
+        <div className="px-4 pb-4 space-y-2">
+          {dept.employees.map(emp => (
+            <EmployeeCard key={emp.id} emp={emp} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function OrgChart() {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-center">
+        <div className="bg-yellow-900/20 border-2 border-yellow-600/50 rounded-xl px-6 py-3 text-center">
+          <p className="text-yellow-400 font-bold">👨‍💼 大口陽平</p>
+          <p className="text-[10px] text-yellow-600">会長</p>
+        </div>
+      </div>
+      <div className="flex justify-center"><div className="w-px h-6 bg-gray-700" /></div>
+
+      <div className="flex justify-center">
+        <div className="bg-yellow-900/10 border-2 border-yellow-700/30 rounded-xl px-6 py-3 text-center">
+          <p className="text-yellow-300 font-bold">👑 レイア</p>
+          <p className="text-[10px] text-yellow-600">CEO（代表取締役）</p>
+        </div>
+      </div>
+      <div className="flex justify-center"><div className="w-px h-6 bg-gray-700" /></div>
+
+      <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto">
+        <div className="bg-gray-900/50 border border-gray-600 rounded-xl px-4 py-3 text-center">
+          <p className="text-gray-300 font-bold">⚡ ソラト</p>
+          <p className="text-[10px] text-gray-500">COO（執行管理）</p>
+          <p className="text-[10px] text-gray-600 mt-1">事業部門 8部署</p>
+        </div>
+        <div className="bg-gray-900/50 border border-blue-800 rounded-xl px-4 py-3 text-center">
+          <p className="text-blue-300 font-bold">🔧 カイト</p>
+          <p className="text-[10px] text-blue-500">CTO（技術統括）</p>
+          <p className="text-[10px] text-gray-600 mt-1">技術部門 4部署</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="space-y-2">
+          <h3 className="text-xs text-gray-500 text-center">COO管轄</h3>
+          {departments
+            .filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
+            .map(dept => (
+              <div
+                key={dept.id}
+                className="flex items-center gap-3 bg-gray-900/30 rounded-lg px-3 py-2 border"
+                style={{ borderColor: dept.borderColor + '44' }}
+              >
+                <span>{dept.icon}</span>
+                <div className="flex-1">
+                  <p className="text-xs font-bold" style={{ color: dept.color }}>{dept.name}</p>
+                  <p className="text-[10px] text-gray-600">{dept.manager} + {dept.employees.length - 1}名</p>
+                </div>
+                <span className="text-[10px] text-gray-600">{dept.employees.length}名</span>
+              </div>
+            ))}
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xs text-gray-500 text-center">CTO管轄</h3>
+          {departments
+            .filter(d => d.parentDivision === 'cto')
+            .map(dept => (
+              <div
+                key={dept.id}
+                className="flex items-center gap-3 bg-gray-900/30 rounded-lg px-3 py-2 border"
+                style={{ borderColor: dept.borderColor + '44' }}
+              >
+                <span>{dept.icon}</span>
+                <div className="flex-1">
+                  <p className="text-xs font-bold" style={{ color: dept.color }}>{dept.name}</p>
+                  <p className="text-[10px] text-gray-600">{dept.manager} + {dept.employees.length - 1}名</p>
+                </div>
+                <span className="text-[10px] text-gray-600">{dept.employees.length}名</span>
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function VirtualOffice() {
+  const [now, setNow] = useState('')
+  const [view, setView] = useState<'dashboard' | 'org'>('dashboard')
+
+  useEffect(() => {
+    const update = () => setNow(new Date().toLocaleString('ja-JP'))
+    update()
+    const timer = setInterval(update, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const totalEmployees = allEmployeesList.length
+  const busyProjects = allEmployeesList.filter(e => e.status === 'busy').length
+  const activeProjects = allEmployeesList.filter(e => e.status === 'working').length
+  const totalApps = 24
+
+  const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
+  const ctoDepts = departments.filter(d => d.parentDivision === 'cto')
+  const execDept = departments.find(d => d.id === 'executive')
+
+  return (
+    <div className="min-h-screen bg-[#060b14] text-white font-mono">
+      <header className="border-b border-gray-800 px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-lg font-bold">
+              <span className="text-cyan-400">🏢</span>{' '}
+              <span className="text-cyan-300">大口ヘルスケアグループ</span>{' '}
+              <span className="text-gray-600">バーチャルオフィス</span>
+            </h1>
+            <p className="text-[10px] text-gray-600 mt-0.5">
+              LAST UPDATE: {now} | AUTO REFRESH: 8s
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView('dashboard')}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition ${
+                view === 'dashboard'
+                  ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10'
+                  : 'border-gray-700 text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              📊 ダッシュボード
+            </button>
+            <button
+              onClick={() => setView('org')}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition ${
+                view === 'org'
+                  ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10'
+                  : 'border-gray-700 text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              🏗️ 組織図
+            </button>
+            <button
+              onClick={() => setNow(new Date().toLocaleString('ja-JP'))}
+              className="px-3 py-1.5 text-xs rounded-lg border border-cyan-800 text-cyan-400 hover:bg-cyan-900/30 transition"
+            >
+              [ REFRESH ]
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Cloud Usage */}
+        <section className="bg-gray-900/50 rounded-xl border border-gray-800 p-5">
+          <h2 className="text-sm font-bold text-yellow-400 mb-3">⚡ CLOUD USAGE</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {cloudUsage.map(cu => (
+              <div key={cu.service} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">{cu.service}</span>
+                  <span className="text-[10px] text-gray-600">{cu.cost}</span>
+                </div>
+                <ProgressBar
+                  value={cu.used}
+                  max={cu.limit}
+                  color={cu.used / cu.limit > 0.8 ? '#EF4444' : cu.used / cu.limit > 0.5 ? '#F59E0B' : '#22D3EE'}
+                />
+                <p className="text-[10px] text-gray-600 text-right">
+                  {cu.used} / {cu.limit} {cu.unit}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'AI EMPLOYEES', value: totalEmployees, color: '#22D3EE' },
+            { label: 'BUSY', value: busyProjects, color: '#EF4444' },
+            { label: 'WORKING', value: activeProjects, color: '#22C55E' },
+            { label: 'TOTAL APPS', value: totalApps, color: '#A78BFA' },
+          ].map(stat => (
+            <div key={stat.label} className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 text-center">
+              <p className="text-3xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-[10px] text-gray-500 mt-1 tracking-wider">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {view === 'dashboard' ? (
+          <>
+            {/* 会長 */}
+            <section className="bg-gradient-to-r from-yellow-900/20 to-transparent rounded-xl border-2 border-yellow-700/50 p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-yellow-500/20 border-2 border-yellow-500/50 flex items-center justify-center text-3xl">
+                  👨‍💼
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-yellow-400">大口 陽平</h2>
+                  <p className="text-xs text-yellow-600">会長 — 最高意思決定者</p>
+                  <p className="text-xs text-gray-500 mt-1">大口神経整体院 × 晴陽鍼灸院 × AI事業</p>
+                </div>
+              </div>
+            </section>
+
+            {execDept && <DepartmentCard dept={execDept} />}
+
+            <section>
+              <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 bg-gray-500 rounded-full" />
+                COO管轄（事業部門）— ソラト
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cooDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                CTO管轄（技術部門）— カイト
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ctoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+              </div>
+            </section>
+          </>
+        ) : (
+          <OrgChart />
+        )}
+      </main>
+
+      <footer className="border-t border-gray-800 mt-8 py-4 text-center">
+        <p className="text-[10px] text-gray-700">
+          大口ヘルスケアグループ バーチャルオフィス v1.0 — AI社員{totalEmployees}名体制
+        </p>
+      </footer>
+    </div>
+  )
 }
