@@ -76,11 +76,11 @@ const allEmployees: Employee[] = [
 
   // MEO事業部
   { id: 19, name: 'トモ', role: '部長', department: 'MEO事業部', color: '#5D4037', status: 'working', avatar: '📍', currentTask: 'MEOツール販売戦略', stats: { '管轄ツール': 3, '顧客数': 12, '月額収益': '¥59,000' } },
-  { id: 20, name: 'リク', role: '開発・運用', department: 'MEO事業部', color: '#8D6E63', status: 'idle', avatar: '⚙️', currentTask: '保守・モニタリング', stats: { 'API稼働': '正常', 'エラー率': '0.2%', '計測回数': '1,200' } },
+  { id: 20, name: 'リク', role: '開発・運用', department: 'MEO事業部', color: '#8D6E63', status: 'working', avatar: '⚙️', currentTask: 'MEOチェッカー新機能開発・競合順位追跡', stats: { 'API稼働': '正常', '新機能': '開発中', '計測回数': '1,200' } },
 
   // EC事業部
   { id: 21, name: 'マリ', role: '部長', department: 'EC事業部', color: '#EC407A', status: 'working', avatar: '🛒', currentTask: '商品企画・サブスク管理', stats: { '商品数': 15, 'サブスク': 8, '月商': '¥85,000' } },
-  { id: 22, name: 'ユナ', role: '運用担当', department: 'EC事業部', color: '#F06292', status: 'idle', avatar: '📦', currentTask: '受注処理・在庫管理', stats: { '本日注文': 3, '出荷待ち': 1, '在庫': '充足' } },
+  { id: 22, name: 'ユナ', role: '運用担当', department: 'EC事業部', color: '#F06292', status: 'busy', avatar: '📦', currentTask: 'サブスク顧客フォロー・新商品ページ作成', stats: { '本日注文': 3, 'サブスク更新': 5, '新商品': '準備中' } },
 
   // AI・プロダクト開発部
   { id: 23, name: 'テツ', role: '部長', department: 'AI開発部', color: '#263238', status: 'busy', avatar: '🤖', currentTask: 'AI製品ロードマップ策定', stats: { '製品数': 3, 'B2B契約': 2, '月額': '¥29,600' } },
@@ -89,13 +89,13 @@ const allEmployees: Employee[] = [
 
   // メディア事業部
   { id: 26, name: 'ツキ', role: '部長', department: 'メディア事業部', color: '#311B92', status: 'working', avatar: '🎬', currentTask: 'YouTube戦略・チャンネル最適化', stats: { '動画数': 168, '登録者': 450, '月間再生': '12,000' } },
-  { id: 27, name: 'ヒカ', role: '音楽リサーチ', department: 'メディア事業部', color: '#3949AB', status: 'idle', avatar: '🎵', currentTask: '競合分析・楽曲トレンド調査', stats: { '分析ch': 15, 'トレンド': '更新済', '提案': 3 } },
+  { id: 27, name: 'ヒカ', role: '音楽リサーチ', department: 'メディア事業部', color: '#3949AB', status: 'busy', avatar: '🎵', currentTask: '睡眠BGM新トレンド調査・競合ch分析レポート作成', stats: { '分析ch': 20, 'トレンド': '収集中', '新提案': 5 } },
   { id: 28, name: 'ルナ', role: '成長分析', department: 'メディア事業部', color: '#5C6BC0', status: 'working', avatar: '🌙', currentTask: 'サムネ改善・KPI分析', stats: { 'CTR': '4.2%', '視聴維持': '62%', '目標': '1,000人' } },
 
   // リサーチ部
   { id: 29, name: 'ジン', role: '部長', department: 'リサーチ部', color: '#1B5E20', status: 'working', avatar: '🔬', currentTask: 'リサーチ統括・レポート作成', stats: { '調査数': 12, 'レポート': 5, '更新頻度': '週次' } },
   { id: 30, name: 'モモ', role: '競合分析', department: 'リサーチ部', color: '#388E3C', status: 'working', avatar: '🏪', currentTask: '競合院調査（大阪エリア）', stats: { '分析院数': 25, 'エリア': '大阪', '更新': '3/14' } },
-  { id: 31, name: 'セナ', role: '市場分析', department: 'リサーチ部', color: '#66BB6A', status: 'idle', avatar: '🌐', currentTask: '業界トレンド調査', stats: { '市場規模': '調査中', 'トレンド': 8, 'レポート': 3 } },
+  { id: 31, name: 'セナ', role: '市場分析', department: 'リサーチ部', color: '#66BB6A', status: 'busy', avatar: '🌐', currentTask: '訪問鍼灸市場規模・メタ広告トレンド分析中', stats: { '市場規模': '¥3,200億', 'トレンド': 12, 'レポート': '作成中' } },
 
   // サイト運営部
   { id: 32, name: 'タク', role: '部長', department: 'サイト運営部', color: '#0D47A1', status: 'busy', avatar: '🖥️', currentTask: 'サイト保守・デプロイ統括', stats: { 'サイト数': 24, '稼働率': '99.9%', 'デプロイ': '3/15' } },
