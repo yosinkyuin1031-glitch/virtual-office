@@ -123,76 +123,224 @@ function DepartmentCard({ dept }: { dept: Department }) {
   )
 }
 
-function OrgChart() {
+function OrgNode({ name, role, color, status, glow, children: nodeChildren }: {
+  name: string; role: string; color: string; status: 'working' | 'busy' | 'idle' | 'meeting'; glow?: boolean; children?: React.ReactNode
+}) {
   return (
-    <div className="space-y-4">
-      <div className="flex justify-center">
-        <div className="bg-yellow-900/20 border-2 border-yellow-600/50 rounded-xl px-6 py-3 text-center">
-          <p className="text-yellow-400 font-bold">👨‍💼 大口陽平</p>
-          <p className="text-[10px] text-yellow-600">会長</p>
+    <div className="flex flex-col items-center">
+      <div
+        className={`relative rounded-xl px-4 py-3 text-center border-2 transition-all hover:scale-105 ${glow ? 'shadow-lg' : ''}`}
+        style={{
+          borderColor: color + '88',
+          backgroundColor: color + '15',
+          boxShadow: glow ? `0 0 20px ${color}33, 0 0 40px ${color}11` : undefined,
+        }}
+      >
+        <div className="flex justify-center mb-1">
+          <PixelCharacter name={name} color={color} status={status} size={48} />
         </div>
+        <p className="font-bold text-sm" style={{ color }}>{name}</p>
+        <p className="text-[10px] text-gray-400">{role}</p>
       </div>
-      <div className="flex justify-center"><div className="w-px h-6 bg-gray-700" /></div>
+      {nodeChildren}
+    </div>
+  )
+}
 
-      <div className="flex justify-center">
-        <div className="bg-yellow-900/10 border-2 border-yellow-700/30 rounded-xl px-6 py-3 text-center">
-          <p className="text-yellow-300 font-bold">👑 レイア</p>
-          <p className="text-[10px] text-yellow-600">CEO（代表取締役）</p>
-        </div>
+function ConnectorVertical({ color = '#374151', height = 24 }: { color?: string; height?: number }) {
+  return (
+    <div className="flex justify-center">
+      <div style={{ width: 2, height, background: `linear-gradient(to bottom, ${color}, ${color}44)` }} />
+    </div>
+  )
+}
+
+function ConnectorBranch({ color = '#374151' }: { color?: string }) {
+  return (
+    <div className="flex justify-center">
+      <div className="relative w-full max-w-md" style={{ height: 20 }}>
+        <div className="absolute left-1/4 right-1/4 top-0 border-t-2" style={{ borderColor: color + '66' }} />
+        <div className="absolute left-1/4 top-0 w-0.5 h-full" style={{ backgroundColor: color + '66' }} />
+        <div className="absolute right-1/4 top-0 w-0.5 h-full" style={{ backgroundColor: color + '66' }} />
       </div>
-      <div className="flex justify-center"><div className="w-px h-6 bg-gray-700" /></div>
+    </div>
+  )
+}
 
-      <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto">
-        <div className="bg-gray-900/50 border border-gray-600 rounded-xl px-4 py-3 text-center">
-          <p className="text-gray-300 font-bold">⚡ ソラト</p>
-          <p className="text-[10px] text-gray-500">COO（執行管理）</p>
-          <p className="text-[10px] text-gray-600 mt-1">事業部門 8部署</p>
+function DeptOrgCard({ dept }: { dept: Department }) {
+  const busyCount = dept.employees.filter(e => e.status === 'busy').length
+  const workingCount = dept.employees.filter(e => e.status === 'working').length
+  const idleCount = dept.employees.filter(e => e.status === 'idle').length
+
+  return (
+    <div
+      className="rounded-xl border p-3 hover:scale-[1.02] transition-all cursor-default"
+      style={{
+        borderColor: dept.borderColor + '66',
+        backgroundColor: dept.color + '08',
+        boxShadow: `0 0 12px ${dept.color}11`,
+      }}
+    >
+      {/* 部署ヘッダー */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">{dept.icon}</span>
+        <div className="flex-1">
+          <p className="text-xs font-bold" style={{ color: dept.color }}>{dept.name}</p>
+          <div className="flex gap-2 mt-0.5">
+            {busyCount > 0 && <span className="text-[9px] text-red-400">🔥{busyCount}</span>}
+            {workingCount > 0 && <span className="text-[9px] text-green-400">💻{workingCount}</span>}
+            {idleCount > 0 && <span className="text-[9px] text-gray-500">💤{idleCount}</span>}
+          </div>
         </div>
-        <div className="bg-gray-900/50 border border-blue-800 rounded-xl px-4 py-3 text-center">
-          <p className="text-blue-300 font-bold">🔧 カイト</p>
-          <p className="text-[10px] text-blue-500">CTO（技術統括）</p>
-          <p className="text-[10px] text-gray-600 mt-1">技術部門 4部署</p>
-        </div>
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-400">{dept.employees.length}名</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div className="space-y-2">
-          <h3 className="text-xs text-gray-500 text-center">COO管轄</h3>
-          {departments
-            .filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
-            .map(dept => (
-              <div
-                key={dept.id}
-                className="flex items-center gap-3 bg-gray-900/30 rounded-lg px-3 py-2 border"
-                style={{ borderColor: dept.borderColor + '44' }}
-              >
-                <span>{dept.icon}</span>
-                <div className="flex-1">
-                  <p className="text-xs font-bold" style={{ color: dept.color }}>{dept.name}</p>
-                  <p className="text-[10px] text-gray-600">{dept.manager} + {dept.employees.length - 1}名</p>
-                </div>
-                <span className="text-[10px] text-gray-600">{dept.employees.length}名</span>
+      {/* メンバーのピクセルキャラクター一覧 */}
+      <div className="flex flex-wrap gap-1 justify-center">
+        {dept.employees.map(emp => (
+          <div key={emp.id} className="flex flex-col items-center group relative">
+            <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={36} />
+            <span className="text-[8px] mt-0.5" style={{ color: emp.color }}>{emp.name}</span>
+            {/* ホバーツールチップ */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10">
+              <div className="bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 shadow-xl whitespace-nowrap">
+                <p className="text-[10px] font-bold" style={{ color: emp.color }}>【{emp.name}】{emp.role}</p>
+                <p className="text-[9px] text-cyan-400 mt-0.5">{emp.currentTask}</p>
               </div>
-            ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 管轄アプリ */}
+      {dept.apps.length > 0 && (
+        <div className="flex flex-wrap gap-0.5 mt-2 justify-center">
+          {dept.apps.map(app => (
+            <span key={app} className="text-[8px] px-1.5 py-0.5 rounded-full bg-gray-800/50 text-gray-500 border border-gray-800">
+              {app}
+            </span>
+          ))}
         </div>
-        <div className="space-y-2">
-          <h3 className="text-xs text-gray-500 text-center">CTO管轄</h3>
-          {departments
-            .filter(d => d.parentDivision === 'cto')
-            .map(dept => (
-              <div
-                key={dept.id}
-                className="flex items-center gap-3 bg-gray-900/30 rounded-lg px-3 py-2 border"
-                style={{ borderColor: dept.borderColor + '44' }}
-              >
-                <span>{dept.icon}</span>
-                <div className="flex-1">
-                  <p className="text-xs font-bold" style={{ color: dept.color }}>{dept.name}</p>
-                  <p className="text-[10px] text-gray-600">{dept.manager} + {dept.employees.length - 1}名</p>
-                </div>
-                <span className="text-[10px] text-gray-600">{dept.employees.length}名</span>
-              </div>
+      )}
+    </div>
+  )
+}
+
+function OrgChart() {
+  const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
+  const ctoDepts = departments.filter(d => d.parentDivision === 'cto')
+  const secretaryDept = departments.find(d => d.id === 'secretary')
+  const cooDeptsList = cooDepts.filter(d => d.id !== 'secretary')
+
+  return (
+    <div className="space-y-3 pb-8">
+      {/* タイトル */}
+      <div className="text-center mb-4">
+        <h2 className="text-lg font-bold text-cyan-300">🏢 大口ヘルスケアグループ 組織図</h2>
+        <p className="text-[10px] text-gray-600 mt-1">AI社員33名 + 会長 = 34名体制 | 12部署</p>
+      </div>
+
+      {/* 会長 */}
+      <OrgNode name="大口 陽平" role="会長（最高意思決定者）" color="#FFD700" status="busy" glow />
+      <ConnectorVertical color="#FFD700" />
+
+      {/* CEO */}
+      <OrgNode name="レイア" role="CEO（代表取締役）" color="#FFD700" status="busy" glow />
+      <ConnectorVertical color="#FFD700" />
+
+      {/* 秘書室（CEOの横） */}
+      {secretaryDept && (
+        <div className="flex justify-center gap-6 items-start">
+          <div className="hidden md:block">
+            <DeptOrgCard dept={secretaryDept} />
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="text-[10px] text-gray-600 bg-gray-900/50 rounded px-2 py-1 border border-gray-800">
+              ┬─ COO / CTO ─┬
+            </div>
+          </div>
+          <div className="md:hidden">
+            <DeptOrgCard dept={secretaryDept} />
+          </div>
+        </div>
+      )}
+
+      <ConnectorBranch color="#666" />
+
+      {/* COO & CTO */}
+      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <OrgNode name="ソラト" role="COO（執行管理）" color="#C0C0C0" status="working">
+          <p className="text-[10px] text-gray-500 mt-1">事業部門 {cooDeptsList.length}部署 統括</p>
+        </OrgNode>
+        <OrgNode name="カイト" role="CTO（技術統括）" color="#4FC3F7" status="busy">
+          <p className="text-[10px] text-gray-500 mt-1">技術部門 {ctoDepts.length}部署 統括</p>
+        </OrgNode>
+      </div>
+
+      {/* 接続線 */}
+      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <ConnectorVertical color="#C0C0C0" height={16} />
+        <ConnectorVertical color="#4FC3F7" height={16} />
+      </div>
+
+      {/* 部署群 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        {/* COO管轄 */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 justify-center">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-700" />
+            <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">
+              ⚡ COO管轄（事業部門）
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-700" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {cooDeptsList.map(dept => (
+              <DeptOrgCard key={dept.id} dept={dept} />
             ))}
+          </div>
+        </div>
+
+        {/* CTO管轄 */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 justify-center">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-900" />
+            <span className="text-[10px] text-blue-400 bg-gray-900 px-2 py-0.5 rounded-full border border-blue-900">
+              🔧 CTO管轄（技術部門）
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-900" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {ctoDepts.map(dept => (
+              <DeptOrgCard key={dept.id} dept={dept} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 全社統計 */}
+      <div className="mt-6 bg-gradient-to-r from-cyan-900/10 via-purple-900/10 to-cyan-900/10 rounded-xl border border-gray-800 p-4">
+        <div className="flex flex-wrap justify-center gap-6 text-center">
+          <div>
+            <p className="text-2xl font-bold text-cyan-400">34</p>
+            <p className="text-[10px] text-gray-500">総社員数</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-yellow-400">12</p>
+            <p className="text-[10px] text-gray-500">部署数</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-green-400">24</p>
+            <p className="text-[10px] text-gray-500">稼働アプリ</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-purple-400">3</p>
+            <p className="text-[10px] text-gray-500">事業ドメイン</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-red-400">{allEmployeesList.filter(e => e.status === 'busy').length}</p>
+            <p className="text-[10px] text-gray-500">激忙中</p>
+          </div>
         </div>
       </div>
     </div>
