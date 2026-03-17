@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { departments, cloudUsage, allEmployeesList } from './lib/data'
 import type { Employee, Department } from './lib/data'
 import PixelCharacter from './components/PixelCharacter'
+import ChatModal from './components/ChatModal'
 
 function StatusBadge({ status }: { status: Employee['status'] }) {
   const config = {
@@ -32,9 +33,12 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
   )
 }
 
-function EmployeeCard({ emp }: { emp: Employee }) {
+function EmployeeCard({ emp, onChat }: { emp: Employee; onChat?: (emp: Employee) => void }) {
   return (
-    <div className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3 border border-gray-800">
+    <div
+      className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3 border border-gray-800 cursor-pointer hover:border-cyan-800 hover:bg-gray-900/80 transition-all active:scale-[0.98]"
+      onClick={() => onChat?.(emp)}
+    >
       <div className="flex-shrink-0 relative">
         <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={56} />
         {/* 名前バッジ */}
@@ -62,12 +66,17 @@ function EmployeeCard({ emp }: { emp: Employee }) {
             </span>
           ))}
         </div>
+        <div className="mt-2">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-900/30 text-cyan-400 border border-cyan-800/50">
+            💬 話しかける
+          </span>
+        </div>
       </div>
     </div>
   )
 }
 
-function DepartmentCard({ dept }: { dept: Department }) {
+function DepartmentCard({ dept, onChat }: { dept: Department; onChat?: (emp: Employee) => void }) {
   const [expanded, setExpanded] = useState(dept.id === 'executive')
   const busyCount = dept.employees.filter(e => e.status === 'busy').length
   const workingCount = dept.employees.filter(e => e.status === 'working').length
@@ -115,7 +124,7 @@ function DepartmentCard({ dept }: { dept: Department }) {
       {expanded && (
         <div className="px-4 pb-4 space-y-2">
           {dept.employees.map(emp => (
-            <EmployeeCard key={emp.id} emp={emp} />
+            <EmployeeCard key={emp.id} emp={emp} onChat={onChat} />
           ))}
         </div>
       )}
@@ -167,7 +176,7 @@ function ConnectorBranch({ color = '#374151' }: { color?: string }) {
   )
 }
 
-function DeptOrgCard({ dept }: { dept: Department }) {
+function DeptOrgCard({ dept, onChat }: { dept: Department; onChat?: (emp: Employee) => void }) {
   const busyCount = dept.employees.filter(e => e.status === 'busy').length
   const workingCount = dept.employees.filter(e => e.status === 'working').length
   const idleCount = dept.employees.filter(e => e.status === 'idle').length
@@ -198,7 +207,11 @@ function DeptOrgCard({ dept }: { dept: Department }) {
       {/* メンバーのピクセルキャラクター一覧 */}
       <div className="flex flex-wrap gap-1 justify-center">
         {dept.employees.map(emp => (
-          <div key={emp.id} className="flex flex-col items-center group relative">
+          <div
+            key={emp.id}
+            className="flex flex-col items-center group relative cursor-pointer hover:scale-110 transition-transform"
+            onClick={() => onChat?.(emp)}
+          >
             <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={36} />
             <span className="text-[8px] mt-0.5" style={{ color: emp.color }}>{emp.name}</span>
             {/* ホバーツールチップ */}
@@ -206,6 +219,7 @@ function DeptOrgCard({ dept }: { dept: Department }) {
               <div className="bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 shadow-xl whitespace-nowrap">
                 <p className="text-[10px] font-bold" style={{ color: emp.color }}>【{emp.name}】{emp.role}</p>
                 <p className="text-[9px] text-cyan-400 mt-0.5">{emp.currentTask}</p>
+                <p className="text-[9px] text-cyan-600 mt-0.5">💬 タップして話しかける</p>
               </div>
             </div>
           </div>
@@ -226,7 +240,7 @@ function DeptOrgCard({ dept }: { dept: Department }) {
   )
 }
 
-function OrgChart() {
+function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void }) {
   const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
   const ctoDepts = departments.filter(d => d.parentDivision === 'cto')
   const cfoDepts = departments.filter(d => d.parentDivision === 'cfo' && d.id !== 'finance')
@@ -269,7 +283,7 @@ function OrgChart() {
       {financeDept && (
         <div className="flex justify-center">
           <div className="max-w-xs w-full">
-            <DeptOrgCard dept={financeDept} />
+            <DeptOrgCard dept={financeDept} onChat={setChatTarget} />
           </div>
         </div>
       )}
@@ -312,7 +326,7 @@ function OrgChart() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {div.depts.map(dept => (
-                <DeptOrgCard key={dept.id} dept={dept} />
+                <DeptOrgCard key={dept.id} dept={dept} onChat={setChatTarget} />
               ))}
             </div>
           </div>
@@ -347,6 +361,7 @@ function OrgChart() {
 export default function VirtualOffice() {
   const [now, setNow] = useState('')
   const [view, setView] = useState<'dashboard' | 'org'>('dashboard')
+  const [chatTarget, setChatTarget] = useState<Employee | null>(null)
 
   useEffect(() => {
     const update = () => setNow(new Date().toLocaleString('ja-JP'))
@@ -467,8 +482,8 @@ export default function VirtualOffice() {
               </div>
             </section>
 
-            {execDept && <DepartmentCard dept={execDept} />}
-            {financeDept2 && <DepartmentCard dept={financeDept2} />}
+            {execDept && <DepartmentCard dept={execDept} onChat={setChatTarget} />}
+            {financeDept2 && <DepartmentCard dept={financeDept2} onChat={setChatTarget} />}
 
             <section>
               <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
@@ -476,7 +491,7 @@ export default function VirtualOffice() {
                 ⚡ COO管轄（事業部門）— ソラト
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {cooDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+                {cooDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} onChat={setChatTarget} />)}
               </div>
             </section>
 
@@ -486,7 +501,7 @@ export default function VirtualOffice() {
                 🔧 技術部門 — テツ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {ctoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+                {ctoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} onChat={setChatTarget} />)}
               </div>
             </section>
 
@@ -496,7 +511,7 @@ export default function VirtualOffice() {
                 💰 CFO管轄（財務・収益部門）— ミサ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {cfoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+                {cfoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} onChat={setChatTarget} />)}
               </div>
             </section>
 
@@ -506,14 +521,19 @@ export default function VirtualOffice() {
                 📣 マーケ・メディア — マヤ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {cmoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+                {cmoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} onChat={setChatTarget} />)}
               </div>
             </section>
           </>
         ) : (
-          <OrgChart />
+          <OrgChart setChatTarget={setChatTarget} />
         )}
       </main>
+
+      {/* チャットモーダル */}
+      {chatTarget && (
+        <ChatModal employee={chatTarget} onClose={() => setChatTarget(null)} />
+      )}
 
       <footer className="border-t border-gray-800 mt-8 py-4 text-center">
         <p className="text-[10px] text-gray-700">
