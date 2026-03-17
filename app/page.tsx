@@ -229,113 +229,110 @@ function DeptOrgCard({ dept }: { dept: Department }) {
 function OrgChart() {
   const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
   const ctoDepts = departments.filter(d => d.parentDivision === 'cto')
-  const secretaryDept = departments.find(d => d.id === 'secretary')
-  const cooDeptsList = cooDepts.filter(d => d.id !== 'secretary')
+  const cfoDepts = departments.filter(d => d.parentDivision === 'cfo' && d.id !== 'finance')
+  const cmoDepts = departments.filter(d => d.parentDivision === 'cmo')
+  const financeDept = departments.find(d => d.id === 'finance')
+
+  const divisions = [
+    { key: 'coo', name: 'ソラト', role: 'COO（事業執行）', color: '#C0C0C0', icon: '⚡', label: 'COO管轄（事業部門）', depts: cooDepts, status: 'busy' as const },
+    { key: 'cto', name: 'テツ', role: '技術統括', color: '#263238', icon: '🔧', label: '技術部門', depts: ctoDepts, status: 'busy' as const },
+    { key: 'cfo', name: 'ミサ', role: 'CFO（財務・収益）', color: '#00C853', icon: '💰', label: 'CFO管轄（財務・収益部門）', depts: cfoDepts, status: 'working' as const },
+    { key: 'cmo', name: 'マヤ', role: 'マーケ統括', color: '#C62828', icon: '📣', label: 'マーケ・メディア部門', depts: cmoDepts, status: 'busy' as const },
+  ]
+
+  const totalEmps = allEmployeesList.length
 
   return (
     <div className="space-y-3 pb-8">
       {/* タイトル */}
       <div className="text-center mb-4">
         <h2 className="text-lg font-bold text-cyan-300">🏢 大口ヘルスケアグループ 組織図</h2>
-        <p className="text-[10px] text-gray-600 mt-1">AI社員33名 + 会長 = 34名体制 | 12部署</p>
+        <p className="text-[10px] text-gray-600 mt-1">AI社員{totalEmps}名 + 会長 = {totalEmps + 1}名体制 | 9部署</p>
       </div>
 
       {/* 会長 */}
       <OrgNode name="大口 陽平" role="会長（最高意思決定者）" color="#FFD700" status="busy" glow />
       <ConnectorVertical color="#FFD700" />
 
-      {/* CEO */}
-      <OrgNode name="レイア" role="CEO（代表取締役）" color="#FFD700" status="busy" glow />
+      {/* CEO + COO */}
+      <div className="flex justify-center gap-4 items-end">
+        <OrgNode name="レイア" role="CEO（代表取締役社長）" color="#FFD700" status="busy" glow />
+        <div className="flex flex-col items-center">
+          <div className="text-[8px] text-yellow-600 mb-1">タッグ</div>
+          <div className="w-12 h-0.5 bg-yellow-600/50" />
+        </div>
+        <OrgNode name="ソラト" role="COO（最高執行責任者）" color="#C0C0C0" status="busy" glow />
+      </div>
       <ConnectorVertical color="#FFD700" />
 
-      {/* 秘書室（CEOの横） */}
-      {secretaryDept && (
-        <div className="flex justify-center gap-6 items-start">
-          <div className="hidden md:block">
-            <DeptOrgCard dept={secretaryDept} />
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="text-[10px] text-gray-600 bg-gray-900/50 rounded px-2 py-1 border border-gray-800">
-              ┬─ COO / CTO ─┬
-            </div>
-          </div>
-          <div className="md:hidden">
-            <DeptOrgCard dept={secretaryDept} />
+      {/* 財務部 */}
+      {financeDept && (
+        <div className="flex justify-center">
+          <div className="max-w-xs w-full">
+            <DeptOrgCard dept={financeDept} />
           </div>
         </div>
       )}
+      <ConnectorVertical color="#666" />
 
-      <ConnectorBranch color="#666" />
-
-      {/* COO & CTO */}
-      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-        <OrgNode name="ソラト" role="COO（執行管理）" color="#C0C0C0" status="working">
-          <p className="text-[10px] text-gray-500 mt-1">事業部門 {cooDeptsList.length}部署 統括</p>
-        </OrgNode>
-        <OrgNode name="カイト" role="CTO（技術統括）" color="#4FC3F7" status="busy">
-          <p className="text-[10px] text-gray-500 mt-1">技術部門 {ctoDepts.length}部署 統括</p>
-        </OrgNode>
+      {/* 部門分岐 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+        {divisions.map(div => (
+          <div key={div.key} className="text-center">
+            <span
+              className="text-[10px] bg-gray-900 px-2 py-0.5 rounded-full border inline-block"
+              style={{ color: div.color, borderColor: div.color + '44' }}
+            >
+              {div.icon} {div.label}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* 接続線 */}
-      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-        <ConnectorVertical color="#C0C0C0" height={16} />
-        <ConnectorVertical color="#4FC3F7" height={16} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+        {divisions.map(div => (
+          <ConnectorVertical key={div.key} color={div.color} height={16} />
+        ))}
       </div>
 
       {/* 部署群 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-        {/* COO管轄 */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 justify-center">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gray-700" />
-            <span className="text-[10px] text-gray-400 bg-gray-900 px-2 py-0.5 rounded-full border border-gray-800">
-              ⚡ COO管轄（事業部門）
-            </span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gray-700" />
+        {divisions.map(div => (
+          <div key={div.key} className="space-y-3">
+            <div className="flex items-center gap-2 justify-center">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent" style={{ borderColor: div.color + '44' }} />
+              <span
+                className="text-[10px] bg-gray-900 px-2 py-0.5 rounded-full border"
+                style={{ color: div.color, borderColor: div.color + '44' }}
+              >
+                {div.icon} {div.label}
+              </span>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent" style={{ borderColor: div.color + '44' }} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {div.depts.map(dept => (
+                <DeptOrgCard key={dept.id} dept={dept} />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {cooDeptsList.map(dept => (
-              <DeptOrgCard key={dept.id} dept={dept} />
-            ))}
-          </div>
-        </div>
-
-        {/* CTO管轄 */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 justify-center">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-900" />
-            <span className="text-[10px] text-blue-400 bg-gray-900 px-2 py-0.5 rounded-full border border-blue-900">
-              🔧 CTO管轄（技術部門）
-            </span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-900" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {ctoDepts.map(dept => (
-              <DeptOrgCard key={dept.id} dept={dept} />
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* 全社統計 */}
       <div className="mt-6 bg-gradient-to-r from-cyan-900/10 via-purple-900/10 to-cyan-900/10 rounded-xl border border-gray-800 p-4">
         <div className="flex flex-wrap justify-center gap-6 text-center">
           <div>
-            <p className="text-2xl font-bold text-cyan-400">34</p>
+            <p className="text-2xl font-bold text-cyan-400">{totalEmps + 1}</p>
             <p className="text-[10px] text-gray-500">総社員数</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-yellow-400">12</p>
+            <p className="text-2xl font-bold text-yellow-400">9</p>
             <p className="text-[10px] text-gray-500">部署数</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-green-400">24</p>
             <p className="text-[10px] text-gray-500">稼働アプリ</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-purple-400">3</p>
-            <p className="text-[10px] text-gray-500">事業ドメイン</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-red-400">{allEmployeesList.filter(e => e.status === 'busy').length}</p>
@@ -363,9 +360,12 @@ export default function VirtualOffice() {
   const activeProjects = allEmployeesList.filter(e => e.status === 'working').length
   const totalApps = 24
 
-  const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
+  const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive' && d.id !== 'secretary')
   const ctoDepts = departments.filter(d => d.parentDivision === 'cto')
+  const cfoDepts = departments.filter(d => d.parentDivision === 'cfo')
+  const cmoDepts = departments.filter(d => d.parentDivision === 'cmo')
   const execDept = departments.find(d => d.id === 'executive')
+  const secretaryDept2 = departments.find(d => d.id === 'secretary')
 
   return (
     <div className="min-h-screen bg-[#060b14] text-white font-mono">
@@ -468,10 +468,11 @@ export default function VirtualOffice() {
             </section>
 
             {execDept && <DepartmentCard dept={execDept} />}
+            {secretaryDept2 && <DepartmentCard dept={secretaryDept2} />}
 
             <section>
               <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 bg-gray-500 rounded-full" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full" />
                 COO管轄（事業部門）— ソラト
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -486,6 +487,26 @@ export default function VirtualOffice() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {ctoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full" />
+                CFO管轄（財務・収益部門）— ミサ
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cfoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 bg-orange-500 rounded-full" />
+                CMO管轄（マーケ・メディア）— リオ
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cmoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
               </div>
             </section>
           </>
