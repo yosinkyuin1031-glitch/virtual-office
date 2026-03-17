@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
 
 // 社員ごとのシステムプロンプト
 function getSystemPrompt(employeeName: string, employeeRole: string, department: string): string {
@@ -28,17 +23,16 @@ function getSystemPrompt(employeeName: string, employeeRole: string, department:
 - 「承知しました、会長」のような挨拶から始める
 - 日本語で対応する`
 
-  // 部署別の追加コンテキスト
   const deptContext: Record<string, string> = {
-    '経営層': `経営戦略・全社方針・KPI管理が専門。数値に基づいた経営判断をサポート。`,
-    '財務部': `財務・収益管理・キャッシュフロー・投資判断が専門。月次PL、コスト削減、資金計画を担当。`,
-    '整体院事業部': `整体院の予約管理・顧客管理・LP最適化・検査シート・睡眠分析が専門。院の運営をITでサポート。`,
-    '訪問鍼灸事業部': `訪問鍼灸のスケジュール管理・レセプト・営業・SNS投稿が専門。訪問事業の効率化を担当。`,
-    'マーケ・コンテンツ部': `広告運用・SEO・GBP投稿・LINE配信・SNS投稿・コピーライティング・競合分析が専門。集客全般を担当。`,
-    'MEO事業部': `MEO対策・Googleマップ順位・ツール開発・BtoB販売が専門。MEO事業の収益拡大を担当。`,
-    'EC事業部': `ECサイト運営・サブスク管理・商品企画・物販が専門。オンライン販売を担当。`,
-    'AI・技術開発部': `AI開発・サイト運営・インフラ管理・Vercel/Supabase運用が専門。技術基盤を担当。`,
-    'メディア事業部': `YouTube運営・動画戦略・サムネ改善・BGMトレンド分析が専門。メディア事業を担当。`,
+    '経営層': '経営戦略・全社方針・KPI管理が専門。数値に基づいた経営判断をサポート。',
+    '財務部': '財務・収益管理・キャッシュフロー・投資判断が専門。月次PL、コスト削減、資金計画を担当。',
+    '整体院事業部': '整体院の予約管理・顧客管理・LP最適化・検査シート・睡眠分析が専門。院の運営をITでサポート。',
+    '訪問鍼灸事業部': '訪問鍼灸のスケジュール管理・レセプト・営業・SNS投稿が専門。訪問事業の効率化を担当。',
+    'マーケ・コンテンツ部': '広告運用・SEO・GBP投稿・LINE配信・SNS投稿・コピーライティング・競合分析が専門。集客全般を担当。',
+    'MEO事業部': 'MEO対策・Googleマップ順位・ツール開発・BtoB販売が専門。MEO事業の収益拡大を担当。',
+    'EC事業部': 'ECサイト運営・サブスク管理・商品企画・物販が専門。オンライン販売を担当。',
+    'AI・技術開発部': 'AI開発・サイト運営・インフラ管理・Vercel/Supabase運用が専門。技術基盤を担当。',
+    'メディア事業部': 'YouTube運営・動画戦略・サムネ改善・BGMトレンド分析が専門。メディア事業を担当。',
   }
 
   return baseContext + '\n\n【部署専門領域】\n' + (deptContext[department] || '')
@@ -46,31 +40,49 @@ function getSystemPrompt(employeeName: string, employeeRole: string, department:
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, employeeName, employeeRole, department, history } = await request.json()
+    const { message, employeeName, employeeRole, department, history, apiKey } = await request.json()
 
     if (!message || !employeeName) {
       return NextResponse.json({ error: 'メッセージと社員名が必要です' }, { status: 400 })
     }
 
+    if (!apiKey) {
+      return NextResponse.json({ error: 'APIキーが設定されていません。設定画面からAPIキーを入力してください。' }, { status: 400 })
+    }
+
     const systemPrompt = getSystemPrompt(employeeName, employeeRole, department)
 
-    // 過去の会話履歴を含める
     const messages: { role: 'user' | 'assistant'; content: string }[] = []
     if (history && Array.isArray(history)) {
-      for (const h of history.slice(-10)) { // 直近10件まで
+      for (const h of history.slice(-10)) {
         messages.push({ role: h.role, content: h.content })
       }
     }
     messages.push({ role: 'user', content: message })
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages,
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages,
+      }),
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    if (!response.ok) {
+      const err = await response.text()
+      console.error('Anthropic API error:', err)
+      return NextResponse.json({ error: 'APIキーが無効か、APIエラーが発生しました' }, { status: 500 })
+    }
+
+    const data = await response.json()
+    const text = data.content?.[0]?.text || ''
 
     return NextResponse.json({ response: text })
   } catch (error) {

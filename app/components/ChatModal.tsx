@@ -19,8 +19,21 @@ export default function ChatModal({ employee, onClose }: ChatModalProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [apiKey, setApiKey] = useState('')
+  const [showKeyInput, setShowKeyInput] = useState(false)
+  const [keyInput, setKeyInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // APIキー読み込み
+  useEffect(() => {
+    const saved = localStorage.getItem('vo_anthropic_key')
+    if (saved) {
+      setApiKey(saved)
+    } else {
+      setShowKeyInput(true)
+    }
+  }, [])
 
   // ローカルストレージから履歴読み込み
   useEffect(() => {
@@ -46,12 +59,25 @@ export default function ChatModal({ employee, onClose }: ChatModalProps) {
 
   // 初回フォーカス
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    if (!showKeyInput) inputRef.current?.focus()
+  }, [showKeyInput])
+
+  const saveApiKey = () => {
+    const k = keyInput.trim()
+    if (!k) return
+    localStorage.setItem('vo_anthropic_key', k)
+    setApiKey(k)
+    setShowKeyInput(false)
+  }
 
   const sendMessage = async () => {
     const text = input.trim()
     if (!text || loading) return
+
+    if (!apiKey) {
+      setShowKeyInput(true)
+      return
+    }
 
     const userMsg: ChatMessage = {
       role: 'user',
@@ -73,10 +99,15 @@ export default function ChatModal({ employee, onClose }: ChatModalProps) {
           employeeRole: employee.role,
           department: employee.department,
           history: messages.map(m => ({ role: m.role, content: m.content })),
+          apiKey,
         }),
       })
 
       const data = await res.json()
+
+      if (data.error && data.error.includes('APIキー')) {
+        setShowKeyInput(true)
+      }
 
       const aiMsg: ChatMessage = {
         role: 'assistant',
@@ -132,6 +163,12 @@ export default function ChatModal({ employee, onClose }: ChatModalProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowKeyInput(true)}
+              className="text-[10px] text-gray-600 hover:text-gray-400 px-2 py-1 rounded border border-gray-800 hover:border-gray-600 transition"
+            >
+              設定
+            </button>
+            <button
               onClick={clearHistory}
               className="text-[10px] text-gray-600 hover:text-gray-400 px-2 py-1 rounded border border-gray-800 hover:border-gray-600 transition"
             >
@@ -146,9 +183,46 @@ export default function ChatModal({ employee, onClose }: ChatModalProps) {
           </div>
         </div>
 
+        {/* APIキー入力画面 */}
+        {showKeyInput && (
+          <div className="absolute inset-0 z-10 bg-[#0a0f1a]/95 flex items-center justify-center p-6">
+            <div className="w-full max-w-sm space-y-4">
+              <h3 className="text-sm font-bold text-cyan-400 text-center">APIキーを設定</h3>
+              <p className="text-[11px] text-gray-500 text-center">
+                AI社員と会話するにはAnthropic APIキーが必要です。
+                <br />一度入力すればブラウザに保存されます。
+              </p>
+              <input
+                type="password"
+                value={keyInput}
+                onChange={e => setKeyInput(e.target.value)}
+                placeholder="sk-ant-... または セッションキー"
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-700"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={saveApiKey}
+                  disabled={!keyInput.trim()}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-cyan-700 hover:bg-cyan-600 text-white disabled:opacity-30 transition"
+                >
+                  保存
+                </button>
+                {apiKey && (
+                  <button
+                    onClick={() => setShowKeyInput(false)}
+                    className="px-4 py-2.5 rounded-lg text-sm border border-gray-700 text-gray-400 hover:text-white transition"
+                  >
+                    戻る
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* メッセージエリア */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-          {messages.length === 0 && (
+          {messages.length === 0 && !showKeyInput && (
             <div className="text-center py-8">
               <div className="flex justify-center mb-3">
                 <PixelCharacter name={employee.name} color={employee.color} status={employee.status} size={64} />
