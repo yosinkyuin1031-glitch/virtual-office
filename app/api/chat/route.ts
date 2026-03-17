@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
+
+// モデルフォールバック（MEO勝ち上げくんと同じ方式）
+const MODEL_CANDIDATES = [
+  'claude-sonnet-4-6',
+  'claude-sonnet-4-20250514',
+  'claude-3-5-sonnet-20241022',
+]
 
 // 社員ごとのシステムプロンプト
 function getSystemPrompt(employeeName: string, employeeRole: string, department: string): string {
@@ -46,10 +54,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'メッセージと社員名が必要です' }, { status: 400 })
     }
 
-    if (!apiKey) {
+    if (!apiKey || apiKey.trim().length < 50) {
       return NextResponse.json({ error: 'APIキーが設定されていません。設定画面からAPIキーを入力してください。' }, { status: 400 })
     }
 
+    const client = new Anthropic({ apiKey: apiKey.trim() })
     const systemPrompt = getSystemPrompt(employeeName, employeeRole, department)
 
     const messages: { role: 'user' | 'assistant'; content: string }[] = []
@@ -60,31 +69,29 @@ export async function POST(request: NextRequest) {
     }
     messages.push({ role: 'user', content: message })
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages,
-      }),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('Anthropic API error:', err)
-      return NextResponse.json({ error: 'APIキーが無効か、APIエラーが発生しました' }, { status: 500 })
+    // モデルフォールバック
+    let lastError: Error | null = null
+    for (const model of MODEL_CANDIDATES) {
+      try {
+        const response = await client.messages.create({
+          model,
+          max_tokens: 2000,
+          system: systemPrompt,
+          messages,
+        })
+        const text = response.content[0].type === 'text' ? response.content[0].text : ''
+        return NextResponse.json({ response: text })
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e))
+        const msg = err.message.toLowerCase()
+        if (msg.includes('authentication') || msg.includes('api_key') || msg.includes('invalid x-api-key') || msg.includes('invalid api key')) {
+          return NextResponse.json({ error: 'APIキーが無効です。設定画面から正しいキーを入力してください。' }, { status: 401 })
+        }
+        lastError = err
+      }
     }
 
-    const data = await response.json()
-    const text = data.content?.[0]?.text || ''
-
-    return NextResponse.json({ response: text })
+    return NextResponse.json({ error: lastError?.message || 'AI社員が応答できません' }, { status: 500 })
   } catch (error) {
     console.error('Chat API error:', error)
     return NextResponse.json({ error: 'AI社員が応答できません' }, { status: 500 })
