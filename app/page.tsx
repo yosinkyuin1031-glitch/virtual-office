@@ -358,14 +358,14 @@ export default function VirtualOffice() {
   const totalEmployees = allEmployeesList.length
   const busyProjects = allEmployeesList.filter(e => e.status === 'busy').length
   const activeProjects = allEmployeesList.filter(e => e.status === 'working').length
-  const totalApps = 24
+  const totalApps = departments.reduce((sum, d) => sum + d.apps.length, 0)
 
-  const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive' && d.id !== 'secretary')
+  const cooDepts = departments.filter(d => d.parentDivision === 'coo' && d.id !== 'executive')
   const ctoDepts = departments.filter(d => d.parentDivision === 'cto')
-  const cfoDepts = departments.filter(d => d.parentDivision === 'cfo')
+  const cfoDepts = departments.filter(d => d.parentDivision === 'cfo' && d.id !== 'finance')
   const cmoDepts = departments.filter(d => d.parentDivision === 'cmo')
   const execDept = departments.find(d => d.id === 'executive')
-  const secretaryDept2 = departments.find(d => d.id === 'secretary')
+  const financeDept2 = departments.find(d => d.id === 'finance')
 
   return (
     <div className="min-h-screen bg-[#060b14] text-white font-mono">
@@ -378,7 +378,7 @@ export default function VirtualOffice() {
               <span className="text-gray-600">バーチャルオフィス</span>
             </h1>
             <p className="text-[10px] text-gray-600 mt-0.5">
-              LAST UPDATE: {now} | AUTO REFRESH: 8s
+              LAST UPDATE: {now} | AI社員{totalEmployees}名体制
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -468,12 +468,12 @@ export default function VirtualOffice() {
             </section>
 
             {execDept && <DepartmentCard dept={execDept} />}
-            {secretaryDept2 && <DepartmentCard dept={secretaryDept2} />}
+            {financeDept2 && <DepartmentCard dept={financeDept2} />}
 
             <section>
               <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 bg-gray-400 rounded-full" />
-                COO管轄（事業部門）— ソラト
+                ⚡ COO管轄（事業部門）— ソラト
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cooDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
@@ -483,7 +483,7 @@ export default function VirtualOffice() {
             <section>
               <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                CTO管轄（技術部門）— カイト
+                🔧 技術部門 — テツ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {ctoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
@@ -493,7 +493,7 @@ export default function VirtualOffice() {
             <section>
               <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 bg-green-500 rounded-full" />
-                CFO管轄（財務・収益部門）— ミサ
+                💰 CFO管轄（財務・収益部門）— ミサ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cfoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
@@ -503,7 +503,7 @@ export default function VirtualOffice() {
             <section>
               <h2 className="text-xs text-gray-500 tracking-widest mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 bg-orange-500 rounded-full" />
-                CMO管轄（マーケ・メディア）— リオ
+                📣 マーケ・メディア — マヤ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cmoDepts.map(dept => <DepartmentCard key={dept.id} dept={dept} />)}
