@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { departments, cloudUsage, allEmployeesList } from './lib/data'
 import type { Employee, Department } from './lib/data'
 import PixelCharacter from './components/PixelCharacter'
@@ -375,6 +376,12 @@ export default function VirtualOffice() {
             >
               🏗️ 組織図
             </button>
+            <Link
+              href="/documents"
+              className="px-3 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-500 hover:text-cyan-400 hover:border-cyan-500 hover:bg-cyan-500/10 transition"
+            >
+              📄 制作物
+            </Link>
           </div>
         </div>
       </header>
