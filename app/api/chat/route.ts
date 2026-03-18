@@ -51,11 +51,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'メッセージと社員名が必要です' }, { status: 400 })
     }
 
-    if (!apiKey || apiKey.trim().length < 50) {
-      return NextResponse.json({ error: 'APIキーが設定されていません。設定画面からAPIキーを入力してください。' }, { status: 400 })
+    // サーバー側の環境変数を優先、なければブラウザから送られたキーを使用
+    const resolvedKey = process.env.ANTHROPIC_API_KEY || (apiKey && apiKey.trim())
+    if (!resolvedKey || resolvedKey.length < 50) {
+      return NextResponse.json({ error: 'APIキーが設定されていません' }, { status: 400 })
     }
 
-    const client = new Anthropic({ apiKey: apiKey.trim() })
+    const client = new Anthropic({ apiKey: resolvedKey })
     const systemPrompt = getSystemPrompt(employeeName, employeeRole, department)
 
     const messages: { role: 'user' | 'assistant'; content: string }[] = []
