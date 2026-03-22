@@ -2,7 +2,7 @@ export interface Document {
   id: string
   title: string
   summary: string
-  category: 'btob' | 'marketing' | 'operations' | 'product' | 'other'
+  category: 'product' | 'btob' | 'sns' | 'meo' | 'operations'
   status: 'draft' | 'final'
   updatedAt: string
   contentHtml: string
@@ -341,7 +341,7 @@ export const documents: Document[] = [
     id: 'gmb-posts-2026-spring',
     title: 'Googleビジネスプロフィール投稿 2026年3-4月',
     summary: '大口神経整体院のGMB投稿8本（季節挨拶・症状訴求・施術の流れ・院長紹介）とスケジュール。',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-22',
     contentHtml: `
@@ -737,7 +737,7 @@ export const documents: Document[] = [
     id: 'fb-template-v4',
     title: 'Facebook投稿テンプレート【v4】5パターン',
     summary: 'ストーリー型・ビフォーアフター型・知識シェア型・舞台裏公開型・実績数字報告型の5パターンテンプレートとハッシュタグ・週配分ガイド。',
-    category: 'marketing',
+    category: 'sns',
     status: 'final',
     updatedAt: '2026-03-22',
     contentHtml: `
@@ -840,7 +840,7 @@ export const documents: Document[] = [
     id: 'fb-calendar-april-2026',
     title: 'Facebook投稿カレンダー 2026年4月（20投稿）',
     summary: '月間テーマ「自律神経×新生活疲労」で週5投稿×4週=20投稿。AIアプリ9本・整体院経営4本・治療機器4本・訪問鍼灸2本・まとめ1本。',
-    category: 'marketing',
+    category: 'sns',
     status: 'final',
     updatedAt: '2026-03-22',
     contentHtml: `
@@ -1484,7 +1484,7 @@ export const documents: Document[] = [
     id: 'fb-post-comparison',
     title: 'Facebook投稿：既存ツールとの違い（比較投稿）',
     summary: '巷のMEOツール・代行業者との違いを体験談ベースで伝えるBtoB投稿。4種一括生成・LLMO・医療広告NGチェックの差別化。',
-    category: 'marketing',
+    category: 'sns',
     status: 'draft',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -1600,7 +1600,7 @@ export const documents: Document[] = [
     id: 'fb-posting-v3',
     title: 'Facebook投稿テンプレート・スケジュール【v3】',
     summary: '週3回投稿（火・木・土）。パーソナルストーリー軸12本＋4事業・Zoom反応19本＋MEO勝ち上げくん差別化7本。合計38本。',
-    category: 'marketing',
+    category: 'sns',
     status: 'draft',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3297,7 +3297,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-faq-30',
     title: '晴陽鍼灸院 よくある質問（FAQ）30問',
     summary: '訪問鍼灸の基本情報・保険料金・施術内容・ケアマネ向け情報をQ&A形式で30問にまとめた総合FAQ',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3396,7 +3396,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-01',
     title: '訪問鍼灸とは？自宅で受けられる鍼灸治療のメリットと利用方法',
     summary: '訪問鍼灸の仕組み・5つのメリット・保険適用6疾患・利用開始の流れを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3476,7 +3476,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-02',
     title: '坐骨神経痛に訪問鍼灸｜自宅でできる痛みケア',
     summary: '坐骨神経痛の原因・鍼灸の効果メカニズム・改善の目安を症状別に解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3560,7 +3560,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-03',
     title: '五十肩に訪問鍼灸｜着替えも洗髪もラクになる改善法',
     summary: '五十肩の3ステージ別施術アプローチ・改善目安・放置リスクを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3663,7 +3663,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-04',
     title: '高齢者の慢性腰痛に訪問鍼灸',
     summary: '慢性腰痛の原因・鍼灸の3つのメカニズム・生活アドバイスを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3755,7 +3755,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-05',
     title: 'リウマチの痛みを鍼灸で和らげる',
     summary: 'リウマチへの鍼灸効果・病院治療との併用・訪問が向いている理由を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3840,7 +3840,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-06',
     title: '首・肩・腕の痛みやしびれ（頸腕症候群）に訪問鍼灸',
     summary: '頸腕症候群の症状・高齢者に多い理由・鍼灸アプローチ・日常注意点を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3916,7 +3916,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-07',
     title: 'むちうち後遺症が何年も続く方へ｜訪問鍼灸でできること',
     summary: '頸椎捻挫後遺症の症状・鍼灸が効く理由・自律神経ケア・天気痛対策を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -3983,7 +3983,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-08',
     title: '神経痛がつらくて動けない方へ｜訪問鍼灸で痛みを和らげる',
     summary: '神経痛の種類（坐骨・肋間・三叉・帯状疱疹後）別に鍼灸の効果を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4068,7 +4068,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-09',
     title: '訪問鍼灸は介護保険を使わない？医療保険の仕組みを解説',
     summary: '介護保険枠を使わない仕組み・ケアマネ向け活用法・自己負担額の目安を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4157,7 +4157,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-10',
     title: '寝たきりを防ぐために｜訪問鍼灸でできる介護予防',
     summary: 'フレイルの悪循環・痛みが入口・鍼灸による5つの予防アプローチを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4253,7 +4253,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-11',
     title: '訪問鍼灸に必要な医師の同意書の取り方を解説',
     summary: '同意書の取得手順・かかりつけ医への伝え方・有効期間・サポート体制を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4339,7 +4339,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-12',
     title: '認知症の方にも安心｜訪問鍼灸が認知症ケアに役立つ理由',
     summary: '認知症の隠れた痛み・言葉に頼らない施術・リラックス効果を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4409,7 +4409,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-13',
     title: 'ケアマネージャーの方へ｜訪問鍼灸の活用ガイド',
     summary: 'ケアマネ向け訪問鍼灸ガイド：メリット・提案ケース・連携体制・導入の流れ',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4507,7 +4507,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-14',
     title: '膝が痛くて歩けない高齢者に｜訪問鍼灸で膝痛を和らげる',
     summary: '変形性膝関節症への鍼灸効果・施術内容・運動指導・手術前後のケアを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4589,7 +4589,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-15',
     title: '脳梗塞の後遺症に訪問鍼灸｜麻痺・しびれ・痛みのケア',
     summary: '脳梗塞後遺症（痙縮・片麻痺）への鍼灸効果・リハビリ併用効果を解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4660,7 +4660,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-16',
     title: '高齢者の不眠に訪問鍼灸｜薬に頼らず眠れる体をつくる',
     summary: '高齢者の不眠原因・鍼灸の睡眠改善効果・睡眠薬との関係・おすすめツボを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4741,7 +4741,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-17',
     title: '高齢者の足のむくみ・冷えに｜お灸と鍼で血行を改善',
     summary: 'むくみ・冷えの原因・お灸の温熱効果・セルフケア・効果的なツボを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4805,7 +4805,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-18',
     title: '介護疲れのご家族へ｜訪問鍼灸であなたの時間を取り戻す',
     summary: '痛みが介護負担を増やす仕組み・訪問鍼灸がご家族に与える5つのメリットを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4869,7 +4869,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-19',
     title: '介護施設への訪問鍼灸｜特養・有料老人ホーム・グループホーム対応',
     summary: '施設訪問の流れ・対応施設一覧・施設スタッフ向け情報・ご家族へのご案内',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -4966,7 +4966,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-blog-20',
     title: '春に増える体の不調｜気圧・気温変化と鍼灸ケア',
     summary: '春の不調の原因（気圧・寒暖差・花粉）・鍼灸の季節ケア・おすすめツボを解説',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -5045,7 +5045,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-faq-symptoms-50',
     title: '晴陽鍼灸院 症状別FAQ 50問',
     summary: '坐骨神経痛・腰痛・五十肩・神経痛・リウマチ・膝痛・その他の症状別Q&A 50問',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -5174,7 +5174,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-faq-caremanager-20',
     title: '晴陽鍼灸院 ケアマネージャー向けFAQ 20問',
     summary: '制度・保険・連携報告・利用者への提案方法をケアマネ向けにQ&A 20問',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -5237,7 +5237,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-faq-family-20',
     title: '晴陽鍼灸院 ご家族向けFAQ 20問',
     summary: '利用方法・費用・安全性・効果についてご家族向けにQ&A 20問',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `
@@ -5307,7 +5307,7 @@ MEO対策で本当に必要なのは、
     id: 'seiyo-faq-anxiety-15',
     title: '晴陽鍼灸院 初めての方の不安解消FAQ 15問',
     summary: '鍼灸が怖い方・訪問への不安・体の不安に答えるQ&A 15問',
-    category: 'marketing',
+    category: 'meo',
     status: 'final',
     updatedAt: '2026-03-21',
     contentHtml: `

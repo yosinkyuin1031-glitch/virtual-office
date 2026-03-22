@@ -6,11 +6,11 @@ import { documents, type Document } from '../lib/documents'
 
 function CategoryBadge({ category }: { category: Document['category'] }) {
   const config = {
-    'btob': { label: 'BtoB戦略', color: '#22D3EE', bg: '#22D3EE15' },
-    'marketing': { label: 'マーケティング', color: '#A78BFA', bg: '#A78BFA15' },
-    'operations': { label: '業務', color: '#22C55E', bg: '#22C55E15' },
     'product': { label: 'プロダクト', color: '#F59E0B', bg: '#F59E0B15' },
-    'other': { label: 'その他', color: '#6B7280', bg: '#6B728015' },
+    'btob': { label: 'BtoB', color: '#22D3EE', bg: '#22D3EE15' },
+    'sns': { label: 'SNS', color: '#A78BFA', bg: '#A78BFA15' },
+    'meo': { label: 'MEO/GBP', color: '#FB923C', bg: '#FB923C15' },
+    'operations': { label: '業務', color: '#22C55E', bg: '#22C55E15' },
   }
   const c = config[category]
   return (
@@ -109,9 +109,10 @@ export default function DocumentsPage() {
 
   const categories: { key: Document['category'] | 'all'; label: string }[] = [
     { key: 'all', label: 'すべて' },
-    { key: 'btob', label: 'BtoB戦略' },
-    { key: 'marketing', label: 'マーケ' },
     { key: 'product', label: 'プロダクト' },
+    { key: 'btob', label: 'BtoB' },
+    { key: 'sns', label: 'SNS' },
+    { key: 'meo', label: 'MEO/GBP' },
     { key: 'operations', label: '業務' },
   ]
 
