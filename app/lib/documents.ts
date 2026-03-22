@@ -12,6 +12,69 @@ export interface Document {
 // contentHtmlはMarkdownから手動変換。新しいドキュメントが作成されたらここに追加する。
 export const documents: Document[] = [
   {
+    id: 'clinicdx-lp-update-2026-03',
+    title: 'ClinicDX BtoB LP 全面更新（2026年3月）',
+    summary: '6アプリ対応・松竹梅料金（5,500/9,800/12,800円）・Stripe自動決済・開発者プロフィール追加。自動決済+手動相談の両対応。',
+    category: 'btob' as const,
+    status: 'final' as const,
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>更新内容サマリー</h2>
+
+<h3>1. アプリラインナップ拡大（3→6アプリ）</h3>
+<table>
+<tr><th>アプリ</th><th>新規/既存</th><th>デモURL</th></tr>
+<tr><td><strong>検査アプリ</strong></td><td>★新規追加（最優先）</td><td>kensa-sheet-app.vercel.app</td></tr>
+<tr><td>顧客管理</td><td>既存</td><td>customer-mgmt.vercel.app</td></tr>
+<tr><td>予約管理</td><td>既存</td><td>reservation-app-steel.vercel.app</td></tr>
+<tr><td>WEB問診</td><td>既存</td><td>web-monshin.vercel.app</td></tr>
+<tr><td><strong>MEO対策ツール</strong></td><td>★新規追加</td><td>app-three-pi-32.vercel.app</td></tr>
+<tr><td><strong>睡眠チェック</strong></td><td>★新規追加</td><td>Coming Soon</td></tr>
+</table>
+
+<h3>2. 料金プラン（松竹梅）</h3>
+<table>
+<tr><th>プラン</th><th>月額</th><th>内容</th></tr>
+<tr><td>梅（ライト）</td><td>5,500円</td><td>検査アプリのみ</td></tr>
+<tr><td><strong>竹（スタンダード）★おすすめ</strong></td><td>9,800円</td><td>検査+顧客管理+予約</td></tr>
+<tr><td>松（フルセット）</td><td>12,800円</td><td>全6アプリ使い放題</td></tr>
+</table>
+
+<h3>3. Stripe自動決済フロー</h3>
+<ol>
+<li>LPで「今すぐ始める」をクリック</li>
+<li>院名・メールアドレスを入力</li>
+<li>Stripe Checkoutで決済（月額サブスク）</li>
+<li>Webhook経由でSupabaseにアカウント自動作成</li>
+<li>成功ページ表示（ログイン情報はメールで通知予定）</li>
+</ol>
+
+<h3>4. 2つのCTA（両対応）</h3>
+<ul>
+<li><strong>「今すぐ始める」</strong>→ Stripe自動決済（寝てても売れる）</li>
+<li><strong>「まずは相談する」</strong>→ お問い合わせフォーム（手動対応）</li>
+</ul>
+
+<h3>5. 開発者プロフィール追加</h3>
+<p>「治療家×経営者×エンジニア」のトリプルポジション。大口陽平のストーリー（AI活用・2週間で30個開発・検査アプリの患者反応）を掲載。</p>
+
+<h3>6. 残対応事項</h3>
+<ul>
+<li>Supabase service_role keyの設定</li>
+<li>clinic_accountsテーブル作成</li>
+<li>Stripe Webhook URLの登録</li>
+<li>メール自動送信機能（Resend等）</li>
+<li>Vercelに環境変数を設定</li>
+</ul>
+
+<h3>関連リンク</h3>
+<ul>
+<li>LP URL: <a href="https://clinic-saas-lp.vercel.app">https://clinic-saas-lp.vercel.app</a></li>
+<li>GitHub: yosinkyuin1031-glitch/clinic-saas-lp</li>
+</ul>
+`
+  },
+  {
     id: 'gmb-posts-2026-spring',
     title: 'Googleビジネスプロフィール投稿 2026年3-4月',
     summary: '大口神経整体院のGMB投稿8本（季節挨拶・症状訴求・施術の流れ・院長紹介）とスケジュール。',
