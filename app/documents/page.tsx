@@ -95,8 +95,17 @@ function DocumentViewer({ doc, onBack }: { doc: Document; onBack: () => void }) 
 export default function DocumentsPage() {
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [filter, setFilter] = useState<Document['category'] | 'all'>('all')
+  const [search, setSearch] = useState('')
 
-  const filtered = filter === 'all' ? documents : documents.filter(d => d.category === filter)
+  const filtered = documents.filter(d => {
+    const matchCategory = filter === 'all' || d.category === filter
+    if (!search.trim()) return matchCategory
+    const q = search.trim().toLowerCase()
+    const matchSearch = d.title.toLowerCase().includes(q)
+      || d.summary.toLowerCase().includes(q)
+      || d.contentHtml.toLowerCase().includes(q)
+    return matchCategory && matchSearch
+  })
 
   const categories: { key: Document['category'] | 'all'; label: string }[] = [
     { key: 'all', label: 'すべて' },
@@ -133,6 +142,26 @@ export default function DocumentsPage() {
           <DocumentViewer doc={selectedDoc} onBack={() => setSelectedDoc(null)} />
         ) : (
           <div className="space-y-4">
+            {/* 検索窓 */}
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="キーワードで検索（例: 料金、MEO、Facebook）"
+                className="w-full pl-9 pr-8 py-2.5 text-sm bg-gray-900/60 border border-gray-700 rounded-xl text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600/30 transition"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
             {/* フィルタ */}
             <div className="flex gap-2 overflow-x-auto pb-2">
               {categories.map(cat => (
@@ -151,7 +180,10 @@ export default function DocumentsPage() {
             </div>
 
             {/* ドキュメント件数 */}
-            <p className="text-[10px] text-gray-600">{filtered.length}件のドキュメント</p>
+            <p className="text-[10px] text-gray-600">
+              {filtered.length}件のドキュメント
+              {search && <span className="text-cyan-500"> （「{search}」で検索中）</span>}
+            </p>
 
             {/* ドキュメント一覧 */}
             <div className="space-y-3">
@@ -162,7 +194,7 @@ export default function DocumentsPage() {
 
             {filtered.length === 0 && (
               <div className="text-center py-12 text-gray-600 text-sm">
-                このカテゴリのドキュメントはまだありません
+                {search ? `「${search}」に一致するドキュメントが見つかりません` : 'このカテゴリのドキュメントはまだありません'}
               </div>
             )}
           </div>

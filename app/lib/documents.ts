@@ -11,6 +11,269 @@ export interface Document {
 // ドキュメント一覧（新しいものが上に来るように並べる）
 // contentHtmlはMarkdownから手動変換。新しいドキュメントが作成されたらここに追加する。
 export const documents: Document[] = [
+  // ==========================================
+  // プロダクト（BtoB販売対象 + 自社運用ツール）
+  // ==========================================
+  {
+    id: 'product-kensa-sheet',
+    title: '検査シートアプリ',
+    summary: '神経学的検査（反射・感覚・筋力）をタブレットで実施→検査結果をPDF/画像で患者に共有。BtoB販売の最優先アプリ。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療家が施術前後の検査結果をタブレットで記録・可視化するアプリ。患者への説明ツールとしても活用でき、「すごい見やすい」と好評。家族に見せて紹介につながった実績あり。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>神経学的検査3ステップ:</strong> 反射テスト・感覚テスト・筋力テスト</li>
+<li><strong>検査結果の可視化:</strong> 身体図上にマッピング、左右比較</li>
+<li><strong>PDF/画像出力:</strong> 患者への説明資料として共有可能</li>
+<li><strong>履歴管理:</strong> 施術前後の変化を時系列で記録</li>
+<li><strong>Supabase Auth + RLS:</strong> マルチテナント対応済み（SaaS化準備完了）</li>
+</ul>
+
+<h2>技術スタック</h2>
+<table>
+<tr><th>項目</th><th>技術</th></tr>
+<tr><td>フロントエンド</td><td>Next.js + Tailwind CSS</td></tr>
+<tr><td>認証・DB</td><td>Supabase（Auth + PostgreSQL + RLS）</td></tr>
+<tr><td>デプロイ</td><td>Vercel</td></tr>
+<tr><td>決済（予定）</td><td>Stripe（月額サブスク）</td></tr>
+</table>
+
+<h2>BtoB販売情報</h2>
+<table>
+<tr><th>プラン</th><th>月額</th></tr>
+<tr><td>梅（検査アプリのみ）</td><td>5,500円</td></tr>
+<tr><td>竹（検査+顧客管理+予約）</td><td>9,800円</td></tr>
+<tr><td>松（全6アプリ）</td><td>12,800円</td></tr>
+</table>
+
+<h2>URL</h2>
+<ul>
+<li>本番: <a href="https://kensa-sheet-app.vercel.app">https://kensa-sheet-app.vercel.app</a></li>
+<li>販売LP: <a href="https://clinic-saas-lp.vercel.app">https://clinic-saas-lp.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-customer-mgmt',
+    title: '顧客管理シート',
+    summary: '患者のカルテ・来院履歴・離反アラート・回数券・SMS送信・AIアドバイスを一元管理。マルチテナント対応済み。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療院の患者管理を一元化するアプリ。紙カルテやExcel管理から脱却し、来院傾向の分析・離反防止・リピート促進までカバー。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>患者カルテ:</strong> 基本情報・来院履歴・施術メモを一覧管理</li>
+<li><strong>離反アラート:</strong> 30日/60日/90日の3段階で自動検知、電話・メモ機能付き</li>
+<li><strong>AIアドバイス:</strong> リピート率・来院経路・平均単価・売上ペースを自動分析</li>
+<li><strong>回数券管理:</strong> 登録・詳細・1回使用ボタン・プログレスバー表示</li>
+<li><strong>SMS選択送信:</strong> 3ステップウィザード、テンプレート対応</li>
+<li><strong>CSV取込:</strong> 既存データの一括インポート対応</li>
+</ul>
+
+<h2>URL</h2>
+<ul>
+<li>本番: <a href="https://customer-mgmt.vercel.app">https://customer-mgmt.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-reservation',
+    title: '予約管理アプリ',
+    summary: 'LINE予約ページ連携の予約管理システム。カレンダー表示・空き枠管理・患者向け予約フォーム。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療院の予約をオンラインで受付・管理するアプリ。LINE公式アカウントから直接予約できるページ（/line）を搭載。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>カレンダー表示:</strong> 日/週/月ビューで予約状況を一覧</li>
+<li><strong>空き枠管理:</strong> 施術時間・休憩時間を設定</li>
+<li><strong>LINE予約ページ:</strong> /line パスで患者が直接予約可能</li>
+<li><strong>自動リマインド:</strong> 予約前日の自動通知</li>
+</ul>
+
+<h2>URL</h2>
+<ul>
+<li>本番: <a href="https://reservation-app-steel.vercel.app">https://reservation-app-steel.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-web-monshin',
+    title: 'WEB問診アプリ',
+    summary: '来院前にスマホで問診票を記入。LINE導線対応・名寄せ機能で既存患者と自動マッチング。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>概要</h2>
+<p>患者が来院前にスマホで問診票を記入できるWEBアプリ。紙の問診票が不要になり、待ち時間短縮と施術時間の確保に直結。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>WEB問診フォーム:</strong> スマホ最適化、段階式の入力UI</li>
+<li><strong>LINE導線:</strong> /line パスからLINE経由で問診開始</li>
+<li><strong>名寄せ機能:</strong> 氏名・電話番号で既存患者と自動マッチング</li>
+<li><strong>問診結果一覧:</strong> 管理画面で回答内容を閲覧・印刷</li>
+</ul>
+
+<h2>URL</h2>
+<ul>
+<li>本番: <a href="https://web-monshin.vercel.app">https://web-monshin.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-meo-winner',
+    title: 'MEO勝ち上げくん',
+    summary: 'MEO対策の総合支援ツール。GBP投稿文・FAQ・ブログ・口コミ返信をAI自動生成。モニター10院で運用中。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>概要</h2>
+<p>Googleマップ上位表示（MEO対策）を支援するAIツール。コンテンツ生成からnote・WordPress自動投稿まで対応。現在モニター10院で運用テスト中。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>GBP投稿文の自動生成:</strong> 院の強み・キーワードから最適な投稿文をAI生成</li>
+<li><strong>FAQ自動生成:</strong> 症状別のよくある質問と回答を一括作成</li>
+<li><strong>ブログ記事生成:</strong> SEO対策を考慮した長文記事を自動作成</li>
+<li><strong>口コミ返信文生成:</strong> 口コミ内容に合わせた返信文をAI作成</li>
+<li><strong>note・WordPress自動投稿:</strong> API経由で記事を直接投稿</li>
+<li><strong>MEO順位チェック:</strong> キーワード別の検索順位を記録</li>
+<li><strong>Google Search Console連携:</strong> 検索パフォーマンスを取得</li>
+<li><strong>ダッシュボード:</strong> 今月の投稿数・連続投稿週数を表示</li>
+</ul>
+
+<h2>運用方針</h2>
+<p><strong>「AIが文章を作るところまでは全自動。Googleへの操作はユーザー自身がやる。」</strong></p>
+<p>GoogleのポリシーにComplete準拠。GBPへの自動投稿・口コミスクレイピングは行わない。</p>
+
+<h2>モニター状況（2026年3月）</h2>
+<table>
+<tr><th>項目</th><th>状況</th></tr>
+<tr><td>モニター数</td><td>10院（＋1院追加予定）</td></tr>
+<tr><td>アカウント作成</td><td>10/11 完了</td></tr>
+<tr><td>クラウド化</td><td>Supabase Auth + RLS 完了</td></tr>
+<tr><td>デプロイ先</td><td>Vercel</td></tr>
+</table>
+
+<h2>URL</h2>
+<ul>
+<li>本番: <a href="https://meo-kachiagekun.vercel.app">https://meo-kachiagekun.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-sleep-checker',
+    title: '睡眠チェック分析アプリ',
+    summary: '睡眠の質を問診形式でチェック→スコア算出→改善提案。物販（サプリ・マットレス）への導線付き。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>概要</h2>
+<p>患者の睡眠の質を問診形式で評価し、スコアと改善アドバイスを提供するアプリ。高額メニュー（睡眠改善コース）や物販への導線として活用。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>睡眠チェック問診:</strong> 入眠時間・中途覚醒・日中の眠気など多角的に評価</li>
+<li><strong>スコア算出:</strong> 睡眠の質を数値化して可視化</li>
+<li><strong>改善提案:</strong> スコアに応じた具体的アドバイスを表示</li>
+<li><strong>物販連携:</strong> サプリメント・睡眠グッズの提案</li>
+</ul>
+
+<h2>関連商品</h2>
+<table>
+<tr><th>商品</th><th>仕入値</th><th>販売値</th></tr>
+<tr><td>メラルーナ（睡眠サプリ）</td><td>—</td><td>要確認</td></tr>
+<tr><td>睡眠ウェア</td><td>—</td><td>要確認</td></tr>
+<tr><td>キャッチアイ</td><td>—</td><td>要確認</td></tr>
+</table>
+`
+  },
+  {
+    id: 'product-overview',
+    title: 'プロダクト全体マップ',
+    summary: '全25アプリ+2自動化の一覧。BtoB販売対象6アプリと自社運用ツールの全体像。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-22',
+    contentHtml: `
+<h2>BtoB販売対象（6アプリ）</h2>
+<table>
+<tr><th>アプリ</th><th>用途</th><th>販売優先度</th></tr>
+<tr><td><strong>検査シートアプリ</strong></td><td>神経学的検査の記録・可視化</td><td>★★★ 最優先</td></tr>
+<tr><td><strong>顧客管理シート</strong></td><td>患者カルテ・離反防止・AI分析</td><td>★★★</td></tr>
+<tr><td><strong>予約管理</strong></td><td>オンライン予約・LINE連携</td><td>★★☆</td></tr>
+<tr><td><strong>WEB問診</strong></td><td>来院前問診・名寄せ</td><td>★★☆</td></tr>
+<tr><td><strong>MEO勝ち上げくん</strong></td><td>MEO対策AI支援</td><td>★★☆</td></tr>
+<tr><td><strong>睡眠チェック</strong></td><td>睡眠の質分析・物販導線</td><td>★☆☆</td></tr>
+</table>
+
+<h2>自社運用ツール（19アプリ）</h2>
+<table>
+<tr><th>アプリ</th><th>用途</th></tr>
+<tr><td>広告管理ツール</td><td>Google Ads連携・ROAS管理</td></tr>
+<tr><td>HPコンテンツ管理</td><td>ブログ生成・リッチエディタ</td></tr>
+<tr><td>LINE自動化</td><td>API連携・スケジュール実行</td></tr>
+<tr><td>ECサイト</td><td>物販+サブスク決済</td></tr>
+<tr><td>HeatScope</td><td>ヒートマップ分析</td></tr>
+<tr><td>営業管理</td><td>商談・見込み客管理</td></tr>
+<tr><td>MEOチェッカー（自社用）</td><td>自院の順位チェック</td></tr>
+<tr><td>MEOチェッカー（配布用）</td><td>見込み客への無料提供用</td></tr>
+<tr><td>レセプト管理</td><td>保険請求書管理</td></tr>
+<tr><td>睡眠管理</td><td>患者の睡眠データ管理</td></tr>
+<tr><td>訪問鍼灸スタッフ管理</td><td>日報・施術報告書・スタッフ管理</td></tr>
+<tr><td>クリニックマーク</td><td>院のブランディング</td></tr>
+<tr><td>整体院AIツール</td><td>ブログ生成・診断・クイズ</td></tr>
+<tr><td>高額メニューLP</td><td>睡眠/頭髪/ダイエットのLP</td></tr>
+<tr><td>メニュー管理</td><td>メニュー・価格表・POP</td></tr>
+<tr><td>治療家AIマスター</td><td>症状分析・施術提案AI</td></tr>
+<tr><td>訪問鍼灸管理</td><td>マルチクリニック対応の管理システム</td></tr>
+<tr><td>請求書アプリ</td><td>請求書作成・LINE/メール送信</td></tr>
+<tr><td>バーチャルオフィス</td><td>AI社員による組織管理ダッシュボード</td></tr>
+</table>
+
+<h2>自動化（2件）</h2>
+<table>
+<tr><th>名前</th><th>内容</th></tr>
+<tr><td>月光ヒーリング</td><td>YouTube動画自動生成・24時間ライブ配信</td></tr>
+<tr><td>Stellar Sleep Sounds</td><td>YouTube動画自動生成（英語チャンネル）</td></tr>
+</table>
+
+<h2>料金プラン（BtoB）</h2>
+<table>
+<tr><th>プラン</th><th>月額</th><th>内容</th></tr>
+<tr><td>梅（ライト）</td><td>5,500円</td><td>検査アプリのみ</td></tr>
+<tr><td><strong>竹（スタンダード）★推奨</strong></td><td>9,800円</td><td>検査+顧客管理+予約</td></tr>
+<tr><td>松（フルセット）</td><td>12,800円</td><td>全6アプリ使い放題</td></tr>
+</table>
+
+<h2>販売チャネル</h2>
+<ul>
+<li><strong>販売LP:</strong> <a href="https://clinic-saas-lp.vercel.app">https://clinic-saas-lp.vercel.app</a></li>
+<li><strong>Facebook BtoB発信:</strong> 治療家コミュニティ向け投稿</li>
+<li><strong>モニター配布:</strong> MEO勝ち上げくんを11院に無料提供中</li>
+</ul>
+`
+  },
+  // ==========================================
+  // BtoB戦略
+  // ==========================================
   {
     id: 'clinicdx-lp-update-2026-03',
     title: 'ClinicDX BtoB LP 全面更新（2026年3月）',
