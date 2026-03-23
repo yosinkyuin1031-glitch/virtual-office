@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { departments, cloudUsage, allEmployeesList } from './lib/data'
-import type { Employee, Department } from './lib/data'
+import { departments, cloudUsage, allEmployeesList, products, productCategories } from './lib/data'
+import type { Employee, Department, Product } from './lib/data'
 import PixelCharacter from './components/PixelCharacter'
 import ChatModal from './components/ChatModal'
 
@@ -231,7 +231,7 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
     <div className="space-y-4 pb-8">
       <div className="text-center mb-4">
         <h2 className="text-lg font-bold text-cyan-300">大口ヘルスケアグループ 組織図</h2>
-        <p className="text-[10px] text-gray-600 mt-1">AI社員{totalEmps}名 + 会長 = {totalEmps + 1}名体制 | 6部署</p>
+        <p className="text-[10px] text-gray-600 mt-1">AI社員{totalEmps}名 + 会長 = {totalEmps + 1}名体制 | {departments.length}部署</p>
       </div>
 
       {/* 会長 */}
@@ -320,10 +320,139 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
   )
 }
 
+// 制作物ボードビュー（写真のようなプロジェクト一覧）
+function ProductBoard({ setChatTarget }: { setChatTarget: (emp: Employee) => void }) {
+  const [filterCat, setFilterCat] = useState<string>('all')
+  const cats = Object.entries(productCategories)
+  const filtered = filterCat === 'all' ? products : products.filter(p => p.category === filterCat)
+  const activeCount = products.filter(p => p.status === 'active').length
+  const devCount = products.filter(p => p.status === 'development').length
+
+  return (
+    <div className="space-y-4 pb-8">
+      <div className="text-center mb-4">
+        <h2 className="text-lg font-bold text-cyan-300">制作物ボード</h2>
+        <p className="text-[10px] text-gray-600 mt-1">
+          全{products.length}プロダクト | 稼働中 {activeCount} | 開発中 {devCount} | AI社員{allEmployeesList.length}名が担当
+        </p>
+      </div>
+
+      {/* カテゴリフィルター */}
+      <div className="flex flex-wrap gap-1.5 justify-center">
+        <button
+          onClick={() => setFilterCat('all')}
+          className={`text-[10px] px-3 py-1.5 rounded-full border transition ${
+            filterCat === 'all' ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10' : 'border-gray-700 text-gray-500'
+          }`}
+        >
+          すべて ({products.length})
+        </button>
+        {cats.map(([key, cat]) => {
+          const count = products.filter(p => p.category === key).length
+          if (count === 0) return null
+          return (
+            <button
+              key={key}
+              onClick={() => setFilterCat(key)}
+              className={`text-[10px] px-3 py-1.5 rounded-full border transition ${
+                filterCat === key ? 'text-white bg-opacity-20' : 'border-gray-700 text-gray-500'
+              }`}
+              style={filterCat === key ? { borderColor: cat.color, color: cat.color, backgroundColor: cat.color + '15' } : {}}
+            >
+              {cat.icon} {cat.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
+      {/* プロダクトグリッド */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {filtered.map(product => (
+          <ProductCard key={product.id} product={product} onClickMember={setChatTarget} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// プロダクトカード（アバター付き）
+function ProductCard({ product, onClickMember }: { product: Product; onClickMember: (emp: Employee) => void }) {
+  const cat = productCategories[product.category]
+  const assignedEmployees = allEmployeesList.filter(e => product.assignedTo.includes(e.id))
+
+  return (
+    <div
+      className="rounded-xl border overflow-hidden transition-all hover:scale-[1.02] hover:shadow-lg"
+      style={{ borderColor: cat.color + '44', backgroundColor: '#0a0f1a' }}
+    >
+      {/* ヘッダー */}
+      <div className="p-3 pb-2">
+        <div className="flex items-start justify-between mb-1">
+          <span className="text-xl">{product.icon}</span>
+          <span
+            className="text-[8px] px-1.5 py-0.5 rounded-full"
+            style={{
+              backgroundColor: product.status === 'active' ? '#22C55E22' : product.status === 'development' ? '#F59E0B22' : '#64748B22',
+              color: product.status === 'active' ? '#22C55E' : product.status === 'development' ? '#F59E0B' : '#64748B',
+              border: `1px solid ${product.status === 'active' ? '#22C55E44' : product.status === 'development' ? '#F59E0B44' : '#64748B44'}`,
+            }}
+          >
+            {product.status === 'active' ? '稼働中' : product.status === 'development' ? '開発中' : '計画中'}
+          </span>
+        </div>
+        <h4 className="text-xs font-bold text-white leading-tight">{product.name}</h4>
+        <p className="text-[9px] text-gray-500 mt-0.5 leading-snug line-clamp-2">{product.description}</p>
+      </div>
+
+      {/* 担当メンバーアバター */}
+      <div className="px-3 pb-2">
+        <div className="flex items-center gap-1">
+          {assignedEmployees.map(emp => (
+            <div
+              key={emp.id}
+              className="cursor-pointer hover:scale-125 transition-transform relative group"
+              onClick={() => onClickMember(emp)}
+            >
+              <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={28} />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-20">
+                <div className="bg-gray-900 border border-gray-700 rounded px-1.5 py-1 shadow-xl whitespace-nowrap">
+                  <p className="text-[9px] font-bold" style={{ color: emp.color }}>{emp.name}</p>
+                  <p className="text-[8px] text-gray-400">{emp.role.split('（')[0]}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* カテゴリ＆URL */}
+      <div className="px-3 pb-2 flex items-center justify-between">
+        <span
+          className="text-[8px] px-1.5 py-0.5 rounded-full"
+          style={{ backgroundColor: cat.color + '15', color: cat.color, border: `1px solid ${cat.color}33` }}
+        >
+          {cat.label}
+        </span>
+        {product.url && (
+          <a
+            href={product.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[9px] text-cyan-600 hover:text-cyan-400 transition"
+            onClick={e => e.stopPropagation()}
+          >
+            🔗 開く
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // メインページ
 export default function VirtualOffice() {
   const [now, setNow] = useState('')
-  const [view, setView] = useState<'dashboard' | 'org'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'org' | 'products'>('products')
   const [chatTarget, setChatTarget] = useState<Employee | null>(null)
 
   useEffect(() => {
@@ -356,10 +485,18 @@ export default function VirtualOffice() {
               <span className="text-gray-600 text-sm">バーチャルオフィス</span>
             </h1>
             <p className="text-[10px] text-gray-600 mt-0.5">
-              {now} | AI社員{totalEmployees}名 · 6部署
+              {now} | AI社員{totalEmployees}名 · {departments.length}部署
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setView('products')}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition ${
+                view === 'products' ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10' : 'border-gray-700 text-gray-500'
+              }`}
+            >
+              🎯 制作物ボード
+            </button>
             <button
               onClick={() => setView('dashboard')}
               className={`px-3 py-1.5 text-xs rounded-lg border transition ${
@@ -380,7 +517,7 @@ export default function VirtualOffice() {
               href="/documents"
               className="px-3 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-500 hover:text-cyan-400 hover:border-cyan-500 hover:bg-cyan-500/10 transition"
             >
-              📄 制作物
+              📄 資料
             </Link>
           </div>
         </div>
@@ -393,7 +530,7 @@ export default function VirtualOffice() {
             { label: '社員数', value: totalEmployees, color: '#22D3EE' },
             { label: '激忙中', value: busyCount, color: '#EF4444' },
             { label: '作業中', value: workingCount, color: '#22C55E' },
-            { label: 'アプリ', value: totalApps, color: '#A78BFA' },
+            { label: 'プロダクト', value: products.length, color: '#A78BFA' },
           ].map(s => (
             <div key={s.label} className="bg-gray-900/50 rounded-lg border border-gray-800 p-3 text-center">
               <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
@@ -402,7 +539,9 @@ export default function VirtualOffice() {
           ))}
         </div>
 
-        {view === 'dashboard' ? (
+        {view === 'products' ? (
+          <ProductBoard setChatTarget={setChatTarget} />
+        ) : view === 'dashboard' ? (
           <div className="space-y-6">
             {/* 会長 */}
             <section className="bg-gradient-to-r from-yellow-900/20 to-transparent rounded-xl border-2 border-yellow-700/50 p-4">
@@ -489,7 +628,7 @@ export default function VirtualOffice() {
 
       <footer className="border-t border-gray-800 mt-8 py-4 text-center">
         <p className="text-[10px] text-gray-700">
-          大口ヘルスケアグループ バーチャルオフィス v2.0 — AI社員{totalEmployees}名 · 6部署体制
+          大口ヘルスケアグループ バーチャルオフィス v2.0 — AI社員{totalEmployees}名 · {departments.length}部署体制
         </p>
       </footer>
     </div>
