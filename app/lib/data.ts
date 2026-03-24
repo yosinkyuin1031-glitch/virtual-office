@@ -826,6 +826,8 @@ export const products: Product[] = [
   { id: 'sleep-app', name: '睡眠管理アプリ', category: 'clinic-app', status: 'active', assignedTo: [6, 12], description: '睡眠データ記録・分析', icon: '😴' },
   { id: 'line-auto', name: 'LINE自動化', url: 'https://line-automation.vercel.app', category: 'clinic-app', status: 'active', assignedTo: [7, 14], description: 'API連携・スケジュール実行・ステップ配信', icon: '💬' },
 
+  { id: 'rental-salon', name: 'レンタルサロン予約決済', url: 'https://rental-salon.vercel.app', category: 'clinic-app', status: 'active', assignedTo: [6, 14], description: 'Stripe決済・空き時間管理・予約カレンダー', icon: '💈' },
+
   // ━━━ 訪問鍼灸アプリ ━━━
   { id: 'houmon-staff', name: '訪問鍼灸スタッフ管理', url: 'https://houmon-staff-manager.vercel.app', category: 'houmon-app', status: 'active', assignedTo: [9, 14], description: 'スタッフシフト・勤怠管理', icon: '👨‍⚕️' },
   { id: 'receipt-manager', name: 'レセプト管理', url: 'https://receipt-manager-taupe.vercel.app', category: 'houmon-app', status: 'active', assignedTo: [9, 14], description: '保険請求・施術報告書・別添フォーマット', icon: '🧾' },
@@ -841,6 +843,7 @@ export const products: Product[] = [
   { id: 'clinicmark', name: 'クリニックマーク', category: 'btob-saas', status: 'active', assignedTo: [12, 14], description: 'マーケティング管理生成サイト', icon: '✨' },
   { id: 'kensa-saas', name: '検査シートSaaS', category: 'btob-saas', status: 'development', assignedTo: [13, 11], description: 'Stripe月額課金・マルチテナント化進行中', icon: '🔬' },
   { id: 'virtual-office', name: 'バーチャルオフィス', category: 'btob-saas', status: 'active', assignedTo: [14, 12], description: 'AI社員24名のバーチャル会社', icon: '🏢' },
+  { id: 'capillary-scope', name: '毛細血管スコープ導入', url: 'https://capillary-scope-package.vercel.app', category: 'btob-saas', status: 'active', assignedTo: [20, 14], description: 'POP・解説動画・事例・LINE配信テンプレートハブ', icon: '🔬' },
 
   // ━━━ サイト ━━━
   { id: 'ec-shop', name: 'ECサイト（物販+サブスク）', url: 'https://ec-shop-cyan.vercel.app', category: 'site', status: 'active', assignedTo: [6, 14], description: 'サプリ・物販のオンライン販売', icon: '🛒' },
@@ -851,6 +854,7 @@ export const products: Product[] = [
   { id: 'golf-swing', name: 'ゴルフスイング診断', url: 'https://golf-swing-green.vercel.app', category: 'diagnostic', status: 'active', assignedTo: [12, 14], description: 'スイング動画AI分析・フォーム改善アドバイス', icon: '⛳' },
 
   // ━━━ マーケティングツール ━━━
+  { id: 'capillary-scope-lp', name: '毛細血管スコープLP', url: 'https://capillary-scope-lp.vercel.app', category: 'marketing', status: 'active', assignedTo: [20, 17], description: '毛細血管スコープ導入の営業LP', icon: '🩸' },
   { id: 'ad-manager', name: '広告管理ツール', url: 'https://ad-manager-mu.vercel.app', category: 'marketing', status: 'active', assignedTo: [5, 14], description: 'Google Ads API連携・カスタムKPI', icon: '📊' },
   { id: 'heatscope', name: 'HeatScope', url: 'https://heatscope.vercel.app', category: 'marketing', status: 'active', assignedTo: [5, 14], description: 'ヒートマップ分析ツール', icon: '🔥' },
 
@@ -858,6 +862,8 @@ export const products: Product[] = [
   { id: 'lp-builder', name: 'LP作成ツール', url: 'https://lp-builder-weld.vercel.app', category: 'lp', status: 'active', assignedTo: [17, 14], description: '10テンプレ・3訴求軸・道のりセクション・ヒーロー7カスタム', icon: '🏗️' },
   { id: 'premium-lp', name: '高額メニューLP', url: 'https://premium-lp.vercel.app', category: 'lp', status: 'active', assignedTo: [19, 17], description: '睡眠/頭髪/ダイエット3コース', icon: '💎' },
   { id: 'clinic-saas-lp', name: 'BtoB販売LP', url: 'https://clinic-saas-lp.vercel.app', category: 'lp', status: 'active', assignedTo: [20, 17], description: '治療院DXツール3点セットの販売ページ', icon: '🤝' },
+  { id: 'jiritsu-lp', name: '自律神経失調症LP', category: 'lp', status: 'active', assignedTo: [17, 19], description: '自律神経失調症に特化した専門LP', icon: '🧠' },
+  { id: 'symptom-lps', name: '症状別LP', url: 'https://symptom-lps.vercel.app', category: 'lp', status: 'active', assignedTo: [17, 19], description: '脊柱管狭窄症・坐骨神経痛・腰痛・膝痛・睡眠改善', icon: '🩻' },
 
   // ━━━ コンテンツ ━━━
   { id: 'fb-templates', name: 'Facebook投稿テンプレート', category: 'content', status: 'active', assignedTo: [20, 7], description: 'BtoB向け5投稿＋7日間シリーズ', icon: '📘' },
@@ -876,6 +882,10 @@ export const products: Product[] = [
   // ━━━ ツール ━━━
   { id: 'tsuyomi-worksheet', name: '強みワークシート', url: 'https://tsuyomi-worksheet.vercel.app', category: 'tool', status: 'active', assignedTo: [17, 7], description: '強み・差別化・ストーリーの言語化', icon: '💪' },
   { id: 'proposal-gen', name: '提案書ジェネレーター', category: 'tool', status: 'active', assignedTo: [24, 12], description: '施術提案書の自動生成', icon: '📄' },
+  { id: 'invoice-forge', name: '請求書作成アプリ', url: 'https://invoice-forge-ashy.vercel.app', category: 'tool', status: 'active', assignedTo: [10, 14], description: '請求書作成・PDF出力・テンプレート管理', icon: '🧾' },
+  { id: 'project-hub', name: 'プロジェクト管理', url: 'https://project-hub-three-chi.vercel.app', category: 'tool', status: 'active', assignedTo: [14, 1], description: '全プロジェクト一覧・カテゴリフィルター・検索', icon: '📋' },
+  { id: 'quarterly-dashboard', name: '数字比較ダッシュボード', url: 'https://quarterly-dashboard-nu.vercel.app', category: 'tool', status: 'active', assignedTo: [10, 14], description: '四半期売上3年比較・目標設定・グラフ表示', icon: '📊' },
+  { id: 'koteihi', name: '固定費管理', url: 'https://koteihi-kanri.vercel.app', category: 'tool', status: 'active', assignedTo: [10, 14], description: '4カテゴリ固定費管理・月額年額換算・支払アラート', icon: '💰' },
 ]
 
 // カテゴリ定義
