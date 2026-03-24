@@ -848,6 +848,7 @@ export const products: Product[] = [
 
   // ━━━ 無料診断系 ━━━
   { id: 'sleep-checker', name: '睡眠チェック分析', category: 'diagnostic', status: 'active', assignedTo: [6, 12], description: '睡眠品質チェック・カウンセリング用', icon: '🌙' },
+  { id: 'golf-swing', name: 'ゴルフスイング診断', url: 'https://golf-swing-green.vercel.app', category: 'diagnostic', status: 'active', assignedTo: [12, 14], description: 'スイング動画AI分析・フォーム改善アドバイス', icon: '⛳' },
 
   // ━━━ マーケティングツール ━━━
   { id: 'ad-manager', name: '広告管理ツール', url: 'https://ad-manager-mu.vercel.app', category: 'marketing', status: 'active', assignedTo: [5, 14], description: 'Google Ads API連携・カスタムKPI', icon: '📊' },
