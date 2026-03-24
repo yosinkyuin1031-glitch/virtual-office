@@ -223,7 +223,8 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
   const execDept = departments.find(d => d.id === 'executive')
   const financeDept = departments.find(d => d.id === 'finance')
   const opsDepts = departments.filter(d => d.parentDivision === 'operations')
-  const aiDept = departments.find(d => d.id === 'ai_dev')
+  const aiDepts = departments.filter(d => d.parentDivision === 'ai')
+  const contentDepts = departments.filter(d => d.parentDivision === 'content')
   const mediaDept = departments.find(d => d.id === 'media')
   const totalEmps = allEmployeesList.length
 
@@ -256,9 +257,9 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
       )}
       <div className="flex justify-center"><div className="w-0.5 h-6 bg-gray-600/50" /></div>
 
-      {/* 3部門分岐 */}
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 4部門分岐 */}
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 実業サポート */}
           <div className="space-y-3">
             <div className="text-center">
@@ -271,14 +272,28 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
             ))}
           </div>
 
-          {/* AI開発部 */}
+          {/* AI・BtoB部門 */}
           <div className="space-y-3">
             <div className="text-center">
               <span className="text-[10px] bg-cyan-900/30 text-cyan-400 px-3 py-1 rounded-full border border-cyan-800/50">
-                🤖 AI会社（収益中核）
+                🤖 AI・BtoB部門（収益中核）
               </span>
             </div>
-            {aiDept && <OrgDeptCard dept={aiDept} onChat={setChatTarget} />}
+            {aiDepts.map(dept => (
+              <OrgDeptCard key={dept.id} dept={dept} onChat={setChatTarget} />
+            ))}
+          </div>
+
+          {/* 制作部門 */}
+          <div className="space-y-3">
+            <div className="text-center">
+              <span className="text-[10px] bg-pink-900/30 text-pink-400 px-3 py-1 rounded-full border border-pink-800/50">
+                🎨 LP・制作部門
+              </span>
+            </div>
+            {contentDepts.map(dept => (
+              <OrgDeptCard key={dept.id} dept={dept} onChat={setChatTarget} />
+            ))}
           </div>
 
           {/* メディア部 */}
@@ -301,7 +316,7 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
             <p className="text-[10px] text-gray-500">総社員数</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-yellow-400">6</p>
+            <p className="text-2xl font-bold text-yellow-400">{departments.length}</p>
             <p className="text-[10px] text-gray-500">部署数</p>
           </div>
           <div>
@@ -449,10 +464,197 @@ function ProductCard({ product, onClickMember }: { product: Product; onClickMemb
   )
 }
 
+// 会長メモビュー
+function ChairmanMemos() {
+  const [memos, setMemos] = useState<{ id: string; content: string; category: string; source: string; department_tags: string[]; created_at: string }[]>([])
+  const [input, setInput] = useState('')
+  const [category, setCategory] = useState<string>('general')
+  const [filterCat, setFilterCat] = useState('all')
+  const [loading, setLoading] = useState(false)
+
+  const categories = [
+    { key: 'direction', label: '方針・判断', icon: '🧭', color: '#FFD700' },
+    { key: 'insight', label: '気づき', icon: '💡', color: '#22D3EE' },
+    { key: 'task', label: 'タスク', icon: '📋', color: '#22C55E' },
+    { key: 'feedback', label: 'FB', icon: '📝', color: '#F59E0B' },
+    { key: 'general', label: 'その他', icon: '💬', color: '#A78BFA' },
+  ]
+
+  useEffect(() => {
+    fetchMemos()
+  }, [filterCat])
+
+  const fetchMemos = async () => {
+    const params = filterCat !== 'all' ? `?category=${filterCat}` : ''
+    const res = await fetch(`/api/memos${params}`)
+    const data = await res.json()
+    setMemos(data.memos || [])
+  }
+
+  const sendMemo = async () => {
+    const text = input.trim()
+    if (!text || loading) return
+    setLoading(true)
+    await fetch('/api/memos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, category, source: 'web' }),
+    })
+    setInput('')
+    await fetchMemos()
+    setLoading(false)
+  }
+
+  const deleteMemo = async (id: string) => {
+    await fetch(`/api/memos?id=${id}`, { method: 'DELETE' })
+    await fetchMemos()
+  }
+
+  return (
+    <div className="space-y-4 pb-8">
+      <div className="text-center mb-4">
+        <h2 className="text-lg font-bold text-yellow-300">会長メモ</h2>
+        <p className="text-[10px] text-gray-600 mt-1">
+          あなたの言葉が全社員の知識になります | LINE返信も自動で反映されます
+        </p>
+      </div>
+
+      {/* メモ入力 */}
+      <div className="bg-gradient-to-r from-yellow-900/20 to-transparent rounded-xl border-2 border-yellow-700/50 p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">👨‍💼</span>
+          <span className="text-sm font-bold text-yellow-400">大口 陽平</span>
+          <span className="text-[10px] text-gray-500">会長</span>
+        </div>
+
+        {/* カテゴリ選択 */}
+        <div className="flex flex-wrap gap-1.5">
+          {categories.map(c => (
+            <button
+              key={c.key}
+              onClick={() => setCategory(c.key)}
+              className={`text-[10px] px-2.5 py-1 rounded-full border transition ${
+                category === c.key ? 'text-white' : 'border-gray-700 text-gray-500'
+              }`}
+              style={category === c.key ? { borderColor: c.color, color: c.color, backgroundColor: c.color + '15' } : {}}
+            >
+              {c.icon} {c.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 入力欄 */}
+        <div className="flex items-end gap-2">
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMemo() } }}
+            placeholder="考えていること、方針、気づき、タスクをメモ..."
+            rows={2}
+            className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-yellow-700 transition"
+          />
+          <button
+            onClick={sendMemo}
+            disabled={!input.trim() || loading}
+            className="px-4 py-2.5 rounded-xl text-sm font-bold transition disabled:opacity-30 bg-yellow-700 hover:bg-yellow-600 text-white"
+          >
+            保存
+          </button>
+        </div>
+
+        <p className="text-[9px] text-gray-600">
+          LINEからも入力可能: 「方針:〇〇」「気づき:〇〇」「タスク:〇〇」と送信すると自動分類されます
+        </p>
+      </div>
+
+      {/* フィルター */}
+      <div className="flex flex-wrap gap-1.5 justify-center">
+        <button
+          onClick={() => setFilterCat('all')}
+          className={`text-[10px] px-3 py-1.5 rounded-full border transition ${
+            filterCat === 'all' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-gray-700 text-gray-500'
+          }`}
+        >
+          すべて
+        </button>
+        {categories.map(c => (
+          <button
+            key={c.key}
+            onClick={() => setFilterCat(c.key)}
+            className={`text-[10px] px-3 py-1.5 rounded-full border transition ${
+              filterCat === c.key ? 'text-white' : 'border-gray-700 text-gray-500'
+            }`}
+            style={filterCat === c.key ? { borderColor: c.color, color: c.color, backgroundColor: c.color + '15' } : {}}
+          >
+            {c.icon} {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* メモ一覧 */}
+      <div className="space-y-2">
+        {memos.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-600 text-sm">まだメモがありません</p>
+            <p className="text-gray-700 text-[10px] mt-1">上のフォームから入力するか、LINEで送信してください</p>
+          </div>
+        )}
+        {memos.map(memo => {
+          const cat = categories.find(c => c.key === memo.category) || categories[4]
+          const date = new Date(memo.created_at)
+          const dateStr = date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+          return (
+            <div
+              key={memo.id}
+              className="rounded-xl border p-3 hover:bg-gray-900/50 transition group"
+              style={{ borderColor: cat.color + '33', backgroundColor: '#0a0f1a' }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="text-[9px] px-1.5 py-0.5 rounded-full"
+                      style={{ backgroundColor: cat.color + '15', color: cat.color, border: `1px solid ${cat.color}33` }}
+                    >
+                      {cat.icon} {cat.label}
+                    </span>
+                    {memo.source === 'line' && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-900/30 text-green-400 border border-green-800/50">
+                        LINE
+                      </span>
+                    )}
+                    <span className="text-[9px] text-gray-600">{dateStr}</span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">{memo.content}</p>
+                  {memo.department_tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {memo.department_tags.map(tag => (
+                        <span key={tag} className="text-[8px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500 border border-gray-700">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => deleteMemo(memo.id)}
+                  className="text-gray-700 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // メインページ
 export default function VirtualOffice() {
   const [now, setNow] = useState('')
-  const [view, setView] = useState<'dashboard' | 'org' | 'products'>('products')
+  const [view, setView] = useState<'dashboard' | 'org' | 'products' | 'memos'>('products')
   const [chatTarget, setChatTarget] = useState<Employee | null>(null)
 
   useEffect(() => {
@@ -489,6 +691,14 @@ export default function VirtualOffice() {
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setView('memos')}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition ${
+                view === 'memos' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-gray-700 text-gray-500'
+              }`}
+            >
+              👨‍💼 会長メモ
+            </button>
             <button
               onClick={() => setView('products')}
               className={`px-3 py-1.5 text-xs rounded-lg border transition ${
@@ -539,7 +749,9 @@ export default function VirtualOffice() {
           ))}
         </div>
 
-        {view === 'products' ? (
+        {view === 'memos' ? (
+          <ChairmanMemos />
+        ) : view === 'products' ? (
           <ProductBoard setChatTarget={setChatTarget} />
         ) : view === 'dashboard' ? (
           <div className="space-y-6">
