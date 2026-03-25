@@ -73,19 +73,21 @@ function DocumentViewer({ doc, onBack }: { doc: Document; onBack: () => void }) 
       </div>
 
       <div
-        className="bg-gray-900/30 rounded-xl border border-gray-800 p-4 prose prose-invert prose-sm max-w-none
+        className="bg-gray-900/30 rounded-xl border border-gray-800 p-5 prose prose-invert prose-sm max-w-none
           prose-headings:text-cyan-300 prose-headings:border-b prose-headings:border-gray-800 prose-headings:pb-2
-          prose-h2:text-base prose-h2:mt-6 prose-h2:mb-3
-          prose-h3:text-sm prose-h3:mt-4 prose-h3:mb-2
-          prose-p:text-[13px] prose-p:text-gray-300 prose-p:leading-relaxed
-          prose-li:text-[13px] prose-li:text-gray-300
+          prose-h2:text-base prose-h2:mt-8 prose-h2:mb-4
+          prose-h3:text-sm prose-h3:mt-6 prose-h3:mb-3
+          prose-p:text-[13px] prose-p:text-gray-300 prose-p:leading-[1.9] prose-p:mb-4
+          prose-li:text-[13px] prose-li:text-gray-300 prose-li:leading-[1.8] prose-li:mb-1
           prose-strong:text-cyan-200
           prose-table:text-[12px]
           prose-th:text-cyan-300 prose-th:bg-gray-800/50 prose-th:px-3 prose-th:py-2
           prose-td:text-gray-300 prose-td:px-3 prose-td:py-2 prose-td:border-gray-800
           prose-code:text-cyan-400 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:rounded
           prose-blockquote:border-cyan-700 prose-blockquote:text-gray-400
-          prose-hr:border-gray-800"
+          prose-hr:border-gray-800
+          [&_br]:block [&_br]:mt-3 [&_br]:content-['']
+          [&>br]:mt-6"
         dangerouslySetInnerHTML={{ __html: doc.contentHtml }}
       />
     </div>
