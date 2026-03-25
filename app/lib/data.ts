@@ -25,7 +25,7 @@ export interface Department {
   canAsk: string[]
   apps: string[]
   employees: Employee[]
-  parentDivision: 'executive' | 'operations' | 'ai' | 'media' | 'finance' | 'content'
+  parentDivision: 'executive' | 'operations' | 'ai' | 'media' | 'finance' | 'content' | 'cs'
 }
 
 export interface Product {
@@ -688,6 +688,152 @@ Canvaブランドキット適用で統一感のあるデザイン。`,
 【仕組み化の方針】
 会長の手を離れても回る仕組みを作る。マニュアル化→スタッフ/AIに委譲。`,
   },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // アプリ制作事業 強化メンバー（5名）★新規採用
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // ── プロダクトマネジメント部（2名）★新設 ──
+  {
+    id: 25, name: 'カナ', role: 'PM（プロダクトマネージャー・要件定義のプロ）', department: 'プロダクト管理部',
+    color: '#FF7043', status: 'busy', avatar: '📊',
+    currentTask: 'アプリ統合計画・販売戦略策定・ロードマップ管理',
+    skills: ['要件定義・仕様書作成', 'アプリ統合・整理の計画', '販売戦略・価格設計', 'ロードマップ策定', 'ユーザーストーリー作成', '競合分析・市場調査'],
+    stats: { '管轄アプリ': 45, '統合計画': '策定中', 'ロードマップ': '稼働中' },
+    expertise: `【プロダクトマネジメントの専門家】
+全45プロダクトの統合・整理・販売戦略を統括するプロダクトマネージャー。
+
+【統合整理の方針】
+現在のアプリは機能が重複・分散しているものがある。以下の統合グループで整理：
+①院内オペレーション統合（顧客管理+予約+WEB問診+検査シート+メニュー管理）→「治療院OS」として1つのプラットフォームに
+②集客統合（MEO+GBP+広告+HeatScope+LP）→「集客ダッシュボード」として統合
+③訪問鍼灸統合（スタッフ管理+レセプト+営業管理+訪問管理）→「訪問鍼灸OS」として統合
+④AI・コンテンツ統合（AIマスター+AIツール+ブログ生成+FAQ生成）→「AI治療家アシスタント」として統合
+
+【販売戦略（3段階）】
+Phase 1（現在）：単品販売5本 + セット割引
+Phase 2（3ヶ月後）：統合プラットフォーム「治療院OS」の月額制
+Phase 3（6ヶ月後）：治療院OS + 集客ダッシュボード + 訪問鍼灸OSの3プラットフォーム体制
+
+【価格戦略】
+単品：月額2,980〜5,500円（現行維持）
+統合プラン：月額19,800円（5アプリ統合）/ 年額198,000円（2ヶ月分無料）
+プレミアム：月額39,800円（全機能+カスタマイズ+サポート）
+導入支援パッケージ：初期設定費用110,000円（データ移行+カスタマイズ+研修2時間）`,
+  },
+  {
+    id: 26, name: 'ミオ', role: 'UX/UIデザイナー（使いやすさのプロ）', department: 'プロダクト管理部',
+    color: '#AB47BC', status: 'working', avatar: '🎯',
+    currentTask: 'アプリUI統一・使いやすさ改善・デザインシステム構築',
+    skills: ['UI/UXレビュー・改善提案', 'デザインシステム構築', 'ユーザビリティテスト設計', 'ワイヤーフレーム作成', 'アクセシビリティ改善', 'モバイルUX最適化'],
+    stats: { 'レビュー済': 20, 'UI改善': '進行中', 'デザインシステム': '構築中' },
+    expertise: `【UX/UIデザインの専門家】
+全アプリのUI統一とユーザー体験の最適化を統括。
+
+【デザインシステム】
+統一カラー：プライマリ#0EA5E9（シアン）、アクセント#22C55E（グリーン）、警告#F59E0B
+フォント：治療院向け＝読みやすさ重視（Noto Sans JP）、管理画面＝情報密度重視
+コンポーネント：ボタン・フォーム・カード・テーブル・モーダルの統一規格
+
+【UX改善の優先順位】
+①予約管理：患者が3タップで予約完了できるフロー
+②検査シート：施術中でも片手で操作できるUI
+③顧客管理：一覧→詳細→アクションの導線最適化
+④WEB問診：高齢者でも迷わない大きなボタン・文字
+
+【モバイルファースト原則】
+治療院の先生は施術中にスマホで操作する。モバイルでの操作性が最優先。
+ページロード3秒以内、タップターゲット44px以上、スクロール最小化。`,
+  },
+
+  // ── 品質管理部（1名）★新設 ──
+  {
+    id: 27, name: 'レン', role: 'QA（品質保証・テストのプロ）', department: 'プロダクト管理部',
+    color: '#66BB6A', status: 'working', avatar: '🔍',
+    currentTask: '全アプリ品質チェック・バグ修正・パフォーマンス監視',
+    skills: ['バグ発見・修正指示', 'パフォーマンス監視', 'セキュリティチェック', 'ユーザーテスト実施', '品質レポート作成', 'リグレッションテスト'],
+    stats: { 'バグ修正': 34, 'テスト': '稼働中', '品質スコア': '87%' },
+    expertise: `【品質保証の専門家】
+全プロダクトの品質管理・テスト・セキュリティチェックを統括。
+
+【品質基準（全プロダクト共通）】
+①機能テスト：主要フローが正常動作するか（CRUD、認証、決済）
+②表示テスト：モバイル・PC・タブレットで崩れないか
+③パフォーマンス：ページロード3秒以内、API応答1秒以内
+④セキュリティ：XSS、CSRF、SQLインジェクション対策、RLS確認
+⑤アクセシビリティ：コントラスト比4.5:1以上、キーボード操作対応
+
+【品質スコア基準】
+A（90点以上）：リリース可能。全テスト合格。
+B（80-89点）：軽微な修正で対応可能。機能に影響なし。
+C（70-79点）：修正必要。一部機能に影響あり。
+D（69点以下）：リリース不可。重大な問題あり。
+
+【チェックリスト（BtoB販売前必須）】
+顧客管理シートは外部展開予定のため、不具合を根本から潰す品質基準を適用。
+Stripe決済フロー、マルチテナントデータ分離、認証・認可の完全性を最優先で検証。`,
+  },
+
+  // ── カスタマーサクセス部（2名）★新設 ──
+  {
+    id: 28, name: 'アオイ', role: 'カスタマーサクセス（導入支援・定着化のプロ）', department: 'カスタマーサクセス部',
+    color: '#26C6DA', status: 'busy', avatar: '🤗',
+    currentTask: 'モニター10名のフォロー・オンボーディング改善・解約防止',
+    skills: ['導入オンボーディング設計', 'ユーザーヒアリング・要望整理', '解約防止・リテンション施策', '使い方ガイド・FAQ作成', 'カスタマージャーニー設計', '満足度調査・NPS計測'],
+    stats: { 'モニター': 10, '定着率': '80%', 'NPS': '+42' },
+    expertise: `【カスタマーサクセスの専門家】
+BtoB SaaS顧客の導入支援・定着化・LTV最大化を統括。
+
+【オンボーディングフロー（標準5ステップ）】
+Step1：アカウント作成（5分）→ Supabase Auth でメール認証
+Step2：初期設定ウィザード（15分）→ 院情報・スタッフ・メニュー登録
+Step3：データ移行（30分）→ 既存の患者CSV・来院履歴CSVをインポート
+Step4：Zoom研修（60分）→ 主要機能の操作デモ・質疑応答
+Step5：1週間フォロー → 毎日1回使い方Tips配信 + 質問対応
+
+【解約防止の早期アラート】
+ログイン頻度が週1回未満→イエローアラート（使い方Tips送付）
+2週間ログインなし→レッドアラート（Zoom面談オファー）
+機能利用率30%以下→青アラート（未活用機能の紹介）
+
+【ヘルスコアの定義】
+良好（80点以上）：週3回以上ログイン・主要機能利用・データ入力継続
+注意（50-79点）：利用頻度低下・一部機能のみ利用
+危険（49点以下）：ログインなし・サポート問合せなし→即フォロー
+
+【モニター管理（現在10名）】
+MEO勝ち上げくんのモニター10名を管理中。有料転換を推進。
+院名・メール・パスワードの情報を保有。個別フォローを実施。`,
+  },
+  {
+    id: 29, name: 'ショウ', role: 'セールスマーケター（BtoB集客・売上拡大のプロ）', department: 'カスタマーサクセス部',
+    color: '#FFA726', status: 'busy', avatar: '🚀',
+    currentTask: 'BtoB集客自動化・セミナー企画・パートナー開拓',
+    skills: ['BtoB集客ファネル設計', 'ウェビナー・セミナー企画', 'メールマーケティング', 'パートナーシップ開拓', 'LPのA/Bテスト', '広告運用（BtoB向け）'],
+    stats: { 'リード': 45, '商談化率': '22%', '月間MRR': '¥89,000' },
+    expertise: `【BtoBセールスマーケティングの専門家】
+治療家向けSaaSのBtoB集客・リード獲得・売上拡大を統括。
+
+【集客ファネル設計】
+認知→Facebookグループ投稿・YouTube動画・SEO記事
+興味→無料セミナー「治療院DX入門」（月1回Zoom開催）
+検討→無料モニター2週間体験→Zoom個別商談
+契約→月額プラン or 買切プラン（Stripe決済）
+継続→カスタマーサクセスチーム（アオイ）に引き継ぎ
+
+【ターゲットコミュニティ】
+神経整体実践者コミュニティ、ハリック勉強会、パートナーコミュニティ
+治療家向けFacebook グループ（5,000名規模）
+整骨院・鍼灸院の経営者向けオンラインサロン
+
+【売上目標】
+現在MRR ¥89,000→6ヶ月後MRR ¥500,000→12ヶ月後MRR ¥1,250,000
+必要契約数：月額5,500円×約90件 or 統合プラン19,800円×約25件
+
+【セミナー企画】
+テーマ例：「検査で変わる！AI時代の治療院経営」「30分でできる院内DX」
+月1回Zoom開催、録画をYouTubeで公開→次月のリード獲得に活用`,
+  },
 ]
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -811,6 +957,32 @@ export const departments: Department[] = [
     employees: allEmployees.filter(e => e.department === '動画・デザイン制作部'),
     parentDivision: 'content',
   },
+  {
+    id: 'product_mgmt',
+    name: 'プロダクト管理部',
+    icon: '📊',
+    color: '#FF7043',
+    borderColor: '#E64A19',
+    manager: 'カナ（PM）',
+    description: 'アプリの品質管理・統合計画・UI改善・販売戦略を統括',
+    canAsk: ['アプリ統合の計画相談', '販売戦略の立案', 'UI/UX改善提案', '品質チェック依頼', 'ロードマップの確認', 'バグ報告・修正依頼'],
+    apps: ['全プロダクトの品質管理', 'デザインシステム', 'テスト管理'],
+    employees: allEmployees.filter(e => e.department === 'プロダクト管理部'),
+    parentDivision: 'ai',
+  },
+  {
+    id: 'customer_success',
+    name: 'カスタマーサクセス部',
+    icon: '🤗',
+    color: '#26C6DA',
+    borderColor: '#00ACC1',
+    manager: 'アオイ',
+    description: 'BtoB顧客の導入支援・定着化・売上拡大・セミナー企画',
+    canAsk: ['モニターの状況確認', '導入支援フロー設計', '解約防止施策', 'セミナー企画', 'BtoB集客戦略', 'メールマーケティング'],
+    apps: ['オンボーディングガイド', 'ヘルスコアダッシュボード'],
+    employees: allEmployees.filter(e => e.department === 'カスタマーサクセス部'),
+    parentDivision: 'ai',
+  },
 ]
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -903,3 +1075,276 @@ export const productCategories: Record<Product['category'], { label: string; col
 }
 
 export const allEmployeesList = allEmployees
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ワークフローテンプレート（社員連携の自動化フロー）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export interface WorkflowTemplate {
+  id: string
+  name: string
+  description: string
+  icon: string
+  color: string
+  category: 'content' | 'marketing' | 'development' | 'operations' | 'sales'
+  steps: WorkflowStep[]
+  estimatedTime: string
+}
+
+export interface WorkflowStep {
+  order: number
+  employee: string
+  department: string
+  action: string
+  description: string
+  autoExecute: boolean // ターミナルで自動実行可能か
+  command?: string // 自動実行するスキルコマンド
+}
+
+export const workflowTemplates: WorkflowTemplate[] = [
+  {
+    id: 'blog-creation',
+    name: 'SEOブログ記事作成',
+    description: 'キーワード調査→執筆→SEO最適化→公開まで自動連携',
+    icon: '📝',
+    color: '#22C55E',
+    category: 'content',
+    steps: [
+      { order: 1, employee: 'セナ', department: 'BtoB営業部', action: 'キーワードリサーチ', description: '検索ボリューム・競合調査を実施', autoExecute: true, command: '/web-research' },
+      { order: 2, employee: 'リン', department: 'LP・Web制作部', action: 'SEO記事執筆', description: '調査結果を元に記事を執筆', autoExecute: true, command: '/seo-article' },
+      { order: 3, employee: 'フミ', department: '整体院事業部', action: '文章添削', description: '顧客対応5原則に沿った添削', autoExecute: false },
+      { order: 4, employee: 'タク', department: 'AI開発部', action: '公開・デプロイ', description: 'HPコンテンツ管理に記事を公開', autoExecute: true, command: '/hp-content' },
+    ],
+    estimatedTime: '30分',
+  },
+  {
+    id: 'sns-post',
+    name: 'SNS投稿一括作成',
+    description: 'テーマ決定→投稿文作成→画像生成→スケジュール設定',
+    icon: '📸',
+    color: '#E91E63',
+    category: 'marketing',
+    steps: [
+      { order: 1, employee: 'ハル', department: '整体院事業部', action: 'テーマ・訴求決定', description: '四半期別症状訴求から今月のテーマを選定', autoExecute: false },
+      { order: 2, employee: 'フミ', department: '整体院事業部', action: '投稿文作成', description: 'Instagram/Facebook/GBPの投稿文を一括作成', autoExecute: true, command: '/sns-post' },
+      { order: 3, employee: 'スイ', department: '動画・デザイン制作部', action: '画像生成', description: 'Canvaブランドキットで統一デザイン作成', autoExecute: true, command: '/sns-image' },
+      { order: 4, employee: 'ハル', department: '整体院事業部', action: 'GBP投稿', description: 'Googleビジネスプロフィールに投稿', autoExecute: true, command: '/gmb-post' },
+    ],
+    estimatedTime: '20分',
+  },
+  {
+    id: 'facebook-btob',
+    name: 'BtoB Facebook投稿',
+    description: 'BtoB向け投稿文作成→添削→バーチャルオフィス同期',
+    icon: '📘',
+    color: '#1877F2',
+    category: 'sales',
+    steps: [
+      { order: 1, employee: 'ジン', department: 'BtoB営業部', action: '投稿テーマ設定', description: '今週のBtoB訴求テーマを決定', autoExecute: false },
+      { order: 2, employee: 'テツ', department: 'AI開発部', action: '投稿文作成', description: 'BtoB発信ルールに沿って投稿文を生成', autoExecute: true, command: '/btob-content' },
+      { order: 3, employee: 'フミ', department: '整体院事業部', action: '添削', description: '文体チェック・NGワード確認', autoExecute: true, command: '/fb-review' },
+      { order: 4, employee: 'タク', department: 'AI開発部', action: '同期・保存', description: 'バーチャルオフィスのドキュメントに保存', autoExecute: true, command: '/fb-post' },
+    ],
+    estimatedTime: '15分',
+  },
+  {
+    id: 'app-fix',
+    name: 'アプリ修正・デプロイ',
+    description: 'バグ報告→修正→テスト→デプロイまで一気通貫',
+    icon: '🔧',
+    color: '#FF9800',
+    category: 'development',
+    steps: [
+      { order: 1, employee: 'レン', department: 'プロダクト管理部', action: 'バグ調査・原因特定', description: '報告されたバグの原因を調査', autoExecute: false },
+      { order: 2, employee: 'コウ', department: 'AI開発部', action: 'コード修正', description: 'バグの根本原因を修正', autoExecute: false },
+      { order: 3, employee: 'レン', department: 'プロダクト管理部', action: 'テスト実施', description: '修正後の動作確認・リグレッションテスト', autoExecute: true, command: '/deploy-verify' },
+      { order: 4, employee: 'タク', department: 'AI開発部', action: 'デプロイ', description: 'git push→Vercel自動デプロイ', autoExecute: false },
+    ],
+    estimatedTime: '45分',
+  },
+  {
+    id: 'new-app-build',
+    name: '新規アプリ構築',
+    description: '要件定義→設計→開発→テスト→デプロイ→フォルダ保存',
+    icon: '🏗️',
+    color: '#9C27B0',
+    category: 'development',
+    steps: [
+      { order: 1, employee: 'カナ', department: 'プロダクト管理部', action: '要件定義', description: 'ユーザーストーリー・機能一覧・技術選定', autoExecute: false },
+      { order: 2, employee: 'ミオ', department: 'プロダクト管理部', action: 'UI/UX設計', description: 'ワイヤーフレーム・デザイン案', autoExecute: false },
+      { order: 3, employee: 'コウ', department: 'AI開発部', action: '開発・実装', description: 'Next.js+Tailwind+Supabaseで構築', autoExecute: true, command: '/app-builder' },
+      { order: 4, employee: 'レン', department: 'プロダクト管理部', action: '品質テスト', description: '品質基準A以上を確認', autoExecute: true, command: '/deploy-verify' },
+      { order: 5, employee: 'タク', department: 'AI開発部', action: 'デプロイ・保存', description: 'Vercelデプロイ→フォルダ整理', autoExecute: false },
+      { order: 6, employee: 'アオイ', department: 'カスタマーサクセス部', action: '使い方ガイド作成', description: 'オンボーディング資料を作成', autoExecute: false },
+    ],
+    estimatedTime: '2時間',
+  },
+  {
+    id: 'daily-clinic-ops',
+    name: '整体院デイリー業務',
+    description: '予約確認→LINE配信→GBP投稿→日報の日次ルーティン',
+    icon: '🏥',
+    color: '#1565C0',
+    category: 'operations',
+    steps: [
+      { order: 1, employee: 'ナギ', department: '整体院事業部', action: '予約確認・整理', description: '本日の予約一覧確認・空き枠チェック', autoExecute: false },
+      { order: 2, employee: 'フミ', department: '整体院事業部', action: 'LINE配信', description: '明日のリマインド・来週の空き案内を配信', autoExecute: true, command: '/line-auto' },
+      { order: 3, employee: 'ハル', department: '整体院事業部', action: 'GBP投稿', description: '本日のGBP投稿を作成・投稿', autoExecute: true, command: '/gmb-post' },
+      { order: 4, employee: 'ミコ', department: '経営層', action: '日報作成', description: '全社の本日の活動を日報にまとめる', autoExecute: true, command: '/daily-report' },
+    ],
+    estimatedTime: '15分',
+  },
+  {
+    id: 'competitor-analysis',
+    name: '競合調査レポート',
+    description: 'Web検索→Googleマップ調査→SNS分析→レポート作成',
+    icon: '🔍',
+    color: '#607D8B',
+    category: 'marketing',
+    steps: [
+      { order: 1, employee: 'セナ', department: 'BtoB営業部', action: 'Web調査', description: '競合のWebサイト・料金・特徴を調査', autoExecute: true, command: '/web-research' },
+      { order: 2, employee: 'ハル', department: '整体院事業部', action: 'MEO調査', description: '競合のGoogleマップ順位・口コミを分析', autoExecute: true, command: '/competitor-research' },
+      { order: 3, employee: 'サク', department: '訪問鍼灸事業部', action: 'SNS調査', description: '競合のSNSフォロワー数・投稿頻度・エンゲージメント', autoExecute: false },
+      { order: 4, employee: 'レイア', department: '経営層', action: '戦略提案', description: '調査結果を元に差別化戦略を策定', autoExecute: false },
+    ],
+    estimatedTime: '40分',
+  },
+  {
+    id: 'monthly-campaign',
+    name: '月間キャンペーン実行',
+    description: 'テーマ決定→LP作成→SNS→LINE→広告の一括キャンペーン',
+    icon: '🎉',
+    color: '#FF5722',
+    category: 'marketing',
+    steps: [
+      { order: 1, employee: 'ハル', department: '整体院事業部', action: 'テーマ決定', description: '月別キャンペーン計画からテーマ選定', autoExecute: false },
+      { order: 2, employee: 'マヤ', department: 'LP・Web制作部', action: 'LP作成', description: 'キャンペーン用LPを即時作成', autoExecute: true, command: '/quick-site' },
+      { order: 3, employee: 'フミ', department: '整体院事業部', action: 'SNS・LINE文面', description: '投稿文・LINE配信文を一括作成', autoExecute: true, command: '/sns-post' },
+      { order: 4, employee: 'ヒカ', department: '動画・デザイン制作部', action: '広告動画', description: 'Instagram・YouTube広告用の短尺動画', autoExecute: false },
+      { order: 5, employee: 'スイ', department: '動画・デザイン制作部', action: 'チラシ・POP', description: '院内掲示用・ポスティング用チラシ', autoExecute: false },
+    ],
+    estimatedTime: '1時間',
+  },
+]
+
+export const workflowCategories: Record<WorkflowTemplate['category'], { label: string; color: string; icon: string }> = {
+  content: { label: 'コンテンツ', color: '#22C55E', icon: '📝' },
+  marketing: { label: 'マーケティング', color: '#E91E63', icon: '📣' },
+  development: { label: '開発', color: '#FF9800', icon: '🔧' },
+  operations: { label: '院内業務', color: '#1565C0', icon: '🏥' },
+  sales: { label: '営業', color: '#1877F2', icon: '🤝' },
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// アプリ統合グループ（整理・販売戦略用）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export interface AppBundle {
+  id: string
+  name: string
+  description: string
+  icon: string
+  color: string
+  apps: string[] // product IDs
+  currentPrice: string
+  bundlePrice: string
+  integratedPrice: string
+  targetUser: string
+  phase: 'current' | 'phase2' | 'phase3'
+}
+
+export const appBundles: AppBundle[] = [
+  {
+    id: 'clinic-os',
+    name: '治療院OS',
+    description: '院内業務を丸ごとデジタル化。予約〜検査〜顧客管理〜物販まで一元管理。',
+    icon: '🏥',
+    color: '#1565C0',
+    apps: ['customer-mgmt', 'reservation', 'web-monshin', 'kensa-sheet', 'menu-manager', 'sleep-checker'],
+    currentPrice: '単品合計 ¥23,420/月',
+    bundlePrice: 'セット割 ¥15,800/月',
+    integratedPrice: '統合版 ¥19,800/月（予定）',
+    targetUser: '整体院・鍼灸院・整骨院の院長',
+    phase: 'phase2',
+  },
+  {
+    id: 'marketing-suite',
+    name: '集客ダッシュボード',
+    description: 'MEO・GBP・広告・ヒートマップ・LPを一画面で管理。集客を数字で可視化。',
+    icon: '📣',
+    color: '#E91E63',
+    apps: ['meo-winner', 'meo-checker-self', 'ad-manager', 'heatscope', 'lp-builder'],
+    currentPrice: '単品合計 ¥14,940/月',
+    bundlePrice: 'セット割 ¥9,800/月',
+    integratedPrice: '統合版 ¥14,800/月（予定）',
+    targetUser: '集客に力を入れたい治療院',
+    phase: 'phase2',
+  },
+  {
+    id: 'houmon-os',
+    name: '訪問鍼灸OS',
+    description: 'スタッフ管理・レセプト・営業リスト・日報を一元管理。訪問事業の効率化。',
+    icon: '🏠',
+    color: '#2E7D32',
+    apps: ['houmon-staff', 'receipt-manager', 'sales-manager', 'houmon-manager'],
+    currentPrice: '自社利用のみ',
+    bundlePrice: '—',
+    integratedPrice: '¥9,800/月（予定）',
+    targetUser: '訪問鍼灸・訪問マッサージ事業者',
+    phase: 'phase3',
+  },
+  {
+    id: 'ai-assistant',
+    name: 'AI治療家アシスタント',
+    description: '症状分析・施術提案・ブログ生成・FAQ作成をAIが支援。',
+    icon: '🧠',
+    color: '#9C27B0',
+    apps: ['ai-master', 'ai-tools', 'hp-content', 'sleep-checker'],
+    currentPrice: '単品合計 ¥11,460/月',
+    bundlePrice: 'セット割 ¥7,800/月',
+    integratedPrice: '統合版 ¥9,800/月（予定）',
+    targetUser: 'AIを活用したい治療家',
+    phase: 'phase2',
+  },
+  {
+    id: 'starter-pack',
+    name: 'スターターパック',
+    description: '検査シート＋顧客管理＋予約管理の3点セット。まずはここから。',
+    icon: '⭐',
+    color: '#FF9800',
+    apps: ['kensa-sheet', 'customer-mgmt', 'reservation'],
+    currentPrice: '単品合計 ¥13,460/月',
+    bundlePrice: 'セット割 ¥9,800/月',
+    integratedPrice: '—',
+    targetUser: '初めてDXに取り組む治療院',
+    phase: 'current',
+  },
+]
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 院内業務自動化タスク
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export interface AutomationTask {
+  id: string
+  name: string
+  description: string
+  icon: string
+  frequency: 'daily' | 'weekly' | 'monthly' | 'on-demand'
+  department: string
+  assignedTo: string[]
+  command?: string
+  status: 'active' | 'planned' | 'paused'
+}
+
+export const automationTasks: AutomationTask[] = [
+  { id: 'daily-report', name: '全社日報', description: '毎晩22時に全プロジェクトの作業内容を自動集計', icon: '📋', frequency: 'daily', department: '経営層', assignedTo: ['ミコ'], command: '/daily-report', status: 'active' },
+  { id: 'gbp-post', name: 'GBP投稿', description: '週2回のGoogleビジネスプロフィール自動投稿', icon: '📍', frequency: 'weekly', department: '整体院事業部', assignedTo: ['ハル'], command: '/gmb-post', status: 'active' },
+  { id: 'youtube-upload', name: 'YouTube自動投稿', description: 'Shorts12本/日の自動投稿', icon: '🎬', frequency: 'daily', department: 'メディア部', assignedTo: ['ツキ'], command: '/youtube-healing', status: 'active' },
+  { id: 'sns-generation', name: 'SNS投稿生成', description: '週3本のInstagram投稿文+画像を自動生成', icon: '📸', frequency: 'weekly', department: '整体院事業部', assignedTo: ['フミ', 'スイ'], command: '/sns-image', status: 'active' },
+  { id: 'seo-article', name: 'SEO記事生成', description: '月4本の症状別SEO記事を自動生成', icon: '📝', frequency: 'weekly', department: 'LP・Web制作部', assignedTo: ['リン'], command: '/seo-article', status: 'active' },
+  { id: 'faq-generation', name: 'FAQ記事生成', description: 'AI検索対策のFAQ記事を月2本生成', icon: '❓', frequency: 'monthly', department: 'LP・Web制作部', assignedTo: ['リン'], command: '/faq-generator', status: 'active' },
+  { id: 'btob-facebook', name: 'BtoB Facebook投稿', description: '治療家向けBtoB投稿を週2本自動生成', icon: '📘', frequency: 'weekly', department: 'BtoB営業部', assignedTo: ['ジン', 'テツ'], command: '/btob-content', status: 'active' },
+  { id: 'competitor-check', name: '競合定期チェック', description: '月1回の競合MEO順位・口コミ・価格調査', icon: '🔍', frequency: 'monthly', department: 'BtoB営業部', assignedTo: ['セナ'], command: '/competitor-research', status: 'active' },
+  { id: 'meo-tracking', name: 'MEO順位トラッキング', description: '毎日のキーワード順位自動取得', icon: '📊', frequency: 'daily', department: 'AI開発部', assignedTo: ['リク'], status: 'active' },
+  { id: 'line-step', name: 'LINEステップ配信', description: '新患向け5日間ステップ配信の自動実行', icon: '💬', frequency: 'daily', department: '整体院事業部', assignedTo: ['フミ'], command: '/line-auto', status: 'active' },
+  { id: 'deploy-monitor', name: '全サイト稼働監視', description: '30サイトのヘルスチェック・エラー監視', icon: '🖥️', frequency: 'daily', department: 'AI開発部', assignedTo: ['タク'], command: '/deploy-verify', status: 'active' },
+  { id: 'health-score', name: 'ヘルスコア計算', description: 'BtoB顧客のログイン頻度・利用率を自動集計', icon: '💚', frequency: 'weekly', department: 'カスタマーサクセス部', assignedTo: ['アオイ'], status: 'planned' },
+]
