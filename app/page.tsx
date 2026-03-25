@@ -652,6 +652,89 @@ function ChairmanMemos() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 活動フィード（全社の最新動き）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function ActivityFeed() {
+  const [activities, setActivities] = useState<{id: string; employee_name: string; department: string; action: string; detail: string; created_at: string}[]>([])
+  const [runningCount, setRunningCount] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
+
+  useEffect(() => {
+    fetchActivity()
+    const timer = setInterval(fetchActivity, 15000) // 15秒ごとに更新
+    return () => clearInterval(timer)
+  }, [])
+
+  const fetchActivity = async () => {
+    try {
+      const [actRes, cmdRes] = await Promise.all([
+        fetch('/api/activity?limit=5'),
+        fetch('/api/commands?status=all&limit=50'),
+      ])
+      const actData = await actRes.json()
+      const cmdData = await cmdRes.json()
+      setActivities(actData.activities || [])
+      const cmds = cmdData.commands || []
+      setRunningCount(cmds.filter((c: {status: string}) => c.status === 'running').length)
+      setPendingCount(cmds.filter((c: {status: string}) => c.status === 'pending').length)
+    } catch {
+      setActivities([])
+    }
+  }
+
+  if (activities.length === 0 && runningCount === 0 && pendingCount === 0) return null
+
+  return (
+    <div className="bg-gray-900/30 rounded-xl border border-gray-800 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] text-gray-500 font-bold">📡 リアルタイム状況</span>
+        <div className="flex items-center gap-2">
+          {runningCount > 0 && (
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-400 border border-blue-800/50 animate-pulse">
+              ⚡ {runningCount}件 実行中
+            </span>
+          )}
+          {pendingCount > 0 && (
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
+              ⏳ {pendingCount}件 待機中
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="space-y-1">
+        {activities.slice(0, 3).map(a => {
+          const emp = allEmployeesList.find(e => e.name === a.employee_name)
+          const ago = getTimeAgo(a.created_at)
+          return (
+            <div key={a.id} className="flex items-center gap-2 text-[10px]">
+              {emp ? (
+                <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={18} />
+              ) : (
+                <span className="text-gray-600">🤖</span>
+              )}
+              <span style={{ color: emp?.color || '#888' }}>{a.employee_name}</span>
+              <span className="text-gray-600">—</span>
+              <span className="text-gray-400 flex-1 truncate">{a.action}: {a.detail}</span>
+              <span className="text-gray-600 flex-shrink-0">{ago}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function getTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return '今'
+  if (min < 60) return `${min}分前`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}時間前`
+  return `${Math.floor(hr / 24)}日前`
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 指令センター（携帯→ターミナル自動実行）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function CommandCenter() {
@@ -720,7 +803,7 @@ function CommandCenter() {
       <div className="text-center mb-4">
         <h2 className="text-lg font-bold text-orange-300">⚡ 指令センター</h2>
         <p className="text-[10px] text-gray-600 mt-1">
-          ここから指示を出す → ターミナルのClaude Codeが自動実行 → 結果がここに返ってくる
+          指示を出す → 5分以内に自動実行 → 結果がここに返ってくる（サーバー+ローカル二重稼働）
         </p>
       </div>
 
@@ -765,7 +848,7 @@ function CommandCenter() {
         </div>
 
         <p className="text-[9px] text-gray-600">
-          ターミナルで <code className="text-orange-400">node scripts/command-worker.js --watch</code> を起動すると自動実行されます
+          ✅ 自動実行中 — Vercelサーバー(5分毎) + ローカルMac(60秒毎) の二重体制で稼働
         </p>
       </div>
 
@@ -1287,6 +1370,9 @@ export default function VirtualOffice() {
             </div>
           ))}
         </div>
+
+        {/* 活動フィード（直近の指令実行状況） */}
+        <ActivityFeed />
 
         {view === 'commands' ? (
           <CommandCenter />
