@@ -71,6 +71,23 @@ async function getPendingCommands() {
   return sbGet('commands', 'status=eq.pending&order=priority.asc,created_at.asc&limit=3')
 }
 
+// AIっぽいマークダウン記号を除去
+function cleanAIText(text) {
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/`{1,3}[^`]*`{1,3}/g, (m) => m.replace(/`/g, ''))
+    .replace(/^---+$/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 function buildPrompt(cmd) {
   const lines = []
   if (cmd.assigned_employee) {
@@ -78,6 +95,7 @@ function buildPrompt(cmd) {
   }
   lines.push('')
   lines.push('以下の指令を実行し、結果を簡潔に報告してください。')
+  lines.push('回答にはマークダウン記号（**、##、*、---、```など）を一切使わず、プレーンテキストで書いてください。')
   lines.push('')
   lines.push(cmd.instruction)
   return lines.join('\n')
@@ -123,7 +141,8 @@ async function executeCommand(cmd) {
       result = await executeViaAPI(prompt)
     }
 
-    // 完了
+    // マークダウン記号を除去して完了
+    result = cleanAIText(result)
     await sbPatch('commands', cmd.id, {
       status: 'completed',
       result: result.substring(0, 10000),
@@ -195,6 +214,31 @@ async function advanceWorkflow(workflowId, currentStep) {
       console.log(`  🎉 ワークフロー「${wf.name}」完了`)
     } else {
       await sbPatch('workflows', workflowId, { current_step: next })
+
+      // 次ステップの指令を自動生成（contextからstepsとsubject等を取得）
+      const ctx = wf.context || {}
+      const steps = ctx.steps || []
+      const nextStep = steps.find(s => s.order === next)
+      if (nextStep) {
+        const contextLines = []
+        if (ctx.subject) contextLines.push(`対象: ${ctx.subject}`)
+        if (ctx.detail) contextLines.push(`背景: ${ctx.detail}`)
+        if (ctx.goal) contextLines.push(`ゴール: ${ctx.goal}`)
+        const contextStr = contextLines.length > 0 ? `\n${contextLines.join('\n')}` : ''
+
+        await sbInsert('commands', {
+          instruction: `【${wf.name}】Step ${nextStep.order}: ${nextStep.action} — ${nextStep.description}${contextStr}`,
+          status: 'pending',
+          priority: 'high',
+          assigned_department: nextStep.department,
+          assigned_employee: nextStep.employee,
+          workflow_id: workflowId,
+          workflow_step: next,
+          source: 'workflow',
+        })
+        console.log(`  → 次ステップ指令作成: Step ${next} (${nextStep.employee}: ${nextStep.action})`)
+      }
+
       await logActivity('システム', '全社', 'ワークフロー進行', `「${wf.name}」Step ${next}/${wf.total_steps}`)
       console.log(`  → ワークフロー Step ${next}/${wf.total_steps}`)
     }

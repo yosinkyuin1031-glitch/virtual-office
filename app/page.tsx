@@ -637,8 +637,8 @@ function ChairmanMemos() {
                   )}
                 </div>
                 <button
-                  onClick={() => deleteMemo(memo.id)}
-                  className="text-gray-700 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition"
+                  onClick={(e) => { e.stopPropagation(); deleteMemo(memo.id) }}
+                  className="text-gray-500 active:text-red-400 hover:text-red-400 text-sm px-2 py-1 rounded-lg hover:bg-red-900/20 active:bg-red-900/30 transition flex-shrink-0"
                 >
                   ✕
                 </button>
@@ -931,8 +931,13 @@ function CommandCenter() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function WorkflowView() {
   const [filterCat, setFilterCat] = useState('all')
-  const [activeWorkflows, setActiveWorkflows] = useState<{id: string; name: string; status: string; current_step: number; total_steps: number; created_at: string}[]>([])
+  const [activeWorkflows, setActiveWorkflows] = useState<{id: string; name: string; status: string; current_step: number; total_steps: number; created_at: string; context?: Record<string, string>}[]>([])
   const [launching, setLaunching] = useState<string | null>(null)
+  // 起動モーダル用
+  const [showLaunchModal, setShowLaunchModal] = useState<WorkflowTemplate | null>(null)
+  const [launchSubject, setLaunchSubject] = useState('')
+  const [launchDetail, setLaunchDetail] = useState('')
+  const [launchGoal, setLaunchGoal] = useState('')
 
   useEffect(() => { fetchActiveWorkflows() }, [])
 
@@ -944,8 +949,18 @@ function WorkflowView() {
     } catch { setActiveWorkflows([]) }
   }
 
-  const launchWorkflow = async (template: WorkflowTemplate) => {
+  const openLaunchModal = (template: WorkflowTemplate) => {
+    setShowLaunchModal(template)
+    setLaunchSubject('')
+    setLaunchDetail('')
+    setLaunchGoal('')
+  }
+
+  const launchWorkflow = async () => {
+    const template = showLaunchModal
+    if (!template) return
     setLaunching(template.id)
+    setShowLaunchModal(null)
     try {
       await fetch('/api/workflows', {
         method: 'POST',
@@ -954,7 +969,13 @@ function WorkflowView() {
           template_id: template.id,
           name: template.name,
           steps: template.steps,
-          context: { started_from: 'web', started_at: new Date().toISOString() },
+          context: {
+            started_from: 'web',
+            started_at: new Date().toISOString(),
+            subject: launchSubject.trim(),
+            detail: launchDetail.trim(),
+            goal: launchGoal.trim(),
+          },
         }),
       })
       await fetchActiveWorkflows()
@@ -980,14 +1001,19 @@ function WorkflowView() {
         <div className="bg-purple-900/10 rounded-xl border border-purple-800/50 p-4 space-y-2">
           <h3 className="text-xs font-bold text-purple-400">⚡ 実行中のワークフロー</h3>
           {activeWorkflows.map(wf => (
-            <div key={wf.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-900/50">
-              <div className="flex-1">
-                <p className="text-xs text-white">{wf.name}</p>
-                <p className="text-[10px] text-gray-500">Step {wf.current_step} / {wf.total_steps}</p>
-              </div>
-              <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
-                <div className="h-full bg-purple-500 rounded-full transition-all"
-                  style={{ width: `${(wf.current_step / wf.total_steps) * 100}%` }} />
+            <div key={wf.id} className="p-2 rounded-lg bg-gray-900/50 space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-xs text-white">{wf.name}</p>
+                  {wf.context?.subject && (
+                    <p className="text-[10px] text-purple-400 mt-0.5">📌 {wf.context.subject}</p>
+                  )}
+                  <p className="text-[10px] text-gray-500">Step {wf.current_step} / {wf.total_steps}</p>
+                </div>
+                <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-purple-500 rounded-full transition-all"
+                    style={{ width: `${(wf.current_step / wf.total_steps) * 100}%` }} />
+                </div>
               </div>
             </div>
           ))}
@@ -1056,7 +1082,7 @@ function WorkflowView() {
 
             {/* 起動ボタン */}
             <div className="p-3 border-t border-gray-800/50">
-              <button onClick={() => launchWorkflow(wf)} disabled={launching === wf.id}
+              <button onClick={() => openLaunchModal(wf)} disabled={launching === wf.id}
                 className="w-full py-2 rounded-lg text-xs font-bold transition disabled:opacity-50"
                 style={{ backgroundColor: wf.color + '20', color: wf.color, border: `1px solid ${wf.color}44` }}>
                 {launching === wf.id ? '起動中...' : '▶ ワークフロー起動'}
@@ -1065,6 +1091,88 @@ function WorkflowView() {
           </div>
         ))}
       </div>
+
+      {/* ワークフロー起動モーダル */}
+      {showLaunchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setShowLaunchModal(null)}>
+          <div className="bg-gray-900 rounded-2xl border-2 w-full max-w-md overflow-hidden"
+            style={{ borderColor: showLaunchModal.color + '66' }}
+            onClick={e => e.stopPropagation()}>
+            {/* ヘッダー */}
+            <div className="p-4 border-b border-gray-800" style={{ backgroundColor: showLaunchModal.color + '08' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{showLaunchModal.icon}</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">{showLaunchModal.name}</h3>
+                  <p className="text-[10px] text-gray-500">{showLaunchModal.description}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 入力フォーム */}
+            <div className="p-4 space-y-3">
+              <p className="text-[11px] text-gray-400">何について実行するか、具体的に入力してください。</p>
+
+              {/* 対象・テーマ（必須） */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 mb-1 block">
+                  対象・テーマ <span className="text-red-400">*必須</span>
+                </label>
+                <input
+                  value={launchSubject}
+                  onChange={e => setLaunchSubject(e.target.value)}
+                  placeholder={
+                    showLaunchModal.category === 'content' ? '例: 春の自律神経ケア、肩こり改善ストレッチ' :
+                    showLaunchModal.category === 'development' ? '例: 予約管理アプリのバグ修正、新規ECサイト構築' :
+                    showLaunchModal.category === 'marketing' ? '例: 4月キャンペーン、GBP投稿（腰痛テーマ）' :
+                    showLaunchModal.category === 'operations' ? '例: 本日の予約整理、月次レポート作成' :
+                    '例: 検査アプリの料金プラン提案、モニター向け案内'
+                  }
+                  className="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition"
+                  autoFocus
+                />
+              </div>
+
+              {/* 補足・背景 */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 mb-1 block">補足・背景（任意）</label>
+                <textarea
+                  value={launchDetail}
+                  onChange={e => setLaunchDetail(e.target.value)}
+                  placeholder="なぜこれをやるのか、注意点、参考情報など"
+                  rows={3}
+                  className="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition resize-none"
+                />
+              </div>
+
+              {/* ゴール */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 mb-1 block">期待するゴール（任意）</label>
+                <input
+                  value={launchGoal}
+                  onChange={e => setLaunchGoal(e.target.value)}
+                  placeholder="例: 記事を3本公開する、修正してデプロイまで"
+                  className="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition"
+                />
+              </div>
+            </div>
+
+            {/* ボタン */}
+            <div className="p-4 pt-0 flex gap-2">
+              <button onClick={() => setShowLaunchModal(null)}
+                className="flex-1 py-2.5 rounded-lg text-xs text-gray-400 border border-gray-700 hover:bg-gray-800 transition">
+                キャンセル
+              </button>
+              <button onClick={launchWorkflow} disabled={!launchSubject.trim()}
+                className="flex-1 py-2.5 rounded-lg text-xs font-bold transition disabled:opacity-30"
+                style={{ backgroundColor: showLaunchModal.color + '20', color: showLaunchModal.color, border: `1px solid ${showLaunchModal.color}66` }}>
+                ▶ この内容で起動
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1179,21 +1179,6 @@ export const workflowTemplates: WorkflowTemplate[] = [
     estimatedTime: '2時間',
   },
   {
-    id: 'daily-clinic-ops',
-    name: '整体院デイリー業務',
-    description: '予約確認→LINE配信→GBP投稿→日報の日次ルーティン',
-    icon: '🏥',
-    color: '#1565C0',
-    category: 'operations',
-    steps: [
-      { order: 1, employee: 'ナギ', department: '整体院事業部', action: '予約確認・整理', description: '本日の予約一覧確認・空き枠チェック', autoExecute: false },
-      { order: 2, employee: 'フミ', department: '整体院事業部', action: 'LINE配信', description: '明日のリマインド・来週の空き案内を配信', autoExecute: true, command: '/line-auto' },
-      { order: 3, employee: 'ハル', department: '整体院事業部', action: 'GBP投稿', description: '本日のGBP投稿を作成・投稿', autoExecute: true, command: '/gmb-post' },
-      { order: 4, employee: 'ミコ', department: '経営層', action: '日報作成', description: '全社の本日の活動を日報にまとめる', autoExecute: true, command: '/daily-report' },
-    ],
-    estimatedTime: '15分',
-  },
-  {
     id: 'competitor-analysis',
     name: '競合調査レポート',
     description: 'Web検索→Googleマップ調査→SNS分析→レポート作成',

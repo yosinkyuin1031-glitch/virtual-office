@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'テンプレートIDとステップが必要です' }, { status: 400 })
   }
 
-  // ワークフローレコード作成
+  // ワークフローレコード作成（stepsもcontextに保存して次ステップ生成に使う）
   const { data: workflow, error: wfError } = await supabase
     .from('workflows')
     .insert({
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       status: 'running',
       current_step: 1,
       total_steps: steps.length,
-      context,
+      context: { ...context, steps },
     })
     .select()
     .single()
@@ -53,12 +53,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: wfError.message }, { status: 500 })
   }
 
-  // 最初のステップの指令を作成
+  // 最初のステップの指令を作成（contextの内容を指令文に埋め込む）
   const firstStep = steps[0]
+  const contextLines: string[] = []
+  if (context.subject) contextLines.push(`対象: ${context.subject}`)
+  if (context.detail) contextLines.push(`背景: ${context.detail}`)
+  if (context.goal) contextLines.push(`ゴール: ${context.goal}`)
+  const contextStr = contextLines.length > 0 ? `\n${contextLines.join('\n')}` : ''
+
   const { data: command, error: cmdError } = await supabase
     .from('commands')
     .insert({
-      instruction: `【${name}】Step ${firstStep.order}: ${firstStep.action} — ${firstStep.description}`,
+      instruction: `【${name}】Step ${firstStep.order}: ${firstStep.action} — ${firstStep.description}${contextStr}`,
       status: 'pending',
       priority: 'high',
       assigned_department: firstStep.department,

@@ -80,9 +80,10 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        const result = response?.content?.[0]?.type === 'text'
+        const rawResult = response?.content?.[0]?.type === 'text'
           ? response.content[0].text
           : '応答を取得できませんでした'
+        const result = cleanAIText(rawResult)
 
         // 完了
         await supabase.from('commands').update({
@@ -129,12 +130,30 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// AIっぽいマークダウン記号を除去
+function cleanAIText(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/gm, '')          // ## 見出し
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')   // ***太字斜体***
+    .replace(/\*\*(.*?)\*\*/g, '$1')       // **太字**
+    .replace(/\*(.*?)\*/g, '$1')           // *斜体*
+    .replace(/^[-*+]\s+/gm, '')            // - リスト記号
+    .replace(/^\d+\.\s+/gm, '')            // 1. 番号リスト
+    .replace(/^>\s+/gm, '')                // > 引用
+    .replace(/`{1,3}[^`]*`{1,3}/g, (m) => m.replace(/`/g, ''))  // `コード`
+    .replace(/^---+$/gm, '')               // --- 区切り線
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [リンク](url)
+    .replace(/\n{3,}/g, '\n\n')            // 3行以上の空行を2行に
+    .trim()
+}
+
 function buildPrompt(cmd: { instruction: string; assigned_employee?: string; assigned_department?: string }) {
   const lines = []
   if (cmd.assigned_employee) {
     lines.push(`あなたは大口ヘルスケアグループのAI社員「${cmd.assigned_employee}」（${cmd.assigned_department || ''}）です。`)
   }
   lines.push('以下の指令を実行し、結果を簡潔に報告してください。')
+  lines.push('回答にはマークダウン記号（**、##、*、---、```など）を一切使わず、プレーンテキストで書いてください。')
   lines.push('')
   lines.push(cmd.instruction)
   return lines.join('\n')
@@ -160,6 +179,29 @@ async function advanceWorkflow(workflowId: string, currentStep: number | null) {
       await supabase.from('workflows').update({
         current_step: next,
       }).eq('id', workflowId)
+
+      // 次ステップの指令を自動生成（stepsとcontextから）
+      const ctx = wf.context || {}
+      const steps = ctx.steps || []
+      const nextStep = steps.find((s: { order: number }) => s.order === next)
+      if (nextStep) {
+        const contextLines: string[] = []
+        if (ctx.subject) contextLines.push(`対象: ${ctx.subject}`)
+        if (ctx.detail) contextLines.push(`背景: ${ctx.detail}`)
+        if (ctx.goal) contextLines.push(`ゴール: ${ctx.goal}`)
+        const contextStr = contextLines.length > 0 ? `\n${contextLines.join('\n')}` : ''
+
+        await supabase.from('commands').insert({
+          instruction: `【${wf.name}】Step ${nextStep.order}: ${nextStep.action} — ${nextStep.description}${contextStr}`,
+          status: 'pending',
+          priority: 'high',
+          assigned_department: nextStep.department,
+          assigned_employee: nextStep.employee,
+          workflow_id: workflowId,
+          workflow_step: next,
+          source: 'workflow',
+        })
+      }
     }
   } catch {}
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { documents, type Document } from '../lib/documents'
 
@@ -23,41 +23,100 @@ function CategoryBadge({ category }: { category: Document['category'] }) {
   )
 }
 
-function DocumentCard({ doc, onClick }: { doc: Document; onClick: () => void }) {
+function DocumentCard({ doc, onClick, onDelete }: { doc: Document; onClick: () => void; onDelete: () => void }) {
+  const [showConfirm, setShowConfirm] = useState(false)
+
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left bg-gray-900/50 rounded-xl border border-gray-800 p-4 hover:bg-gray-900/80 hover:border-gray-700 transition-all active:scale-[0.99]"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <CategoryBadge category={doc.category} />
-            {doc.status === 'draft' && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
-                ドラフト
-              </span>
-            )}
+    <div className="relative bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden hover:bg-gray-900/80 hover:border-gray-700 transition-all">
+      <button
+        onClick={onClick}
+        className="w-full text-left p-4"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <CategoryBadge category={doc.category} />
+              {doc.status === 'draft' && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
+                  ドラフト
+                </span>
+              )}
+            </div>
+            <h3 className="text-sm font-bold text-gray-200 mt-1">{doc.title}</h3>
+            <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{doc.summary}</p>
+            <p className="text-[10px] text-gray-600 mt-2">{doc.updatedAt}</p>
           </div>
-          <h3 className="text-sm font-bold text-gray-200 mt-1">{doc.title}</h3>
-          <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{doc.summary}</p>
-          <p className="text-[10px] text-gray-600 mt-2">{doc.updatedAt}</p>
+          <span className="text-gray-600 text-lg flex-shrink-0">→</span>
         </div>
-        <span className="text-gray-600 text-lg flex-shrink-0">→</span>
-      </div>
-    </button>
+      </button>
+
+      {/* 削除ボタン */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setShowConfirm(true) }}
+        className="absolute top-2 right-2 text-gray-600 active:text-red-400 hover:text-red-400 text-sm px-2 py-1 rounded-lg hover:bg-red-900/20 active:bg-red-900/30 transition"
+      >
+        ✕
+      </button>
+
+      {/* 削除確認 */}
+      {showConfirm && (
+        <div className="absolute inset-0 bg-gray-900/95 flex flex-col items-center justify-center gap-3 p-4 rounded-xl z-10">
+          <p className="text-xs text-gray-300 text-center">「{doc.title}」を削除しますか？</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowConfirm(false)}
+              className="px-4 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={() => { onDelete(); setShowConfirm(false) }}
+              className="px-4 py-1.5 text-xs rounded-lg bg-red-900/50 text-red-400 border border-red-800/50 hover:bg-red-900/80 transition"
+            >
+              削除する
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
-function DocumentViewer({ doc, onBack }: { doc: Document; onBack: () => void }) {
+function DocumentViewer({ doc, onBack, onDelete }: { doc: Document; onBack: () => void; onDelete: () => void }) {
+  const [showConfirm, setShowConfirm] = useState(false)
+
   return (
     <div className="space-y-4">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition"
-      >
-        ← 一覧に戻る
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition"
+        >
+          ← 一覧に戻る
+        </button>
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="text-xs text-gray-600 hover:text-red-400 active:text-red-400 px-3 py-1.5 rounded-lg border border-gray-800 hover:border-red-800/50 hover:bg-red-900/20 transition"
+        >
+          削除
+        </button>
+      </div>
+
+      {showConfirm && (
+        <div className="bg-red-900/10 border border-red-800/50 rounded-xl p-4 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-300">このドキュメントを削除しますか？</p>
+          <div className="flex gap-2 flex-shrink-0">
+            <button onClick={() => setShowConfirm(false)}
+              className="px-3 py-1 text-[10px] rounded-lg border border-gray-700 text-gray-400">
+              キャンセル
+            </button>
+            <button onClick={() => { onDelete(); setShowConfirm(false) }}
+              className="px-3 py-1 text-[10px] rounded-lg bg-red-900/50 text-red-400 border border-red-800/50">
+              削除する
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
         <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -73,21 +132,22 @@ function DocumentViewer({ doc, onBack }: { doc: Document; onBack: () => void }) 
       </div>
 
       <div
-        className="bg-gray-900/30 rounded-xl border border-gray-800 p-5 prose prose-invert prose-sm max-w-none
-          prose-headings:text-cyan-300 prose-headings:border-b prose-headings:border-gray-800 prose-headings:pb-2
-          prose-h2:text-base prose-h2:mt-8 prose-h2:mb-4
-          prose-h3:text-sm prose-h3:mt-6 prose-h3:mb-3
-          prose-p:text-[13px] prose-p:text-gray-300 prose-p:leading-[1.9] prose-p:mb-4
-          prose-li:text-[13px] prose-li:text-gray-300 prose-li:leading-[1.8] prose-li:mb-1
+        className="bg-gray-900/30 rounded-xl border border-gray-800 p-6 prose prose-invert prose-sm max-w-none
+          prose-headings:text-cyan-300 prose-headings:border-b prose-headings:border-gray-800 prose-headings:pb-3
+          prose-h2:text-base prose-h2:mt-10 prose-h2:mb-6
+          prose-h3:text-sm prose-h3:mt-8 prose-h3:mb-4
+          prose-p:text-[13px] prose-p:text-gray-300 prose-p:leading-[2.1] prose-p:mb-6
+          prose-li:text-[13px] prose-li:text-gray-300 prose-li:leading-[2.0] prose-li:mb-2
+          prose-ul:my-4 prose-ol:my-4
           prose-strong:text-cyan-200
-          prose-table:text-[12px]
-          prose-th:text-cyan-300 prose-th:bg-gray-800/50 prose-th:px-3 prose-th:py-2
-          prose-td:text-gray-300 prose-td:px-3 prose-td:py-2 prose-td:border-gray-800
+          prose-table:text-[12px] prose-table:my-6
+          prose-th:text-cyan-300 prose-th:bg-gray-800/50 prose-th:px-3 prose-th:py-2.5
+          prose-td:text-gray-300 prose-td:px-3 prose-td:py-2.5 prose-td:border-gray-800
           prose-code:text-cyan-400 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:rounded
-          prose-blockquote:border-cyan-700 prose-blockquote:text-gray-400
-          prose-hr:border-gray-800
-          [&_br]:block [&_br]:mt-3 [&_br]:content-['']
-          [&>br]:mt-6"
+          prose-blockquote:border-cyan-700 prose-blockquote:text-gray-400 prose-blockquote:my-6
+          prose-hr:border-gray-800 prose-hr:my-8
+          [&_br]:block [&_br]:mt-4 [&_br]:content-['']
+          [&>br]:mt-8"
         dangerouslySetInnerHTML={{ __html: doc.contentHtml }}
       />
     </div>
@@ -98,8 +158,33 @@ export default function DocumentsPage() {
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [filter, setFilter] = useState<Document['category'] | 'all'>('all')
   const [search, setSearch] = useState('')
+  const [hiddenIds, setHiddenIds] = useState<string[]>([])
 
-  const filtered = documents.filter(d => {
+  useEffect(() => {
+    fetchHiddenIds()
+  }, [])
+
+  const fetchHiddenIds = async () => {
+    try {
+      const res = await fetch('/api/documents')
+      const data = await res.json()
+      setHiddenIds(data.hiddenIds || [])
+    } catch {}
+  }
+
+  const hideDocument = async (id: string) => {
+    await fetch('/api/documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    setHiddenIds(prev => [...prev, id])
+    if (selectedDoc?.id === id) setSelectedDoc(null)
+  }
+
+  const visibleDocs = documents.filter(d => !hiddenIds.includes(d.id))
+
+  const filtered = visibleDocs.filter(d => {
     const matchCategory = filter === 'all' || d.category === filter
     if (!search.trim()) return matchCategory
     const q = search.trim().toLowerCase()
@@ -128,7 +213,7 @@ export default function DocumentsPage() {
               <span className="text-cyan-300">制作物・ドキュメント</span>
             </h1>
             <p className="text-[10px] text-gray-600 mt-0.5">
-              CCが作成した資料を携帯から確認
+              CCが作成した資料を携帯から確認・管理
             </p>
           </div>
           <Link
@@ -142,7 +227,11 @@ export default function DocumentsPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-6">
         {selectedDoc ? (
-          <DocumentViewer doc={selectedDoc} onBack={() => setSelectedDoc(null)} />
+          <DocumentViewer
+            doc={selectedDoc}
+            onBack={() => setSelectedDoc(null)}
+            onDelete={() => hideDocument(selectedDoc.id)}
+          />
         ) : (
           <div className="space-y-4">
             {/* 検索窓 */}
@@ -191,7 +280,12 @@ export default function DocumentsPage() {
             {/* ドキュメント一覧 */}
             <div className="space-y-3">
               {filtered.map(doc => (
-                <DocumentCard key={doc.id} doc={doc} onClick={() => setSelectedDoc(doc)} />
+                <DocumentCard
+                  key={doc.id}
+                  doc={doc}
+                  onClick={() => setSelectedDoc(doc)}
+                  onDelete={() => hideDocument(doc.id)}
+                />
               ))}
             </div>
 
