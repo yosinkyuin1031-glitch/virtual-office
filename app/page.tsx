@@ -170,6 +170,19 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
   const totalEmployees = allEmployeesList.length
   const busyCount = allEmployeesList.filter(e => e.status === 'busy').length
 
+  const quickApps = [
+    { name: '顧客管理', icon: '👥', url: 'https://customer-mgmt.vercel.app', color: '#F59E0B' },
+    { name: '予約管理', icon: '📅', url: 'https://reservation-app-steel.vercel.app', color: '#3B82F6' },
+    { name: 'WEB問診', icon: '📝', url: 'https://web-monshin.vercel.app', color: '#8B5CF6' },
+    { name: '検査シート', icon: '🔬', url: 'https://kensa-sheet-app.vercel.app', color: '#10B981' },
+    { name: 'MEO勝ち上げくん', icon: '🏆', url: 'https://meo-kachiagekun.vercel.app', color: '#EF4444' },
+    { name: 'LINE自動化', icon: '💬', url: 'https://line-automation.vercel.app', color: '#06B6D4' },
+    { name: 'ECサイト', icon: '🛒', url: 'https://ec-shop-cyan.vercel.app', color: '#F97316' },
+    { name: 'プロジェクト管理', icon: '📋', url: 'https://project-hub-three-chi.vercel.app', color: '#6366F1' },
+    { name: '治療家AIマスター', icon: '🧠', url: 'https://ai-master.vercel.app', color: '#EC4899' },
+    { name: 'VideoForge', icon: '🎬', url: 'https://video-forge-nu.vercel.app', color: '#14B8A6' },
+  ]
+
   return (
     <div className="space-y-6 pb-8">
       {/* A. ヘッダーエリア */}
@@ -196,6 +209,31 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
 
       {/* C. 事業方針エリア */}
       <ContextEditor />
+
+      {/* C2. よく使うアプリ */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+          よく使うアプリ
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+          {quickApps.map(app => (
+            <a
+              key={app.name}
+              href={app.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white border border-gray-200 hover:shadow-md hover:scale-[1.03] transition-all group"
+            >
+              <span className="text-2xl group-hover:scale-110 transition-transform">{app.icon}</span>
+              <span className="text-[10px] font-bold text-gray-700 text-center leading-tight">{app.name}</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: app.color + '15', color: app.color }}>
+                開く →
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
 
       {/* D. 部署カード（グリッド） */}
       <div>

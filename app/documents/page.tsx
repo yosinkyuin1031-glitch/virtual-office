@@ -27,7 +27,7 @@ function DocumentCard({ doc, onClick, onDelete }: { doc: Document; onClick: () =
   const [showConfirm, setShowConfirm] = useState(false)
 
   return (
-    <div className="relative bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden hover:bg-gray-900/80 hover:border-gray-700 transition-all">
+    <div className="relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:bg-amber-50/50 hover:border-amber-300/60 transition-all shadow-sm">
       <button
         onClick={onClick}
         className="w-full text-left p-4"
@@ -37,41 +37,41 @@ function DocumentCard({ doc, onClick, onDelete }: { doc: Document; onClick: () =
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <CategoryBadge category={doc.category} />
               {doc.status === 'draft' && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-600 border border-yellow-200">
                   ドラフト
                 </span>
               )}
             </div>
-            <h3 className="text-sm font-bold text-gray-200 mt-1">{doc.title}</h3>
+            <h3 className="text-sm font-bold text-gray-800 mt-1">{doc.title}</h3>
             <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{doc.summary}</p>
-            <p className="text-[10px] text-gray-600 mt-2">{doc.updatedAt}</p>
+            <p className="text-[10px] text-gray-400 mt-2">{doc.updatedAt}</p>
           </div>
-          <span className="text-gray-600 text-lg flex-shrink-0">→</span>
+          <span className="text-amber-400 text-lg flex-shrink-0">→</span>
         </div>
       </button>
 
       {/* 削除ボタン */}
       <button
         onClick={(e) => { e.stopPropagation(); setShowConfirm(true) }}
-        className="absolute top-2 right-2 text-gray-600 active:text-red-400 hover:text-red-400 text-sm px-2 py-1 rounded-lg hover:bg-red-900/20 active:bg-red-900/30 transition"
+        className="absolute top-2 right-2 text-gray-400 active:text-red-500 hover:text-red-500 text-sm px-2 py-1 rounded-lg hover:bg-red-50 active:bg-red-100 transition"
       >
         ✕
       </button>
 
       {/* 削除確認 */}
       {showConfirm && (
-        <div className="absolute inset-0 bg-gray-900/95 flex flex-col items-center justify-center gap-3 p-4 rounded-xl z-10">
-          <p className="text-xs text-gray-300 text-center">「{doc.title}」を削除しますか？</p>
+        <div className="absolute inset-0 bg-white/95 border border-gray-200 flex flex-col items-center justify-center gap-3 p-4 rounded-xl z-10">
+          <p className="text-xs text-gray-600 text-center">「{doc.title}」を削除しますか？</p>
           <div className="flex gap-2">
             <button
               onClick={() => setShowConfirm(false)}
-              className="px-4 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition"
+              className="px-4 py-1.5 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               キャンセル
             </button>
             <button
               onClick={() => { onDelete(); setShowConfirm(false) }}
-              className="px-4 py-1.5 text-xs rounded-lg bg-red-900/50 text-red-400 border border-red-800/50 hover:bg-red-900/80 transition"
+              className="px-4 py-1.5 text-xs rounded-lg bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 transition"
             >
               削除する
             </button>
@@ -90,62 +90,62 @@ function DocumentViewer({ doc, onBack, onDelete }: { doc: Document; onBack: () =
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition"
+          className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-500 transition"
         >
           ← 一覧に戻る
         </button>
         <button
           onClick={() => setShowConfirm(true)}
-          className="text-xs text-gray-600 hover:text-red-400 active:text-red-400 px-3 py-1.5 rounded-lg border border-gray-800 hover:border-red-800/50 hover:bg-red-900/20 transition"
+          className="text-xs text-gray-400 hover:text-red-500 active:text-red-500 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-red-200 hover:bg-red-50 transition"
         >
           削除
         </button>
       </div>
 
       {showConfirm && (
-        <div className="bg-red-900/10 border border-red-800/50 rounded-xl p-4 flex items-center justify-between gap-3">
-          <p className="text-xs text-gray-300">このドキュメントを削除しますか？</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-600">このドキュメントを削除しますか？</p>
           <div className="flex gap-2 flex-shrink-0">
             <button onClick={() => setShowConfirm(false)}
-              className="px-3 py-1 text-[10px] rounded-lg border border-gray-700 text-gray-400">
+              className="px-3 py-1 text-[10px] rounded-lg border border-gray-200 text-gray-500">
               キャンセル
             </button>
             <button onClick={() => { onDelete(); setShowConfirm(false) }}
-              className="px-3 py-1 text-[10px] rounded-lg bg-red-900/50 text-red-400 border border-red-800/50">
+              className="px-3 py-1 text-[10px] rounded-lg bg-red-50 text-red-500 border border-red-200">
               削除する
             </button>
           </div>
         </div>
       )}
 
-      <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex items-center gap-2 flex-wrap mb-2">
           <CategoryBadge category={doc.category} />
           {doc.status === 'draft' && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-600 border border-yellow-200">
               ドラフト
             </span>
           )}
         </div>
-        <h2 className="text-base font-bold text-gray-200">{doc.title}</h2>
-        <p className="text-[10px] text-gray-600 mt-1">最終更新: {doc.updatedAt}</p>
+        <h2 className="text-base font-bold text-gray-800">{doc.title}</h2>
+        <p className="text-[10px] text-gray-400 mt-1">最終更新: {doc.updatedAt}</p>
       </div>
 
       <div
-        className="bg-gray-900/30 rounded-xl border border-gray-800 p-6 prose prose-invert prose-sm max-w-none
-          prose-headings:text-cyan-300 prose-headings:border-b prose-headings:border-gray-800 prose-headings:pb-3
+        className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm prose prose-sm max-w-none
+          prose-headings:text-amber-700 prose-headings:border-b prose-headings:border-amber-200/60 prose-headings:pb-3
           prose-h2:text-base prose-h2:mt-10 prose-h2:mb-6
           prose-h3:text-sm prose-h3:mt-8 prose-h3:mb-4
-          prose-p:text-[13px] prose-p:text-gray-300 prose-p:leading-[2.1] prose-p:mb-6
-          prose-li:text-[13px] prose-li:text-gray-300 prose-li:leading-[2.0] prose-li:mb-2
+          prose-p:text-[13px] prose-p:text-gray-600 prose-p:leading-[2.1] prose-p:mb-6
+          prose-li:text-[13px] prose-li:text-gray-600 prose-li:leading-[2.0] prose-li:mb-2
           prose-ul:my-4 prose-ol:my-4
-          prose-strong:text-cyan-200
+          prose-strong:text-amber-800
           prose-table:text-[12px] prose-table:my-6
-          prose-th:text-cyan-300 prose-th:bg-gray-800/50 prose-th:px-3 prose-th:py-2.5
-          prose-td:text-gray-300 prose-td:px-3 prose-td:py-2.5 prose-td:border-gray-800
-          prose-code:text-cyan-400 prose-code:bg-gray-800/50 prose-code:px-1 prose-code:rounded
-          prose-blockquote:border-cyan-700 prose-blockquote:text-gray-400 prose-blockquote:my-6
-          prose-hr:border-gray-800 prose-hr:my-8
+          prose-th:text-amber-700 prose-th:bg-amber-50 prose-th:px-3 prose-th:py-2.5
+          prose-td:text-gray-600 prose-td:px-3 prose-td:py-2.5 prose-td:border-gray-200
+          prose-code:text-amber-600 prose-code:bg-amber-50 prose-code:px-1 prose-code:rounded
+          prose-blockquote:border-amber-300 prose-blockquote:text-gray-500 prose-blockquote:my-6
+          prose-hr:border-gray-200 prose-hr:my-8
           [&_br]:block [&_br]:mt-4 [&_br]:content-['']
           [&>br]:mt-8"
         dangerouslySetInnerHTML={{ __html: doc.contentHtml }}
@@ -204,21 +204,21 @@ export default function DocumentsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#060b14] text-white font-mono">
-      <header className="border-b border-gray-800 px-4 py-3">
+    <div className="min-h-screen bg-[#faf7f2] text-gray-800 font-sans">
+      <header className="border-b border-amber-200/60 bg-white/80 backdrop-blur-sm px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-lg font-bold">
-              <span className="text-cyan-400">📄</span>{' '}
-              <span className="text-cyan-300">制作物・ドキュメント</span>
+              <span className="text-amber-500">📄</span>{' '}
+              <span className="text-amber-700">制作物・ドキュメント</span>
             </h1>
-            <p className="text-[10px] text-gray-600 mt-0.5">
+            <p className="text-[10px] text-gray-500 mt-0.5">
               CCが作成した資料を携帯から確認・管理
             </p>
           </div>
           <Link
             href="/"
-            className="px-3 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-500 hover:text-gray-300 hover:border-gray-600 transition"
+            className="px-3 py-1.5 text-xs rounded-lg border border-amber-200 text-amber-600 hover:text-amber-700 hover:border-amber-300 hover:bg-amber-50 transition"
           >
             🏢 オフィスに戻る
           </Link>
@@ -236,18 +236,18 @@ export default function DocumentsPage() {
           <div className="space-y-4">
             {/* 検索窓 */}
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="キーワードで検索（例: 料金、MEO、Facebook）"
-                className="w-full pl-9 pr-8 py-2.5 text-sm bg-gray-900/60 border border-gray-700 rounded-xl text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-600/30 transition"
+                className="w-full pl-9 pr-8 py-2.5 text-sm bg-white border border-amber-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition"
               />
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
                 >
                   ✕
                 </button>
@@ -262,8 +262,8 @@ export default function DocumentsPage() {
                   onClick={() => setFilter(cat.key)}
                   className={`px-3 py-1.5 text-xs rounded-lg border whitespace-nowrap transition ${
                     filter === cat.key
-                      ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10'
-                      : 'border-gray-700 text-gray-500 hover:text-gray-300'
+                      ? 'border-amber-400 text-amber-700 bg-amber-50'
+                      : 'border-gray-200 text-gray-400 hover:text-gray-600'
                   }`}
                 >
                   {cat.label}
@@ -272,9 +272,9 @@ export default function DocumentsPage() {
             </div>
 
             {/* ドキュメント件数 */}
-            <p className="text-[10px] text-gray-600">
+            <p className="text-[10px] text-gray-500">
               {filtered.length}件のドキュメント
-              {search && <span className="text-cyan-500"> （「{search}」で検索中）</span>}
+              {search && <span className="text-amber-600"> （「{search}」で検索中）</span>}
             </p>
 
             {/* ドキュメント一覧 */}
@@ -290,7 +290,7 @@ export default function DocumentsPage() {
             </div>
 
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-gray-600 text-sm">
+              <div className="text-center py-12 text-gray-400 text-sm">
                 {search ? `「${search}」に一致するドキュメントが見つかりません` : 'このカテゴリのドキュメントはまだありません'}
               </div>
             )}
@@ -298,8 +298,8 @@ export default function DocumentsPage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-800 mt-8 py-4 text-center">
-        <p className="text-[10px] text-gray-700">
+      <footer className="border-t border-amber-200/60 bg-white/60 mt-8 py-4 text-center">
+        <p className="text-[10px] text-gray-400">
           大口ヘルスケアグループ バーチャルオフィス — 制作物管理
         </p>
       </footer>
