@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "バーチャルオフィス | 大口ヘルスケアグループ",
-  description: "AI社員33名体制のバーチャルオフィス管理画面",
+  title: "AI Solutions | バーチャルオフィス",
+  description: "AI社員24名・8部署体制のバーチャルオフィス管理画面",
 };
 
 export default function RootLayout({
