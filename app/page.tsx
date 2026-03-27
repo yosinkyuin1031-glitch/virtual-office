@@ -8,6 +8,7 @@ import PixelCharacter from './components/PixelCharacter'
 import ChatModal from './components/ChatModal'
 import GoalsEditor from './components/GoalsEditor'
 import ContextEditor from './components/ContextEditor'
+import AutoTasksPanel from './components/AutoTasksPanel'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 共通コンポーネント
@@ -189,6 +190,9 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
 
       {/* B. 目標・KPIカード */}
       <GoalsEditor />
+
+      {/* B2. 自動生成タスク */}
+      <AutoTasksPanel />
 
       {/* C. 事業方針エリア */}
       <ContextEditor />
