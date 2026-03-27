@@ -180,6 +180,11 @@ const chars: Record<string, CharDef> = {
     skin: '#F5CBA7', eyes: '#D84315',
     outfit: '#D84315', outfitAcc: '#FFAB91', shoes: '#BF360C',
   },
+  'リオ': {
+    hairStyle: 'messy', hairColor: '#D84315', hairHL: '#FF7043',
+    skin: '#FFE0BD', eyes: '#BF360C',
+    outfit: '#FF5722', outfitAcc: '#FFAB91', shoes: '#D84315',
+  },
 }
 
 // ─── SVG 描画コンポーネント ───
