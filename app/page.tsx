@@ -6,6 +6,8 @@ import { departments, cloudUsage, allEmployeesList, products, productCategories,
 import type { Employee, Department, Product, WorkflowTemplate } from './lib/data'
 import PixelCharacter from './components/PixelCharacter'
 import ChatModal from './components/ChatModal'
+import GoalsEditor from './components/GoalsEditor'
+import ContextEditor from './components/ContextEditor'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 共通コンポーネント
@@ -185,52 +187,11 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
         </div>
       </div>
 
-      {/* B. 目標・KPIカード（横並び4つ） */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: '月間売上目標', value: '300万円', icon: '💰', color: '#F59E0B', sub: '令和8年度' },
-          { label: 'アプリ導入院数', value: '目標50院', icon: '🏥', color: '#3B82F6', sub: '現在 約10院' },
-          { label: 'MEOモニター', value: '10/50院', icon: '📍', color: '#10B981', sub: '拡大中' },
-          { label: '開発アプリ数', value: `${products.length}個`, icon: '📱', color: '#8B5CF6', sub: `${products.filter(p => p.status === 'active').length}個 稼働中` },
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{kpi.icon}</span>
-              <span className="text-[11px] text-gray-400 font-medium">{kpi.label}</span>
-            </div>
-            <p className="text-lg font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
-            <p className="text-[10px] text-gray-400 mt-1">{kpi.sub}</p>
-          </div>
-        ))}
-      </div>
+      {/* B. 目標・KPIカード */}
+      <GoalsEditor />
 
       {/* C. 事業方針エリア */}
-      <div className="bg-white rounded-xl border border-amber-200 p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
-          事業方針
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <span className="text-[10px] px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap font-medium">令和8年</span>
-            <p className="text-sm text-gray-700">年商3,600万円（整体院 + BtoB + 訪問鍼灸）</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-[10px] px-2 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 whitespace-nowrap font-medium">3年後</span>
-            <p className="text-sm text-gray-700">年商1億円</p>
-          </div>
-          <div className="border-t border-gray-100 pt-3">
-            <p className="text-[11px] text-gray-400 mb-2 font-medium">現在の重点施策</p>
-            <div className="flex flex-wrap gap-2">
-              {['検査アプリSaaS化', 'MEOモニター拡大', 'Stripe本番化'].map(item => (
-                <span key={item} className="text-xs px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 text-amber-800 border border-amber-200 font-medium">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ContextEditor />
 
       {/* D. 部署カード（グリッド） */}
       <div>
@@ -1744,7 +1705,7 @@ function DepartmentsView({ setChatTarget }: { setChatTarget: (emp: Employee) => 
 // メインページ
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-type ViewType = 'home' | 'departments' | 'employees' | 'tasks' | 'products' | 'memos' | 'commands' | 'workflows' | 'sales' | 'automation' | 'org' | 'documents'
+type ViewType = 'home' | 'departments' | 'employees' | 'tasks' | 'products' | 'memos' | 'commands' | 'workflows' | 'sales' | 'automation' | 'org' | 'documents' | 'settings'
 
 const sidebarItems: { key: ViewType; label: string; icon: string }[] = [
   { key: 'home', label: 'ダッシュボード', icon: '🏠' },
@@ -1759,6 +1720,7 @@ const sidebarItems: { key: ViewType; label: string; icon: string }[] = [
   { key: 'automation', label: '自動化', icon: '🤖' },
   { key: 'org', label: '組織図', icon: '🏗️' },
   { key: 'documents', label: '資料', icon: '📄' },
+  { key: 'settings', label: '設定', icon: '⚙️' },
 ]
 
 export default function VirtualOffice() {
@@ -1917,6 +1879,15 @@ export default function VirtualOffice() {
             <ProductBoard setChatTarget={setChatTarget} />
           ) : view === 'org' ? (
             <OrgChart setChatTarget={setChatTarget} />
+          ) : view === 'settings' ? (
+            <div className="space-y-6 pb-8">
+              <div className="text-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">設定</h2>
+                <p className="text-[10px] text-gray-400 mt-1">目標・KPI・事業方針をブラウザから編集できます</p>
+              </div>
+              <GoalsEditor fullPage />
+              <ContextEditor fullPage />
+            </div>
           ) : null}
         </main>
       </div>
