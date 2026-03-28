@@ -42,6 +42,10 @@
     {
       "path": "/api/pdca/weekly",
       "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/pdca/task-engine",
+      "schedule": "*/10 * * * *"
     }
   ]
 }
