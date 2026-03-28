@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>治療家が作った、治療家のためのアプリ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #000;
+    overflow: hidden;
+  }
+  .slide {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    background: #FAFAFA;
+    color: #222;
+    position: relative;
+  }
+  .slide.active { display: flex; flex-direction: column; }
+
+  /* スライド番号 */
+  .slide-number {
+    position: absolute;
+    bottom: 24px;
+    right: 40px;
+    font-size: 16px;
+    color: #999;
+  }
+
+  /* 共通 */
+  h1 { font-size: 52px; color: #1565C0; line-height: 1.4; font-weight: 800; }
+  h2 { font-size: 44px; color: #1565C0; line-height: 1.3; font-weight: 700; margin-bottom: 36px; }
+  h3 { font-size: 32px; color: #1565C0; margin-bottom: 20px; font-weight: 700; }
+  p, li { font-size: 28px; line-height: 1.8; color: #333; }
+  .icon { font-size: 56px; margin-bottom: 20px; display: block; }
+  .subtitle { font-size: 24px; color: #666; margin-top: 12px; }
+  .accent { color: #FF6F00; font-weight: 700; }
+  .highlight-box {
+    background: #E3F2FD;
+    border-left: 6px solid #1565C0;
+    padding: 20px 28px;
+    border-radius: 8px;
+    margin: 16px 0;
+  }
+  ul { list-style: none; padding: 0; }
+  ul li { padding: 8px 0; font-size: 28px; }
+  ul li::before { content: ""; }
+
+  /* タイトルスライド */
+  .slide-title {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #FAFAFA 0%, #E3F2FD 100%);
+  }
+  .slide-title h1 { font-size: 60px; margin-bottom: 32px; }
+  .slide-title .author { font-size: 26px; color: #555; margin-top: 24px; line-height: 2; }
+  .slide-title .date { font-size: 22px; color: #999; margin-top: 16px; }
+
+  /* 2カラム */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    flex: 1;
+  }
+  .col { display: flex; flex-direction: column; }
+
+  /* 課題カード */
+  .issue-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+  }
+  .issue-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .issue-card .num {
+    background: #1565C0;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .issue-card p { font-size: 22px; }
+
+  /* アプリカード */
+  .app-slide { justify-content: flex-start; }
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .app-header .app-icon { font-size: 48px; }
+  .app-features {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .feature-item {
+    background: #fff;
+    border: 1px solid #E0E0E0;
+    border-radius: 10px;
+    padding: 18px 24px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .feature-item .check { color: #1565C0; font-weight: 700; font-size: 22px; }
+  .star-badge {
+    background: #FF6F00;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-left: 12px;
+  }
+
+  /* 料金テーブル */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    flex: 1;
+    align-items: start;
+  }
+  .plan-card {
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+    position: relative;
+  }
+  .plan-card.recommended {
+    border-color: #FF6F00;
+    box-shadow: 0 4px 24px rgba(255,111,0,0.15);
+    transform: scale(1.05);
+  }
+  .plan-card.recommended::before {
+    content: "おすすめ";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FF6F00;
+    color: #fff;
+    padding: 4px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .plan-name { font-size: 28px; font-weight: 700; color: #1565C0; margin-bottom: 12px; }
+  .plan-price { font-size: 20px; color: #555; margin-bottom: 20px; }
+  .plan-features { text-align: left; }
+  .plan-features li { font-size: 18px; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+  .plan-features li:last-child { border: none; }
+  .plan-note { font-size: 18px; color: #888; margin-top: 24px; text-align: center; }
+
+  /* ステップ */
+  .steps {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    align-items: center;
+  }
+  .step-card {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .step-num {
+    background: #1565C0;
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+  .step-card h4 { font-size: 22px; color: #1565C0; margin-bottom: 8px; }
+  .step-card p { font-size: 16px; color: #666; }
+  .step-arrow {
+    font-size: 32px;
+    color: #1565C0;
+    flex-shrink: 0;
+  }
+
+  /* FAQ */
+  .faq-list { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .faq-item {
+    background: #fff;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+    padding: 22px 28px;
+  }
+  .faq-q { font-size: 24px; font-weight: 700; color: #1565C0; margin-bottom: 8px; }
+  .faq-a { font-size: 22px; color: #444; }
+
+  /* CTA */
+  .cta-slide {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #FAFAFA 0%, #E3F2FD 100%);
+  }
+  .cta-box {
+    background: #fff;
+    border: 2px solid #1565C0;
+    border-radius: 20px;
+    padding: 48px 64px;
+    margin-top: 32px;
+  }
+  .cta-box p { font-size: 26px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<!-- スライド1: タイトル -->
+<div class="slide slide-title active" id="slide1">
+  <span class="icon">🩺</span>
+  <h1>治療家が作った、<br>治療家のためのアプリ</h1>
+  <div class="author">
+    大口 陽平<br>
+    大口神経整体院 院長 / 大阪で開業6年目
+  </div>
+  <div class="date" id="today-date"></div>
+  <div class="slide-number">1 / 14</div>
+</div>
+
+<!-- スライド2: 自己紹介 -->
+<div class="slide" id="slide2">
+  <span class="icon">👋</span>
+  <h2>自己紹介</h2>
+  <div style="flex:1; display:flex; flex-direction:column; gap:20px;">
+    <div class="highlight-box">
+      <p style="font-size:30px; font-weight:700;">大口 陽平（おおぐち ようへい）</p>
+      <p class="subtitle">大口神経整体院 院長 / 大阪府</p>
+    </div>
+    <ul>
+      <li style="font-size:30px;">&#x25B6; 大阪で<span class="accent">神経整体院</span>を経営して6年目</li>
+      <li style="font-size:30px;">&#x25B6; 施術の現場で<span class="accent">検査の重要性</span>に気づく</li>
+      <li style="font-size:30px;">&#x25B6; 既存ツールでは手技の検査を記録できず、自分で開発を開始</li>
+      <li style="font-size:30px;">&#x25B6; 現在 <span class="accent">30個以上</span>の治療院向けアプリを開発</li>
+    </ul>
+  </div>
+  <div class="slide-number">2 / 14</div>
+</div>
+
+<!-- スライド3: なぜアプリを作り始めたか -->
+<div class="slide" id="slide3">
+  <span class="icon">💡</span>
+  <h2>なぜアプリを作り始めたか</h2>
+  <div style="flex:1; display:flex; flex-direction:column; gap:24px;">
+    <div class="feature-item" style="border-left: 4px solid #FF6F00;">
+      <span style="font-size:24px;">検査結果を患者さんにうまく伝えられていなかった</span>
+    </div>
+    <div class="feature-item" style="border-left: 4px solid #FF6F00;">
+      <span style="font-size:24px;">紙のカルテでは管理に限界がある</span>
+    </div>
+    <div class="feature-item" style="border-left: 4px solid #FF6F00;">
+      <span style="font-size:24px;">既存ツールは「写真」ばかり。手技の検査を記録できるものがなかった</span>
+    </div>
+    <div class="highlight-box" style="margin-top:16px;">
+      <p style="font-size:34px; font-weight:700; color:#1565C0; text-align:center;">「ないなら、自分で作ろう」</p>
+    </div>
+  </div>
+  <div class="slide-number">3 / 14</div>
+</div>
+
+<!-- スライド4: 治療院の6つの課題 -->
+<div class="slide" id="slide4">
+  <span class="icon">📋</span>
+  <h2>治療院の6つの課題</h2>
+  <div class="issue-grid">
+    <div class="issue-card">
+      <div class="num">1</div>
+      <p>検査結果を患者に<br>伝えにくい</p>
+    </div>
+    <div class="issue-card">
+      <div class="num">2</div>
+      <p>カルテ管理が<br>バラバラ</p>
+    </div>
+    <div class="issue-card">
+      <div class="num">3</div>
+      <p>予約管理が<br>手作業</p>
+    </div>
+    <div class="issue-card">
+      <div class="num">4</div>
+      <p>問診に<br>時間がかかる</p>
+    </div>
+    <div class="issue-card">
+      <div class="num">5</div>
+      <p>MEO対策が何をすれば<br>いいかわからない</p>
+    </div>
+    <div class="issue-card">
+      <div class="num">6</div>
+      <p>患者の状態を<br>数値で追えない</p>
+    </div>
+  </div>
+  <div class="slide-number">4 / 14</div>
+</div>
+
+<!-- スライド5: 検査シート -->
+<div class="slide app-slide" id="slide5">
+  <div class="app-header">
+    <span class="app-icon">🔍</span>
+    <div>
+      <h2 style="margin-bottom:0;">検査シートアプリ</h2>
+      <span class="star-badge">一番の推しアプリ</span>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="col" style="gap:12px;">
+      <h3>主な機能</h3>
+      <div class="feature-item"><span class="check">&#10003;</span> 神経学的検査を記録・保存</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 反射・感覚・筋力の3ステップ検査</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 検査結果をグラフで可視化</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 患者ごとに経過を時系列で追跡</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 検査結果から施術提案書を自動生成</div>
+    </div>
+    <div class="col" style="gap:16px;">
+      <h3>こんな悩みを解決</h3>
+      <div class="highlight-box">
+        <p style="font-size:22px;">「検査してるけど、患者にうまく伝えられない...」</p>
+      </div>
+      <div class="highlight-box" style="border-left-color: #FF6F00;">
+        <p style="font-size:22px;">「施術前後の変化を<span class="accent">数値</span>で見せられる」</p>
+      </div>
+      <div class="highlight-box" style="border-left-color: #FF6F00;">
+        <p style="font-size:22px;">「リピート率が上がる理由を<span class="accent">患者自身が理解</span>できる」</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">5 / 14</div>
+</div>
+
+<!-- スライド6: 顧客管理 -->
+<div class="slide app-slide" id="slide6">
+  <div class="app-header">
+    <span class="app-icon">📊</span>
+    <h2 style="margin-bottom:0;">顧客管理アプリ</h2>
+  </div>
+  <div class="two-col">
+    <div class="col" style="gap:12px;">
+      <h3>主な機能</h3>
+      <div class="feature-item"><span class="check">&#10003;</span> 患者情報を一元管理</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 来院履歴・施術内容を記録</div>
+      <div class="feature-item"><span class="check">&#10003;</span> <span class="accent">離反アラート</span>で休眠患者を検知</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 売上分析・LTV自動計算</div>
+    </div>
+    <div class="col" style="gap:16px;">
+      <h3>ここが強み</h3>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">「来なくなった患者」に気づける<br><span class="accent">離反アラート機能</span></p>
+      </div>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">患者1人あたりの売上を<br><span class="accent">自動で見える化</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">6 / 14</div>
+</div>
+
+<!-- スライド7: 予約管理 -->
+<div class="slide app-slide" id="slide7">
+  <div class="app-header">
+    <span class="app-icon">📅</span>
+    <h2 style="margin-bottom:0;">予約管理アプリ</h2>
+  </div>
+  <div class="two-col">
+    <div class="col" style="gap:12px;">
+      <h3>主な機能</h3>
+      <div class="feature-item"><span class="check">&#10003;</span> カレンダー形式で予約管理</div>
+      <div class="feature-item"><span class="check">&#10003;</span> LINE連携でリマインド通知</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 患者が自分で予約可能</div>
+      <div class="feature-item"><span class="check">&#10003;</span> キャンセル・変更もかんたん</div>
+    </div>
+    <div class="col" style="gap:16px;">
+      <h3>ここが強み</h3>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">とにかく<span class="accent">シンプル</span><br>複雑な設定は一切不要</p>
+      </div>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">LINE連携で<span class="accent">無断キャンセル激減</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">7 / 14</div>
+</div>
+
+<!-- スライド8: WEB問診 -->
+<div class="slide app-slide" id="slide8">
+  <div class="app-header">
+    <span class="app-icon">📝</span>
+    <h2 style="margin-bottom:0;">WEB問診アプリ</h2>
+  </div>
+  <div class="two-col">
+    <div class="col" style="gap:12px;">
+      <h3>主な機能</h3>
+      <div class="feature-item"><span class="check">&#10003;</span> 来院前にスマホで問診入力</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 自院用にカスタマイズ可能</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 回答内容を自動でカルテに反映</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 待ち時間の短縮に直結</div>
+    </div>
+    <div class="col" style="gap:16px;">
+      <h3>ここが強み</h3>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">来院前に情報収集できるから<br><span class="accent">初診のヒアリング時間を短縮</span></p>
+      </div>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">手書きのムダをなくして<br><span class="accent">施術に集中できる</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">8 / 14</div>
+</div>
+
+<!-- スライド9: MEO勝ち上げくん -->
+<div class="slide app-slide" id="slide9">
+  <div class="app-header">
+    <span class="app-icon">📍</span>
+    <h2 style="margin-bottom:0;">MEO勝ち上げくん</h2>
+  </div>
+  <div class="two-col">
+    <div class="col" style="gap:12px;">
+      <h3>主な機能</h3>
+      <div class="feature-item"><span class="check">&#10003;</span> Googleビジネスプロフィール最適化</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 投稿テンプレート自動生成</div>
+      <div class="feature-item"><span class="check">&#10003;</span> キーワード順位チェック</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 口コミ返信のサポート</div>
+    </div>
+    <div class="col" style="gap:16px;">
+      <h3>ここが強み</h3>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">週1回、<span class="accent">たった10分</span>の運用でOK</p>
+      </div>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">「何を投稿すればいい？」に<br><span class="accent">迷わない</span>仕組み</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">9 / 14</div>
+</div>
+
+<!-- スライド10: 睡眠チェック -->
+<div class="slide app-slide" id="slide10">
+  <div class="app-header">
+    <span class="app-icon">🌙</span>
+    <h2 style="margin-bottom:0;">睡眠チェックアプリ</h2>
+  </div>
+  <div class="two-col">
+    <div class="col" style="gap:12px;">
+      <h3>主な機能</h3>
+      <div class="feature-item"><span class="check">&#10003;</span> 睡眠の質をスコアリング</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 生活習慣との相関分析</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 改善アドバイスを自動表示</div>
+      <div class="feature-item"><span class="check">&#10003;</span> 施術前後の睡眠変化を可視化</div>
+    </div>
+    <div class="col" style="gap:16px;">
+      <h3>ここが強み</h3>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">施術の効果を<span class="accent">睡眠の数値</span>で示せる</p>
+      </div>
+      <div class="highlight-box" style="border-left-color:#FF6F00;">
+        <p style="font-size:22px;">物販（サプリ・寝具）への<br><span class="accent">自然な導線</span>になる</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">10 / 14</div>
+</div>
+
+<!-- スライド11: 料金プラン -->
+<div class="slide" id="slide11">
+  <span class="icon">💰</span>
+  <h2>料金プラン</h2>
+  <div class="pricing-grid">
+    <div class="plan-card">
+      <div class="plan-name">梅プラン</div>
+      <div class="plan-price">まずは1つから始めたい方</div>
+      <ul class="plan-features">
+        <li>&#10003; アプリ1つ選択</li>
+        <li>&#10003; 動画マニュアル付き</li>
+        <li>&#10003; メールサポート</li>
+      </ul>
+    </div>
+    <div class="plan-card recommended">
+      <div class="plan-name">竹プラン</div>
+      <div class="plan-price">しっかり活用したい方</div>
+      <ul class="plan-features">
+        <li>&#10003; アプリ3つまで選択</li>
+        <li>&#10003; 動画マニュアル付き</li>
+        <li>&#10003; LINEサポート</li>
+        <li>&#10003; 初期設定Zoomサポート</li>
+      </ul>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">松プラン</div>
+      <div class="plan-price">全部まとめて導入したい方</div>
+      <ul class="plan-features">
+        <li>&#10003; 全アプリ使い放題</li>
+        <li>&#10003; 動画マニュアル付き</li>
+        <li>&#10003; LINEサポート</li>
+        <li>&#10003; 月1回Zoomコンサル</li>
+        <li>&#10003; 優先アップデート</li>
+      </ul>
+    </div>
+  </div>
+  <p class="plan-note">※ 料金の詳細はお問い合わせください ／ 月払い・年払い（2ヶ月分お得）・買い切りに対応</p>
+  <div class="slide-number">11 / 14</div>
+</div>
+
+<!-- スライド12: 導入の流れ -->
+<div class="slide" id="slide12">
+  <span class="icon">🚀</span>
+  <h2>導入の流れ</h2>
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h4>お申し込み</h4>
+      <p>LP または LINE<br>からお申し込み</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h4>決済</h4>
+      <p>Stripeで<br>かんたん決済</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h4>アカウント発行</h4>
+      <p>決済後<br>自動で発行</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <h4>初期設定</h4>
+      <p>動画マニュアル or<br>Zoom 15分サポート</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <h4>運用開始</h4>
+      <p>その日から<br>使えます</p>
+    </div>
+  </div>
+  <div class="slide-number">12 / 14</div>
+</div>
+
+<!-- スライド13: よくある質問 -->
+<div class="slide" id="slide13">
+  <span class="icon">❓</span>
+  <h2>よくある質問</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q">Q. ITに弱いけど使えますか？</div>
+      <div class="faq-a">→ はい。動画マニュアルを見ながら進められます。Zoomサポートもあります。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Q. 既存のシステムと併用できますか？</div>
+      <div class="faq-a">→ はい。今お使いのシステムはそのままで、必要なアプリだけ追加できます。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Q. 途中で解約できますか？</div>
+      <div class="faq-a">→ いつでも解約OK。縛り期間はありません。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Q. サポートはありますか？</div>
+      <div class="faq-a">→ LINEグループでいつでも質問できます。同じアプリを使う仲間もいます。</div>
+    </div>
+  </div>
+  <div class="slide-number">13 / 14</div>
+</div>
+
+<!-- スライド14: まとめ・CTA -->
+<div class="slide cta-slide" id="slide14">
+  <span class="icon" style="font-size:64px;">🤝</span>
+  <h2 style="margin-bottom:16px;">本日はありがとうございました</h2>
+  <div class="cta-box">
+    <p style="font-size:30px; font-weight:700; color:#1565C0;">気になったアプリがあれば、<br>お気軽に個別メッセージください</p>
+    <hr style="border:none; border-top:1px solid #E0E0E0; margin:24px 0;">
+    <p style="font-size:22px; color:#666;">オープンチャットでも質問を受け付けています</p>
+    <p style="font-size:22px; color:#666; margin-top:16px;">本日の資料はオープンチャットの<span class="accent">ノート</span>に貼っておきます</p>
+  </div>
+  <div class="slide-number">14 / 14</div>
+</div>
+
+<script>
+  // 日付表示
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  document.getElementById('today-date').textContent = y + '年' + m + '月' + d + '日';
+
+  // スライド制御
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, slides.length - 1));
+    slides[current].classList.add('active');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      showSlide(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      showSlide(current - 1);
+    }
+  });
+</script>
+</body>
+</html>
