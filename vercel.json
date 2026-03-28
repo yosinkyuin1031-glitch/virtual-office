@@ -9,15 +9,7 @@
       "memory": 1024,
       "maxDuration": 60
     },
-    "app/api/pdca/morning/route.ts": {
-      "memory": 1024,
-      "maxDuration": 120
-    },
-    "app/api/pdca/evening/route.ts": {
-      "memory": 1024,
-      "maxDuration": 120
-    },
-    "app/api/pdca/weekly/route.ts": {
+    "app/api/pdca/*/route.ts": {
       "memory": 1024,
       "maxDuration": 120
     }
@@ -28,8 +20,20 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/pdca/kpi-sync",
+      "schedule": "50 21 * * *"
+    },
+    {
       "path": "/api/pdca/morning",
       "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/pdca/handoff",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/pdca/ceo-brain",
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/pdca/evening",
