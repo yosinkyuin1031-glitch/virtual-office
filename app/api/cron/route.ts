@@ -233,4 +233,15 @@ async function cleanup() {
     .delete()
     .eq('status', 'completed')
     .lt('completed_at', weekAgo)
+
+  // PDCAレポートは30日後に削除
+  await supabase.from('vo_pdca_reports')
+    .delete()
+    .lt('created_at', monthAgo)
+
+  // KPIスナップショットは90日後に削除
+  const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+  await supabase.from('vo_kpi_snapshots')
+    .delete()
+    .lt('created_at', threeMonthsAgo)
 }
