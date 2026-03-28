@@ -72,7 +72,13 @@ export async function GET(request: NextRequest) {
         const systemPrompt = buildTaskSystemPrompt(assignedEmployee, task)
         const userMessage = buildTaskUserMessage(task)
 
-        const result = await callClaude(client, systemPrompt, userMessage, 3000)
+        // コンテンツ系タスクはトークン多め（投稿・記事・提案書等）
+        const contentKeywords = ['投稿', '記事', 'コピー', '文章', 'lp', '提案書', 'ブログ', 'sns', 'facebook', 'line', '原稿', 'セールス', '台本', 'チラシ', 'マニュアル']
+        const taskText = `${task.title} ${task.description || ''}`.toLowerCase()
+        const isContentTask = contentKeywords.some(kw => taskText.includes(kw))
+        const tokenLimit = isContentTask ? 6000 : 3000
+
+        const result = await callClaude(client, systemPrompt, userMessage, tokenLimit)
 
         // 5. タスクを完了に更新
         await supabase
@@ -235,14 +241,17 @@ function buildTaskSystemPrompt(
 
 【タスク実行モード】
 あなたは今、自動タスク実行エンジンから呼び出されています。
-以下のルールに従ってください:
+あなたはその道のプロです。プロとして本気の成果物を出してください。
 
-1. タスクの指示を正確に実行し、具体的な成果物を出力してください
-2. 「検討します」「考えます」ではなく、実際に作成・実行した結果を出してください
-3. 他の部署との連携が必要な場合は【連携依頼】として明記してください
-4. 回答はプレーンテキストで、マークダウン記号は使わないでください
-5. 優先度: ${task.priority || 'normal'}
-6. 所属: ${task.department || employee?.department || '全社'}`
+絶対ルール:
+1. 「検討します」「考えます」「〜が必要です」は禁止。実際に完成した成果物を出すこと。
+2. 文章作成タスクは、そのままコピペして使える完成度で書くこと。短い要約ではなく、本文をフルで書くこと。
+3. Facebook投稿なら400-600文字、ブログなら1500-2000文字、LINE配信なら200-300文字、提案書なら全セクション完成で出すこと。
+4. 「〜しましょう」「〜が大切です」のような一般論は書かない。具体的な内容・数字・事例を入れること。
+5. 他の部署との連携が必要な場合は【連携依頼】として明記すること。
+6. 回答はプレーンテキストで、マークダウン記号は使わないこと。
+7. 優先度: ${task.priority || 'normal'}
+8. 所属: ${task.department || employee?.department || '全社'}`
 }
 
 // タスクをユーザーメッセージに変換
