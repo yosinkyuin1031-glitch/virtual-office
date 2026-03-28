@@ -9,6 +9,7 @@ import ChatModal from './components/ChatModal'
 import GoalsEditor from './components/GoalsEditor'
 import ContextEditor from './components/ContextEditor'
 import AutoTasksPanel from './components/AutoTasksPanel'
+import PDCADashboard from './components/PDCADashboard'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 共通コンポーネント
@@ -200,6 +201,9 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
           </div>
         </div>
       </div>
+
+      {/* PDCA自動サイクル ダッシュボード */}
+      <PDCADashboard />
 
       {/* B. 目標・KPIカード */}
       <GoalsEditor />
