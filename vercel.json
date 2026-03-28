@@ -8,12 +8,36 @@
     "app/api/cron/route.ts": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "app/api/pdca/morning/route.ts": {
+      "memory": 1024,
+      "maxDuration": 120
+    },
+    "app/api/pdca/evening/route.ts": {
+      "memory": 1024,
+      "maxDuration": 120
+    },
+    "app/api/pdca/weekly/route.ts": {
+      "memory": 1024,
+      "maxDuration": 120
     }
   },
   "crons": [
     {
       "path": "/api/cron",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/pdca/morning",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/pdca/evening",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/pdca/weekly",
+      "schedule": "0 22 * * 0"
     }
   ]
 }
