@@ -9305,4 +9305,587 @@ DMに「相談希望」と一言いただければ、<br/>
 </p>
 `
   },
+  // ==========================================
+  // 全アプリ一覧（2026-03-28 一括追加）
+  // ==========================================
+  // --- AI会社 ---
+  {
+    id: 'product-clinic-saas-lp',
+    title: 'BtoB販売サイト（ClinicApps）',
+    summary: '治療院向けアプリの購入サイト。6アプリの紹介・料金・Stripe決済・セット割引を提供。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療院・鍼灸院向けSaaSアプリの販売LP。検査シート・顧客管理・予約管理・WEB問診・MEO勝ち上げくん・睡眠チェックの6アプリを個別/セットで販売。</p>
+<h2>主な機能</h2>
+<ul>
+<li>アプリ個別紹介ページ（機能・スクリーンショット・料金）</li>
+<li>セット割引（梅5,500円/竹9,800円/松12,800円）</li>
+<li>Stripe決済連携</li>
+<li>デモ体験リンク</li>
+</ul>
+<h2>URL</h2>
+<ul><li><a href="https://clinic-saas-lp.vercel.app">https://clinic-saas-lp.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-ai-master',
+    title: '治療家AIマスター',
+    summary: '治療家向けAI活用ツール。ChatGPTプロンプトテンプレート・施術提案・カルテ自動生成。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療家がAIを日常業務に活用するためのツール。施術提案書の自動生成、カルテ文章の作成、患者への説明文テンプレートなどを提供。</p>
+<h2>URL</h2>
+<ul><li><a href="https://ai-master.vercel.app">https://ai-master.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-admin-dashboard',
+    title: '管理ダッシュボード',
+    summary: '全アプリの統合管理画面。ユーザー管理・アカウント発行・利用状況の一元管理。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>全SaaSアプリのユーザー・アカウントを一元管理するダッシュボード。新規アカウント発行、利用状況の確認、プラン管理などを行う社内ツール。</p>
+<h2>URL</h2>
+<ul><li><a href="https://admin-dashboard.vercel.app">https://admin-dashboard.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-invoice-forge',
+    title: '請求書作成アプリ',
+    summary: '請求書をブラウザ上で作成・PDF出力。テンプレート管理・顧客情報の保存に対応。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>ブラウザ上で請求書を作成し、PDF出力できるアプリ。顧客情報・品目テンプレートを保存して効率的に請求書を発行。</p>
+<h2>URL</h2>
+<ul><li><a href="https://invoice-forge.vercel.app">https://invoice-forge.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-hearing-sheet',
+    title: 'アプリ開発ヒアリングシート',
+    summary: 'クライアントからのアプリ開発要件をオンラインフォームで収集。要件整理を効率化。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>アプリ開発の受注時に使うヒアリングシート。クライアントがフォームに入力するだけで、必要な要件が整理される。</p>
+<h2>URL</h2>
+<ul><li><a href="https://hearing-sheet.vercel.app">https://hearing-sheet.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-capillary-scope-package',
+    title: '毛細血管スコープ導入パッケージ',
+    summary: '毛細血管観察スコープの導入支援アプリ。撮影データ管理・患者説明用レポート出力。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>毛細血管観察スコープ（BR）の導入パッケージ。撮影画像の管理、前後比較、患者への説明レポート出力に対応。</p>
+<h2>URL</h2>
+<ul>
+<li>パッケージ: <a href="https://capillary-scope-package.vercel.app">https://capillary-scope-package.vercel.app</a></li>
+<li>LP: <a href="https://capillary-scope-lp.vercel.app">https://capillary-scope-lp.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-ec-shop',
+    title: '物販ECサイト',
+    summary: 'サプリメント・睡眠グッズなどの物販EC。カート・Stripe決済・在庫管理。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療院で取り扱うサプリメント・睡眠グッズ・ケア用品のECサイト。カート機能・Stripe決済・在庫管理に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://ec-shop.vercel.app">https://ec-shop.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-rental-salon',
+    title: 'レンタルサロン予約決済',
+    summary: 'レンタルサロンのオンライン予約・決済アプリ。空き枠表示・Stripe決済連携。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>レンタルサロンの予約・決済をオンラインで完結するアプリ。空き枠カレンダー表示、時間枠選択、Stripe決済に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://rental-salon.vercel.app">https://rental-salon.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-golf-swing',
+    title: 'ゴルフスイング診断',
+    summary: 'ゴルフスイングの動画をAI解析。フォーム改善ポイントの自動抽出。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>ゴルフスイング動画をアップロードすると、AIがフォームを解析して改善ポイントを提示するアプリ。</p>
+<h2>URL</h2>
+<ul><li><a href="https://golf-swing.vercel.app">https://golf-swing.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-video-forge',
+    title: '動画編集アプリ（VideoForge）',
+    summary: 'ブラウザ上で動画編集。カット・テロップ・BGM追加・書き出しに対応。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>ブラウザ上で動画編集ができるアプリ。YouTube用動画のカット編集、テロップ挿入、BGM追加、書き出しに対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://video-forge.vercel.app">https://video-forge.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-fan-channel-library',
+    title: 'ファンチャンネルライブラリー',
+    summary: '治療家向けコンテンツライブラリー。記事・動画・テンプレートを有料配信。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療家向けの有料コンテンツライブラリー。施術テクニック記事、経営ノウハウ動画、テンプレート類を配信。</p>
+<h2>URL</h2>
+<ul><li><a href="https://fan-channel-library.vercel.app">https://fan-channel-library.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-salon-academy',
+    title: 'サロン経営アカデミー',
+    summary: '瀬戸口慧共同のサロン経営オンラインスクール。6グループ13カテゴリのカリキュラム。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>瀬戸口慧との共同プロジェクト。サロン経営のオンラインスクール。6グループ13カテゴリのカリキュラム、AIツール10種を搭載。</p>
+<h2>URL</h2>
+<ul><li><a href="https://salon-academy.vercel.app">https://salon-academy.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-clinicmark',
+    title: 'クリニックマーク',
+    summary: '治療院のブランディング・ロゴ・名刺・看板デザインを自動生成するツール。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療院向けのブランディングツール。院のコンセプトを入力するとロゴ・名刺・看板のデザイン案を自動生成。</p>
+<h2>URL</h2>
+<ul><li><a href="https://clinicmark.vercel.app">https://clinicmark.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-meo-tracker',
+    title: 'MEOチェッカー（自社運用）',
+    summary: '自社用MEO順位トラッキングツール。毎日の順位変動・キーワード別推移をグラフ表示。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>Googleマップでの検索順位を毎日自動チェック。キーワード別の順位推移をグラフで可視化する自社運用ツール。</p>
+<h2>URL</h2>
+<ul>
+<li>自社用: <a href="https://meo-tracker.vercel.app">https://meo-tracker.vercel.app</a></li>
+<li>配布用: <a href="https://meo-checker.vercel.app">https://meo-checker.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-customer-mgmt-system',
+    title: '顧客管理システム（AI会社版）',
+    summary: 'AI会社の顧客・案件を管理するCRMシステム。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>AI会社の顧客・案件管理用CRM。リード管理、商談ステータス、売上管理に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://clinicmark.vercel.app">※クリニックマークと統合</a></li></ul>
+`
+  },
+  // --- 整体院（追加分） ---
+  {
+    id: 'product-sleep-check-single',
+    title: '睡眠チェック（単品版）',
+    summary: '睡眠の質を簡易チェック。問診回答→スコア算出→改善アドバイスを即時表示。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>睡眠チェック分析アプリの単品販売版。患者がスマホで回答するだけで睡眠スコアと改善アドバイスが表示される。</p>
+<h2>URL</h2>
+<ul><li><a href="https://sleep-check-single.vercel.app">https://sleep-check-single.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-nutrition-check',
+    title: '栄養バランスチェック',
+    summary: '食事内容の簡易チェック。栄養バランスのスコア算出と食事改善アドバイス。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>患者の食事内容を問診形式でチェックし、栄養バランスのスコアと具体的な改善アドバイスを表示。</p>
+<h2>URL</h2>
+<ul><li><a href="https://nutrition-check.vercel.app">https://nutrition-check.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-gut-health-check',
+    title: '腸内環境チェック',
+    summary: '腸内環境の簡易チェック。問診回答から腸内環境スコアと改善アドバイスを提示。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>腸内環境に関する問診に回答すると、腸内環境スコアと具体的な改善アドバイスが表示されるチェックアプリ。</p>
+<h2>URL</h2>
+<ul><li><a href="https://gut-health-check.vercel.app">https://gut-health-check.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-ad-manager',
+    title: '広告管理ツール',
+    summary: 'Google/Meta広告の成果を一元管理。ROAS・CPA・コンバージョンをダッシュボード表示。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>Google広告・Meta広告の成果データをダッシュボードで一元管理。ROAS・CPA・コンバージョン数を可視化。</p>
+<h2>URL</h2>
+<ul><li><a href="https://ad-manager.vercel.app">https://ad-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-lp-builder',
+    title: 'LP作成ツール',
+    summary: '症状別LPをテンプレートから簡単作成。ノーコードでランディングページを生成。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療院向けのLP（ランディングページ）をテンプレートベースで簡単に作成できるツール。症状別・キャンペーン用に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://lp-builder.vercel.app">https://lp-builder.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-heatscope',
+    title: 'HeatScope',
+    summary: 'サーモグラフィ風の体温分布可視化ツール。施術前後の変化を視覚的に表示。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>患者の体温分布をサーモグラフィ風に可視化するツール。施術前後の変化を色で表現し、患者への説明に活用。</p>
+<h2>URL</h2>
+<ul><li><a href="https://heatscope.vercel.app">https://heatscope.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-symptom-lps',
+    title: '症状別LP（統合版）',
+    summary: '腰痛・坐骨神経痛・脊柱管狭窄症・膝痛・睡眠改善の症状別ランディングページ。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>整体院の集客用症状別LP。腰痛・坐骨神経痛・脊柱管狭窄症・膝痛・睡眠改善など各症状に特化したページを統合管理。</p>
+<h2>URL</h2>
+<ul>
+<li>統合版: <a href="https://symptom-lps.vercel.app">https://symptom-lps.vercel.app</a></li>
+<li>自律神経LP: <a href="https://jiritsu-shinkei-lp.vercel.app">https://jiritsu-shinkei-lp.vercel.app</a></li>
+</ul>
+`
+  },
+  {
+    id: 'product-proposal-generator',
+    title: '提案書ジェネレーター',
+    summary: '患者への施術提案書をAI自動生成。症状・検査結果から治療プランを作成。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>患者の症状・検査結果を入力すると、施術提案書をAIが自動生成。神経整体の治療哲学に基づいた提案書テンプレート。</p>
+<h2>URL</h2>
+<ul><li><a href="https://proposal-generator.vercel.app">https://proposal-generator.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-tsuyomi-worksheet',
+    title: 'つよみワークシート',
+    summary: '治療家の強み・差別化ポイントを整理するワークシート。自己分析→発信戦略に活用。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療家が自分の強み・差別化ポイントを整理するオンラインワークシート。質問に答えるだけで強みが言語化される。</p>
+<h2>URL</h2>
+<ul><li><a href="https://tsuyomi-worksheet.vercel.app">https://tsuyomi-worksheet.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-hp-content-manager',
+    title: 'HPコンテンツ管理',
+    summary: '整体院ホームページのコンテンツ（症状ページ・ブログ）を管理するCMS。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>整体院のホームページに掲載するコンテンツ（症状別ページ・ブログ記事）を管理するCMS。</p>
+<h2>URL</h2>
+<ul><li><a href="https://hp-content-manager.vercel.app">https://hp-content-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-line-automation',
+    title: 'LINE自動化',
+    summary: 'LINE公式アカウントの自動応答・ステップ配信・リッチメニュー設定を管理。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>LINE公式アカウントの自動応答メッセージ、ステップ配信、リッチメニューの設定を一括管理するツール。</p>
+<h2>URL</h2>
+<ul><li><a href="https://line-automation.vercel.app">https://line-automation.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-ai-tools',
+    title: 'AI治療ツール',
+    summary: '治療家向けAIツール群。症状分析・治療プラン提案・カルテ文章生成。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>治療家の日常業務を支援するAIツール群。症状の分析、治療プランの提案、カルテ文章の自動生成に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://ai-tools.vercel.app">https://ai-tools.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-premium-lp',
+    title: 'プレミアムLP',
+    summary: '整体院の高額メニュー・プレミアムコース用のランディングページ。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>整体院の高額メニュー・プレミアムコースを訴求するためのランディングページ。</p>
+<h2>URL</h2>
+<ul><li><a href="https://premium-lp.vercel.app">https://premium-lp.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-menu-manager',
+    title: 'メニュー管理',
+    summary: '整体院の施術メニュー・料金・時間を管理。メニュー表の自動生成。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>整体院の施術メニュー・料金・所要時間を管理するツール。メニュー表の自動生成にも対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://menu-manager.vercel.app">https://menu-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-sleep-app',
+    title: '睡眠管理アプリ',
+    summary: '日々の睡眠ログを記録・分析。睡眠スコアの推移グラフ・改善アドバイス。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>患者が日々の睡眠データを記録し、睡眠スコアの推移をグラフで確認できるアプリ。改善アドバイスも提供。</p>
+<h2>URL</h2>
+<ul><li><a href="https://sleep-app.vercel.app">https://sleep-app.vercel.app</a></li></ul>
+`
+  },
+  // --- 訪問鍼灸 ---
+  {
+    id: 'product-staff-manager',
+    title: '訪問鍼灸スタッフ管理',
+    summary: '訪問鍼灸のスタッフシフト・担当エリア・訪問スケジュールを管理。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>訪問鍼灸事業のスタッフ管理ツール。シフト管理、担当エリア、訪問スケジュールの一元管理に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://staff-manager.vercel.app">https://staff-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-receipt-app',
+    title: '訪問鍼灸レセプト',
+    summary: '訪問鍼灸のレセプト（診療報酬請求書）を作成・管理するアプリ。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>訪問鍼灸の保険請求に必要なレセプトを作成・管理するアプリ。患者情報・施術内容から自動でレセプトを生成。</p>
+<h2>URL</h2>
+<ul><li><a href="https://receipt-app.vercel.app">https://receipt-app.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-houmon-manager',
+    title: '訪問鍼灸管理アプリ',
+    summary: '訪問鍼灸事業の患者・訪問記録・売上を一元管理するシステム。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>訪問鍼灸事業の患者管理・訪問記録・売上管理を一元化するシステム。</p>
+<h2>URL</h2>
+<ul><li><a href="https://houmon-manager.vercel.app">https://houmon-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-sales-manager',
+    title: '訪問鍼灸営業管理',
+    summary: 'ケアマネージャーへの営業活動・訪問記録・紹介実績を管理。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>訪問鍼灸の営業活動を管理するアプリ。ケアマネージャーへの訪問記録、紹介実績、営業計画の管理に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://sales-manager.vercel.app">https://sales-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-receipt-manager',
+    title: 'レセプト管理',
+    summary: 'レセプト（保険請求書）の一括管理・進捗追跡・月次集計。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>訪問鍼灸のレセプト（保険請求書）を一括管理。進捗追跡・月次集計に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://receipt-manager.vercel.app">https://receipt-manager.vercel.app</a></li></ul>
+`
+  },
+  // --- 経営 ---
+  {
+    id: 'product-quarterly-dashboard',
+    title: '数字比較ダッシュボード',
+    summary: '四半期ごとの売上・患者数・広告費などのKPIを比較表示するダッシュボード。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>四半期ごとの売上・患者数・広告費・利益率などのKPIを前期比較で表示するダッシュボード。</p>
+<h2>URL</h2>
+<ul><li><a href="https://quarterly-dashboard.vercel.app">https://quarterly-dashboard.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-vision-sheet',
+    title: 'ビジョンシート',
+    summary: '事業のビジョン・ミッション・バリューを整理するオンラインワークシート。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>事業のビジョン・ミッション・バリューを整理するオンラインワークシート。経営合宿での策定結果を記録・共有。</p>
+<h2>URL</h2>
+<ul><li><a href="https://vision-sheet.vercel.app">https://vision-sheet.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-koteihi-manager',
+    title: '固定費管理',
+    summary: '月々の固定費（家賃・光熱費・サブスク等）を管理・可視化するツール。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>事業の固定費（家賃・光熱費・サブスクリプション・保険等）を一覧管理し、月次コストを可視化するツール。</p>
+<h2>URL</h2>
+<ul><li><a href="https://koteihi-manager.vercel.app">https://koteihi-manager.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-project-hub',
+    title: 'プロジェクト管理ダッシュボード',
+    summary: '全プロジェクトの進捗・タスク・担当者を一元管理するハブ。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>全事業・全プロジェクトの進捗状況、タスク、担当者を一元管理するダッシュボード。</p>
+<h2>URL</h2>
+<ul><li><a href="https://project-hub.vercel.app">https://project-hub.vercel.app</a></li></ul>
+`
+  },
+  {
+    id: 'product-kawaguchimura-seminar',
+    title: '川口村経営セミナー アーカイブ',
+    summary: '川口村経営セミナーの動画アーカイブサイト。YouTube埋め込み・管理画面付き。',
+    category: 'product',
+    status: 'final',
+    updatedAt: '2026-03-28',
+    contentHtml: `
+<h2>概要</h2>
+<p>川口村経営セミナーの動画アーカイブサイト。YouTube URLを貼るだけで動画を管理・公開できる。管理画面からの追加/編集/公開切替に対応。</p>
+<h2>URL</h2>
+<ul><li><a href="https://kawaguchimura-seminar.vercel.app">https://kawaguchimura-seminar.vercel.app</a></li></ul>
+`
+  },
 ]
