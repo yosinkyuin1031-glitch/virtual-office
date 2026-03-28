@@ -163,21 +163,49 @@ function findEmployee(employeeName?: string | null, department?: string | null, 
   // 2. タスク内容からスキルマッチ
   const text = `${taskTitle || ''} ${taskDescription || ''}`.toLowerCase()
   const skillMatch: Record<string, string> = {
-    '売上': 'misa', '収益': 'misa', 'kpi': 'misa', '財務': 'misa', '集計': 'misa', '請求': 'misa', 'コスト': 'misa',
-    'meo': 'haru', '広告': 'haru', '集客': 'haru', 'gbp': 'haru', 'キーワード': 'haru',
-    '投稿': 'fumi', 'sns': 'fumi', 'line': 'fumi', 'コピー': 'fumi', '文章': 'fumi', '記事': 'fumi',
-    'seo': 'rin', 'faq': 'rin', 'hp': 'rin', 'ホームページ': 'rin',
-    'lp': 'maya', 'ランディング': 'maya', 'デザイン': 'maya', 'スライド': 'maya',
-    'アプリ': 'tetsu', 'saas': 'tetsu', '開発': 'kou', 'バグ': 'kou', '修正': 'kou',
-    'btob': 'jin', '営業': 'jin', '提案': 'jin', 'モニター': 'jin',
-    'youtube': 'tsuki', '動画': 'tsuki', 'ヒーリング': 'tsuki',
-    '導入': 'aoi', 'オンボーディング': 'aoi',
+    // 経営層
     '戦略': 'reia', '方針': 'reia', 'ビジョン': 'reia',
-    'タスク': 'miko', 'スケジュール': 'miko', '日報': 'miko',
-    'デプロイ': 'taku', 'インフラ': 'taku',
-    '訪問': 'jin', 'ケアマネ': 'jin', 'レセプト': 'misa',
-    'リサーチ': 'sena', '競合': 'sena', '調査': 'sena',
+    '進捗': 'sorato', 'ボトルネック': 'sorato', '執行': 'sorato', '部署間': 'sorato',
+    'タスク': 'miko', 'スケジュール': 'miko', '日報': 'miko', '優先順位': 'miko',
+    'マニュアル': 'ruka', 'sop': 'ruka', '手順書': 'ruka', '仕組み': 'ruka', 'テンプレート': 'ruka',
+    // 財務部
+    '売上': 'misa', '収益': 'misa', 'kpi': 'misa', '財務': 'misa', '集計': 'misa', '請求': 'misa', 'コスト': 'misa',
+    // 整体院事業部
+    'meo': 'haru', '広告': 'haru', '集客': 'haru', 'gbp': 'haru', 'キーワード': 'haru',
+    '予約': 'nagi', '顧客管理': 'nagi', '問診': 'nagi', '検査アプリ運用': 'nagi', '物販': 'nagi', '在庫': 'nagi',
+    'コピー': 'fumi', '文章': 'fumi', '記事': 'fumi', 'line': 'fumi',
+    // 訪問鍼灸事業部
+    '訪問': 'aki', 'ケアマネ': 'aki', '訪問営業': 'aki', '居宅': 'aki',
+    'レセプト': 'yuki', '労務': 'yuki', 'シフト': 'yuki', '勤怠': 'yuki', '給与': 'yuki',
+    '営業リスト': 'saku', '事業所リスト': 'saku',
+    // AI開発部
+    'アプリ': 'tetsu', 'saas': 'tetsu', 'プロダクト設計': 'tetsu',
+    '開発': 'kou', 'バグ': 'kou', '修正': 'kou', 'プロンプト': 'kou',
+    'マルチテナント': 'riku', 'stripe': 'riku', '課金': 'riku', '認証': 'riku', 'rls': 'riku',
+    'デプロイ': 'taku', 'インフラ': 'taku', 'vercel': 'taku', 'supabase': 'taku',
+    // メディア部
+    'youtube': 'tsuki', 'ヒーリング': 'tsuki', 'チャンネル': 'tsuki',
+    '動画分析': 'luna', 'コンテンツ分析': 'luna', '再生数': 'luna', 'サムネイル': 'luna',
+    // LP・Web制作部
+    'lp': 'maya', 'ランディング': 'maya', 'ワイヤーフレーム': 'maya',
+    'seo': 'rin', 'faq': 'rin', 'hp': 'rin', 'ホームページ': 'rin', '症状ページ': 'rin',
+    '回数券': 'noa', '高額': 'noa', 'セールスページ': 'noa', 'プレミアム': 'noa',
+    // BtoB営業部
+    'btob': 'jin', '営業': 'jin', '提案': 'jin', 'モニター': 'jin', '提案書': 'jin',
+    'リサーチ': 'sena', '競合': 'sena', '調査': 'sena', '市場': 'sena',
+    'ローンチ': 'rio', 'facebook': 'rio', 'オープンチャット': 'rio', '告知': 'rio',
+    // 動画・デザイン制作部
+    '動画編集': 'hika', '映像': 'hika', 'shorts': 'hika', 'デモ動画': 'hika',
+    'チラシ': 'sui', 'pop': 'sui', 'バナー': 'sui', 'デザイン': 'sui', 'フライヤー': 'sui',
+    // プロダクト管理部
     'pm': 'kana', '要件': 'kana', 'ロードマップ': 'kana',
+    'ux': 'mio', 'ui': 'mio', '使いやすさ': 'mio', '操作性': 'mio',
+    'テスト': 'ren', 'qa': 'ren', '品質': 'ren', 'バグレポート': 'ren',
+    // カスタマーサクセス部
+    '導入': 'aoi', 'オンボーディング': 'aoi', '定着': 'aoi', '解約': 'aoi',
+    'マーケティング': 'shou', 'ファネル': 'shou', 'リード': 'shou', 'セミナー': 'shou',
+    // 汎用（後方一致で拾う）
+    '投稿': 'fumi', 'sns': 'saku', '動画': 'hika',
   }
 
   for (const [keyword, empId] of Object.entries(skillMatch)) {
