@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
         })
         .eq('id', task.id)
 
-      // 3. 担当AI社員を特定
-      const assignedEmployee = findEmployee(task.employee_name, task.department)
+      // 3. 担当AI社員を特定（名前・部署・タスク内容からスキルマッチ）
+      const assignedEmployee = findEmployee(task.employee_name, task.department, task.title, task.description)
       const employeeName = assignedEmployee?.name || task.employee_name || '汎用AI'
       const department = assignedEmployee?.department || task.department || '全社'
 
@@ -150,9 +150,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 社員名 or 部署名からAI社員を特定
-function findEmployee(employeeName?: string | null, department?: string | null) {
-  // 名前で検索
+// 社員名 or 部署名 or タスク内容からAI社員を特定
+function findEmployee(employeeName?: string | null, department?: string | null, taskTitle?: string, taskDescription?: string) {
+  // 1. 名前で検索（最優先）
   if (employeeName) {
     const found = Object.values(employeePrompts).find(
       ep => ep.name === employeeName
@@ -160,7 +160,33 @@ function findEmployee(employeeName?: string | null, department?: string | null) 
     if (found) return found
   }
 
-  // 部署で検索（部長を優先的に返す）
+  // 2. タスク内容からスキルマッチ
+  const text = `${taskTitle || ''} ${taskDescription || ''}`.toLowerCase()
+  const skillMatch: Record<string, string> = {
+    '売上': 'misa', '収益': 'misa', 'kpi': 'misa', '財務': 'misa', '集計': 'misa', '請求': 'misa', 'コスト': 'misa',
+    'meo': 'haru', '広告': 'haru', '集客': 'haru', 'gbp': 'haru', 'キーワード': 'haru',
+    '投稿': 'fumi', 'sns': 'fumi', 'line': 'fumi', 'コピー': 'fumi', '文章': 'fumi', '記事': 'fumi',
+    'seo': 'rin', 'faq': 'rin', 'hp': 'rin', 'ホームページ': 'rin',
+    'lp': 'maya', 'ランディング': 'maya', 'デザイン': 'maya', 'スライド': 'maya',
+    'アプリ': 'tetsu', 'saas': 'tetsu', '開発': 'kou', 'バグ': 'kou', '修正': 'kou',
+    'btob': 'jin', '営業': 'jin', '提案': 'jin', 'モニター': 'jin',
+    'youtube': 'tsuki', '動画': 'tsuki', 'ヒーリング': 'tsuki',
+    '導入': 'aoi', 'オンボーディング': 'aoi',
+    '戦略': 'reia', '方針': 'reia', 'ビジョン': 'reia',
+    'タスク': 'miko', 'スケジュール': 'miko', '日報': 'miko',
+    'デプロイ': 'taku', 'インフラ': 'taku',
+    '訪問': 'jin', 'ケアマネ': 'jin', 'レセプト': 'misa',
+    'リサーチ': 'sena', '競合': 'sena', '調査': 'sena',
+    'pm': 'kana', '要件': 'kana', 'ロードマップ': 'kana',
+  }
+
+  for (const [keyword, empId] of Object.entries(skillMatch)) {
+    if (text.includes(keyword) && employeePrompts[empId]) {
+      return employeePrompts[empId]
+    }
+  }
+
+  // 3. 部署で検索（部長を優先的に返す）
   if (department) {
     const deptEmployees = getEmployeePromptsByDepartment(department)
     if (deptEmployees.length > 0) return deptEmployees[0]
