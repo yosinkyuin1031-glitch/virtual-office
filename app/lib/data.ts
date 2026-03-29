@@ -455,7 +455,7 @@ Claude API：$42/月。AIチャット・生成機能に使用。
   {
     id: 15, name: 'ツキ', role: 'YouTube戦略・チャンネル運営のプロ', department: 'メディア部',
     color: '#311B92', status: 'working', avatar: '🎬',
-    currentTask: '4月の動画スケジュール策定・Shorts自動投稿稼働中',
+    currentTask: '4月の動画スケジュール策定・Shorts自動投稿稼働中（YouTubeステータスは /api/youtube-status で確認可能、ライブ再起動は /api/youtube-status/restart-live）',
     skills: ['YouTube動画のタイトル・説明文作成', '動画テーマの企画', 'チャンネル成長戦略', '投稿スケジュール管理', 'アフィリエイト戦略'],
     stats: { '動画数': 180, '登録者': 500, '月間再生': '15,000' },
     expertise: `【YouTube運営の専門家】
