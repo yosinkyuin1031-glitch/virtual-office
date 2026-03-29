@@ -10,7 +10,7 @@ import GoalsEditor from './components/GoalsEditor'
 import ContextEditor from './components/ContextEditor'
 import AutoTasksPanel from './components/AutoTasksPanel'
 import PDCADashboard from './components/PDCADashboard'
-import YouTubeDashboard from './components/YouTubeDashboard'
+// YouTubeDashboard は内部管理に移行（画面表示なし）
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 共通コンポーネント
@@ -205,9 +205,6 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
 
       {/* PDCA自動サイクル ダッシュボード */}
       <PDCADashboard />
-
-      {/* YouTube管理ダッシュボード */}
-      <YouTubeDashboard />
 
       {/* B. 目標・KPIカード */}
       <GoalsEditor />
