@@ -250,7 +250,6 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
           <div className="flex items-center gap-3 text-[11px] text-gray-400">
             <span>{departments.length} 部署</span>
             <span>{totalEmployees} 名</span>
-            <span className="text-red-500">{busyCount} 名稼働中</span>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1820,12 +1819,6 @@ export default function VirtualOffice() {
             </span>
             <span className="text-[10px] px-2 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
               {totalEmployees}名
-            </span>
-            <span className="text-[10px] px-2 py-1 rounded-full bg-red-50 text-red-500 border border-red-200">
-              {busyCount}名稼働
-            </span>
-            <span className="text-[10px] px-2 py-1 rounded-full bg-green-50 text-green-600 border border-green-200 hidden sm:inline-block">
-              {workingCount}名作業中
             </span>
           </div>
         </div>
