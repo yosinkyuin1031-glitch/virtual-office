@@ -79,6 +79,16 @@ export async function GET() {
       })
     )
 
+    // 成長戦略データ読み込み
+    let growthStrategy = null
+    try {
+      const strategyPath = path.join(ANALYTICS_DIR, '..', 'growth_strategy.json')
+      const raw = await fs.readFile(strategyPath, 'utf-8')
+      growthStrategy = JSON.parse(raw)
+    } catch {
+      // optional
+    }
+
     // サマリー計算
     const totalSubscribers = Object.values(latestData).reduce(
       (sum, ch) => sum + (ch.stats?.subscriber_count || 0), 0
@@ -111,6 +121,7 @@ export async function GET() {
       histories,
       top_recommendations: allRecs,
       top_videos: allTopVideos,
+      growth_strategy: growthStrategy,
       collected_at: Object.values(latestData)[0]?.collected_at || null,
     })
   } catch (error) {
