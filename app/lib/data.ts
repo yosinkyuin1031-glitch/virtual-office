@@ -1087,7 +1087,6 @@ export const products: Product[] = [
 
   // ━━━ ツール ━━━
   { id: 'tsuyomi-worksheet', name: '強みワークシート', url: 'https://tsuyomi-worksheet.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [17, 7], description: '強み・差別化・ストーリーの言語化', icon: '💪' },
-  { id: 'proposal-gen', name: '提案書ジェネレーター', category: 'tool', status: 'active', rank: 'C', assignedTo: [24, 12], description: '施術提案書の自動生成（URL未設定）', icon: '📄' },
   { id: 'invoice-forge', name: '請求書作成アプリ', url: 'https://invoice-forge-ashy.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '請求書作成・PDF出力・LINE/email送信', icon: '🧾' },
   { id: 'hearing-sheet', name: 'ヒアリングシート', url: 'https://hearing-sheet.vercel.app', category: 'tool', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'アプリ開発ヒアリング（Gmail未設定）', icon: '📝' },
   { id: 'project-hub', name: 'プロジェクト管理', url: 'https://project-hub-three-chi.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [14, 1], description: '全プロジェクト一覧・カテゴリフィルター・検索', icon: '📋' },
@@ -1096,6 +1095,8 @@ export const products: Product[] = [
   { id: 'vision-sheet', name: 'ビジョンシート', category: 'tool', status: 'active', rank: 'C', assignedTo: [10, 14], description: '経営ビジョン・目標設定シート（URL未設定）', icon: '🔭' },
   { id: 'keiei-dashboard', name: '経営ダッシュボード', category: 'tool', status: 'active', rank: 'C', assignedTo: [10, 14], description: 'YouTube統計・売上KPI表示（URL未設定）', icon: '📊' },
   { id: 'task-notify-bot', name: 'タスク通知bot', category: 'tool', status: 'active', rank: 'C', assignedTo: [14, 1], description: 'LINEタスクリマインダー（URL未設定）', icon: '🔔' },
+  { id: 'point-management', name: 'ポイント管理システム', url: 'https://point-management-nine.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'Square/会費ペイ連動・プラン管理・ポイント付与', icon: '🎁' },
+  { id: 'proposal-generator', name: '提案書ジェネレーター', url: 'https://proposal-generator-gold.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [24, 12], description: '施術提案書の自動生成・リスク5項目・方針詳細', icon: '📄' },
 ]
 
 // カテゴリ定義

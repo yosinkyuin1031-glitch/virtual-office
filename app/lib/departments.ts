@@ -36,7 +36,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '指令センター運用・ワークフロー進捗管理',
       'BtoB利用規約整備・統合プラン契約書テンプレート',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'amber',
   },
   {
@@ -57,7 +57,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '統合プラン価格設計・Stripe課金フロー構築',
       '月次PL・キャッシュフロー予測',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'blue',
   },
   {
@@ -86,7 +86,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '顧客管理シートBtoB納品準備・データ移行手順整備',
       '4月SNS投稿カレンダー作成・LINE配信文面準備',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'purple',
   },
   {
@@ -110,7 +110,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '月末レセプト請求処理・4月シフト確定',
       '訪問鍼灸Instagram週3投稿・営業先リスト更新',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'green',
   },
   {
@@ -138,7 +138,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '検査アプリStripe月額課金実装・マルチテナント最終テスト',
       'v3.0デプロイ完了・全30サイト稼働監視中',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'cyan',
   },
   {
@@ -158,7 +158,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '4月の動画スケジュール策定・Shorts自動投稿稼働中',
       'CTR改善テスト・4月BGMトレンド調査',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'violet',
   },
   {
@@ -183,7 +183,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '気圧×自律神経のSEO記事執筆・FAQ記事2本生成',
       'ダイエットLP CVR改善・睡眠プログラムLP更新',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'pink',
   },
   {
@@ -203,7 +203,7 @@ export const departmentThemes: DepartmentTheme[] = [
       '4月FB投稿20本カレンダー実行・Zoom商談3件',
       '競合AI姿勢分析ツール調査・差別化レポート作成',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'orange',
   },
   {
@@ -223,7 +223,7 @@ export const departmentThemes: DepartmentTheme[] = [
       'アプリ紹介動画制作・4月広告用ショート動画',
       '4月キャンペーンチラシ・LINEリッチメニュー更新',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'pink',
   },
   {
@@ -245,7 +245,7 @@ export const departmentThemes: DepartmentTheme[] = [
       'アプリUI統一・使いやすさ改善・デザインシステム構築',
       '全アプリ品質チェック・バグ修正・パフォーマンス監視',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'purple',
   },
   {
@@ -263,7 +263,7 @@ export const departmentThemes: DepartmentTheme[] = [
       'モニター10名のフォロー・オンボーディング改善・解約防止',
       'BtoB集客自動化・セミナー企画・パートナー開拓',
     ],
-    lastActivity: '2026-03-27',
+    lastActivity: '2026-04-01',
     color: 'cyan',
   },
 ]
