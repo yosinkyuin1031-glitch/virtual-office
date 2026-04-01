@@ -12,6 +12,7 @@ interface Task {
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   due_date: string | null
   batch_id: string
+  generated_by: string | null
   created_at: string
 }
 
@@ -20,6 +21,8 @@ const priorityConfig = {
   normal: { label: '中', color: '#F59E0B', bg: '#FFFBEB', border: '#FDE68A' },
   low: { label: '低', color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
 }
+
+const priorityOrder: Array<'high' | 'normal' | 'low'> = ['high', 'normal', 'low']
 
 const statusConfig = {
   pending: { label: '未着手', icon: '○', color: '#9CA3AF' },
@@ -38,6 +41,8 @@ const departmentColors: Record<string, string> = {
   'マーケティング部': '#E91E63',
   'LP・Web制作部': '#9C27B0',
   'メディア部': '#311B92',
+  '動画・デザイン制作部': '#795548',
+  'プロダクト管理部': '#00796B',
   'カスタマーサクセス部': '#26C6DA',
 }
 
@@ -45,9 +50,13 @@ export default function AutoTasksPanel() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
-  const [filter, setFilter] = useState<string>('active') // active, all, completed
+  const [filter, setFilter] = useState<string>('active')
   const [toast, setToast] = useState('')
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
+  const [showAdd, setShowAdd] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newDept, setNewDept] = useState('経営層')
+  const [newPriority, setNewPriority] = useState<'high' | 'normal' | 'low'>('normal')
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -60,7 +69,6 @@ export default function AutoTasksPanel() {
       const params = filter === 'active' ? '?status=pending' : filter === 'completed' ? '?status=completed' : ''
       const res = await fetch(`/api/auto-tasks${params}`)
       const data = await res.json()
-      // active includes both pending and in_progress
       if (filter === 'active') {
         const res2 = await fetch('/api/auto-tasks?status=in_progress')
         const data2 = await res2.json()
@@ -78,6 +86,14 @@ export default function AutoTasksPanel() {
   useEffect(() => {
     fetchTasks()
   }, [fetchTasks])
+
+  // 初回表示時に全部署を開く
+  useEffect(() => {
+    if (tasks.length > 0 && expandedDepts.size === 0) {
+      const depts = new Set(tasks.map(t => t.department))
+      setExpandedDepts(depts)
+    }
+  }, [tasks, expandedDepts.size])
 
   const generateTasks = async () => {
     setGenerating(true)
@@ -107,6 +123,69 @@ export default function AutoTasksPanel() {
       fetchTasks()
     } catch {
       showToast('更新に失敗しました')
+    }
+  }
+
+  const updatePriority = async (id: string, priority: string) => {
+    try {
+      await fetch('/api/auto-tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, priority }),
+      })
+      fetchTasks()
+    } catch {
+      showToast('更新に失敗しました')
+    }
+  }
+
+  const deleteTask = async (id: string) => {
+    try {
+      await fetch(`/api/auto-tasks?id=${id}`, { method: 'DELETE' })
+      showToast('タスクを削除しました')
+      fetchTasks()
+    } catch {
+      showToast('削除に失敗しました')
+    }
+  }
+
+  const addTask = async () => {
+    if (!newTitle.trim()) return
+    try {
+      const now = new Date()
+      const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+      const today = jstNow.toISOString().split('T')[0]
+
+      const res = await fetch('/api/auto-tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // PUTはupdate用なので、直接Supabaseに挿入するPOSTエンドポイントを使う代わりに
+          // 既存のGETに対して別途insertする
+        }),
+      })
+      // PUTではinsertできないので、直接fetchでinsert
+      const insertRes = await fetch('/api/auto-tasks/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          department: newDept,
+          priority: newPriority,
+          due_date: today,
+        }),
+      })
+      if (insertRes.ok) {
+        showToast('タスクを追加しました')
+        setNewTitle('')
+        setShowAdd(false)
+        fetchTasks()
+      } else {
+        showToast('追加に失敗しました')
+      }
+      void res
+    } catch {
+      showToast('追加に失敗しました')
     }
   }
 
@@ -152,7 +231,7 @@ export default function AutoTasksPanel() {
           <div>
             <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
               <span className="w-1.5 h-5 bg-blue-500 rounded-full" />
-              自動生成タスク
+              タスク管理
             </h3>
             {totalTasks > 0 && (
               <p className="text-[11px] text-gray-400 mt-1 ml-3.5">
@@ -160,25 +239,90 @@ export default function AutoTasksPanel() {
               </p>
             )}
           </div>
-          <button
-            onClick={generateTasks}
-            disabled={generating}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-              generating
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-sm'
-            }`}
-          >
-            {generating ? (
-              <>
-                <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
-                AI分析中...
-              </>
-            ) : (
-              <>⚡ KPIからタスク生成</>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAdd(!showAdd)}
+              className="px-3 py-2 rounded-lg text-xs font-bold border border-blue-200 text-blue-600 hover:bg-blue-50 transition"
+            >
+              + 追加
+            </button>
+            <button
+              onClick={generateTasks}
+              disabled={generating}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                generating
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-sm'
+              }`}
+            >
+              {generating ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
+                  AI分析中...
+                </>
+              ) : (
+                <>AI生成</>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* タスク追加フォーム */}
+        {showAdd && (
+          <div className="mb-4 p-4 bg-blue-50/50 border border-blue-200 rounded-xl space-y-3">
+            <input
+              type="text"
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              placeholder="タスク内容を入力..."
+              className="w-full text-sm border border-blue-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              onKeyDown={e => { if (e.key === 'Enter') addTask() }}
+            />
+            <div className="flex gap-2 items-center flex-wrap">
+              <select
+                value={newDept}
+                onChange={e => setNewDept(e.target.value)}
+                className="text-xs border border-blue-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                {Object.keys(departmentColors).map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+              <div className="flex gap-1">
+                {priorityOrder.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setNewPriority(p)}
+                    className={`text-[11px] px-2 py-1 rounded font-bold transition ${
+                      newPriority === p
+                        ? ''
+                        : 'opacity-40 hover:opacity-70'
+                    }`}
+                    style={{
+                      backgroundColor: priorityConfig[p].bg,
+                      color: priorityConfig[p].color,
+                      border: `1px solid ${priorityConfig[p].border}`,
+                    }}
+                  >
+                    {priorityConfig[p].label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={addTask}
+                className="ml-auto px-4 py-1.5 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-bold"
+              >
+                追加
+              </button>
+              <button
+                onClick={() => { setShowAdd(false); setNewTitle('') }}
+                className="px-3 py-1.5 text-xs bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* フィルター */}
         <div className="flex gap-2 mb-4">
@@ -209,7 +353,7 @@ export default function AutoTasksPanel() {
             <p className="text-3xl mb-3">📋</p>
             <p className="text-sm text-gray-500">タスクがありません</p>
             <p className="text-xs text-gray-400 mt-1">
-              「KPIからタスク生成」ボタンで、目標に基づいたタスクを自動作成できます
+              「+ 追加」や「AI生成」でタスクを作成できます
             </p>
           </div>
         ) : (
@@ -235,8 +379,8 @@ export default function AutoTasksPanel() {
                     <span className="text-sm font-bold text-gray-700 flex-1">{dept}</span>
                     <span className="text-[11px] text-gray-400">
                       {deptTasks.length}件
-                      {deptHigh > 0 && <span className="text-red-500 ml-1">({deptHigh}件 優先)</span>}
-                      {deptCompleted > 0 && <span className="text-green-500 ml-1">({deptCompleted}件 完了)</span>}
+                      {deptHigh > 0 && <span className="text-red-500 ml-1">({deptHigh} 優先)</span>}
+                      {deptCompleted > 0 && <span className="text-green-500 ml-1">({deptCompleted} 完了)</span>}
                     </span>
                     <span className="text-gray-300 text-xs">{isExpanded ? '▲' : '▼'}</span>
                   </button>
@@ -249,7 +393,7 @@ export default function AutoTasksPanel() {
                         const stat = statusConfig[task.status]
 
                         return (
-                          <div key={task.id} className="px-4 py-3 hover:bg-gray-50/50 transition">
+                          <div key={task.id} className="px-4 py-3 hover:bg-gray-50/50 transition group">
                             <div className="flex items-start gap-3">
                               {/* ステータス切替ボタン */}
                               <button
@@ -277,19 +421,31 @@ export default function AutoTasksPanel() {
                                   >
                                     {task.title}
                                   </span>
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-bold"
+                                  {/* 優先度切替ボタン */}
+                                  <button
+                                    onClick={() => {
+                                      const currentIdx = priorityOrder.indexOf(task.priority)
+                                      const nextIdx = (currentIdx + 1) % priorityOrder.length
+                                      updatePriority(task.id, priorityOrder[nextIdx])
+                                    }}
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-bold cursor-pointer hover:opacity-80 transition"
                                     style={{ backgroundColor: pri.bg, color: pri.color, border: `1px solid ${pri.border}` }}
+                                    title="クリックで優先度を変更"
                                   >
                                     {pri.label}
-                                  </span>
+                                  </button>
                                   {task.employee_name && (
                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
                                       {task.employee_name}
                                     </span>
                                   )}
+                                  {task.generated_by === 'line' && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-50 text-green-600 border border-green-200">
+                                      LINE
+                                    </span>
+                                  )}
                                 </div>
-                                {task.description && (
+                                {task.description && task.description !== task.title && (
                                   <p className="text-xs text-gray-400 mt-1 line-clamp-2">{task.description}</p>
                                 )}
                                 {task.due_date && (
@@ -298,6 +454,15 @@ export default function AutoTasksPanel() {
                                   </p>
                                 )}
                               </div>
+
+                              {/* 削除ボタン */}
+                              <button
+                                onClick={() => deleteTask(task.id)}
+                                className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition text-xs p-1"
+                                title="削除"
+                              >
+                                ✕
+                              </button>
                             </div>
                           </div>
                         )

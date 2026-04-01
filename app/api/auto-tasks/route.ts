@@ -228,19 +228,23 @@ KPIのギャップが大きい項目（カルテ枚数・単価UP・サブスク
   }
 }
 
-// PUT: タスクステータス更新
+// PUT: タスク更新（ステータス・優先度）
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json()
-    const { id, status } = body
+    const { id, status, priority } = body
 
-    if (!id || !status) {
-      return NextResponse.json({ error: 'id and status are required' }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 })
     }
+
+    const updateData: Record<string, string> = { updated_at: new Date().toISOString() }
+    if (status) updateData.status = status
+    if (priority) updateData.priority = priority
 
     const { data, error } = await supabase
       .from('vo_tasks')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
@@ -256,6 +260,27 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ task: data })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+// DELETE: タスク削除
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get('id')
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    }
+
+    const { error } = await supabase
+      .from('vo_tasks')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    return NextResponse.json({ success: true })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
