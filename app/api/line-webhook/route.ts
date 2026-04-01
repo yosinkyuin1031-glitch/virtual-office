@@ -1,27 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '../../lib/supabase'
 
-const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply'
-
-// LINE返信
-async function replyLINE(replyToken: string, message: string): Promise<void> {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
-  if (!token) return
-
-  await fetch(LINE_REPLY_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      replyToken,
-      messages: [{ type: 'text', text: message }],
-    }),
-  }).catch(() => {})
-}
-
-// LINE Webhook - ユーザーからの返信をメモ保存 + タスク自動追加
+// LINE Webhook - ユーザーからの返信をメモ保存 + タスク自動追加（返信なし）
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -33,8 +13,6 @@ export async function POST(request: NextRequest) {
 
       const text = event.message.text.trim()
       if (!text) continue
-
-      const replyToken = event.replyToken
 
       // カテゴリ自動判別（先頭のキーワードで分類）
       let category: string = 'general'
@@ -92,10 +70,9 @@ export async function POST(request: NextRequest) {
         const jstNow = new Date(now.getTime() + jstOffset)
         const today = jstNow.toISOString().split('T')[0]
 
-        // 部署を自動判定（見つからなければ経営層）
         const department = department_tags[0] || '経営層'
 
-        const { error } = await supabase.from('vo_tasks').insert({
+        await supabase.from('vo_tasks').insert({
           department,
           employee_name: null,
           title: content.length > 25 ? content.substring(0, 25) : content,
@@ -106,28 +83,13 @@ export async function POST(request: NextRequest) {
           batch_id: `line_${Date.now()}`,
           generated_by: 'line',
         })
-
-        if (!error) {
-          await replyLINE(replyToken, `タスクを追加しました\n${content}\n\n部署: ${department}\n期限: ${today}`)
-        } else {
-          await replyLINE(replyToken, `タスクの追加に失敗しました: ${error.message}`)
-        }
-      } else {
-        // タスク以外のメモは受領確認だけ返す
-        const categoryLabels: Record<string, string> = {
-          direction: '方針',
-          insight: '気づき',
-          feedback: 'フィードバック',
-          general: 'メモ',
-        }
-        await replyLINE(replyToken, `${categoryLabels[category] || 'メモ'}として記録しました\n${content}`)
       }
     }
 
     return NextResponse.json({ status: 'ok' })
   } catch (error) {
     console.error('LINE Webhook error:', error)
-    return NextResponse.json({ status: 'ok' }) // LINEには常に200を返す
+    return NextResponse.json({ status: 'ok' })
   }
 }
 
