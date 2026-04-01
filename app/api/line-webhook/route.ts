@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '../../lib/supabase'
 
-// LINE Webhook - ユーザーからの返信をメモとして保存
+const LINE_REPLY_URL = 'https://api.line.me/v2/bot/message/reply'
+
+// LINE返信
+async function replyLINE(replyToken: string, message: string): Promise<void> {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
+  if (!token) return
+
+  await fetch(LINE_REPLY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      replyToken,
+      messages: [{ type: 'text', text: message }],
+    }),
+  }).catch(() => {})
+}
+
+// LINE Webhook - ユーザーからの返信をメモ保存 + タスク自動追加
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -13,6 +33,8 @@ export async function POST(request: NextRequest) {
 
       const text = event.message.text.trim()
       if (!text) continue
+
+      const replyToken = event.replyToken
 
       // カテゴリ自動判別（先頭のキーワードで分類）
       let category: string = 'general'
@@ -55,13 +77,51 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Supabaseに保存
+      // Supabaseにメモ保存
       await supabase.from('chairman_memos').insert({
         content,
         category,
         source: 'line',
         department_tags,
       })
+
+      // タスクカテゴリの場合 → vo_tasksにも追加
+      if (category === 'task') {
+        const now = new Date()
+        const jstOffset = 9 * 60 * 60 * 1000
+        const jstNow = new Date(now.getTime() + jstOffset)
+        const today = jstNow.toISOString().split('T')[0]
+
+        // 部署を自動判定（見つからなければ経営層）
+        const department = department_tags[0] || '経営層'
+
+        const { error } = await supabase.from('vo_tasks').insert({
+          department,
+          employee_name: null,
+          title: content.length > 25 ? content.substring(0, 25) : content,
+          description: content,
+          priority: 'high',
+          status: 'pending',
+          due_date: today,
+          batch_id: `line_${Date.now()}`,
+          generated_by: 'line',
+        })
+
+        if (!error) {
+          await replyLINE(replyToken, `タスクを追加しました\n${content}\n\n部署: ${department}\n期限: ${today}`)
+        } else {
+          await replyLINE(replyToken, `タスクの追加に失敗しました: ${error.message}`)
+        }
+      } else {
+        // タスク以外のメモは受領確認だけ返す
+        const categoryLabels: Record<string, string> = {
+          direction: '方針',
+          insight: '気づき',
+          feedback: 'フィードバック',
+          general: 'メモ',
+        }
+        await replyLINE(replyToken, `${categoryLabels[category] || 'メモ'}として記録しました\n${content}`)
+      }
     }
 
     return NextResponse.json({ status: 'ok' })

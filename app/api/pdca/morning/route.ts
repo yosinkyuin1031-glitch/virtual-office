@@ -10,6 +10,7 @@ import {
   savePDCAReport,
   isDuplicateExecution,
 } from '../../../lib/pdca-utils'
+import { sendLINEBroadcast } from '../../../lib/line-notify'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -195,6 +196,48 @@ ${eveningInsight}
       morning_message: morningMessage,
     })
 
+    // LINE朝礼メッセージ送信
+    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][new Date(new Date().getTime() + 9 * 60 * 60 * 1000).getDay()]
+    const allTodayTasks = [...(pendingTasks || []), ...insertedTasks]
+    const highTasks = allTodayTasks.filter(t => (t as Record<string, unknown>).priority === 'high')
+    const normalTasks = allTodayTasks.filter(t => (t as Record<string, unknown>).priority !== 'high')
+
+    let lineMessage = `AI Solutions 朝礼\n${today}(${dayOfWeek})\n━━━━━━━━━━━━━\n`
+
+    if (morningMessage) {
+      lineMessage += `\n${morningMessage}\n`
+    }
+
+    if (priorities) {
+      lineMessage += `\n${priorities}\n`
+    }
+
+    lineMessage += `\n━━━━━━━━━━━━━\n`
+    lineMessage += `本日のタスク（${allTodayTasks.length}件）\n`
+
+    if (highTasks.length > 0) {
+      lineMessage += `\n最優先（${highTasks.length}件）\n`
+      for (const t of highTasks.slice(0, 10)) {
+        const task = t as Record<string, unknown>
+        lineMessage += `${task.department}: ${task.title}\n`
+      }
+    }
+
+    if (normalTasks.length > 0) {
+      lineMessage += `\n通常（${normalTasks.length}件）\n`
+      for (const t of normalTasks.slice(0, 10)) {
+        const task = t as Record<string, unknown>
+        lineMessage += `${task.department}: ${task.title}\n`
+      }
+      if (normalTasks.length > 10) {
+        lineMessage += `...他${normalTasks.length - 10}件\n`
+      }
+    }
+
+    lineMessage += `\n新規生成: ${insertedTasks.length}件\n━━━━━━━━━━━━━`
+
+    const lineSent = await sendLINEBroadcast(lineMessage)
+
     return NextResponse.json({
       success: true,
       cycle: 'morning',
@@ -203,6 +246,7 @@ ${eveningInsight}
       tasksGenerated: insertedTasks.length,
       priorities,
       morningMessage: morningMessage.substring(0, 200),
+      lineSent,
     })
 
   } catch (error) {

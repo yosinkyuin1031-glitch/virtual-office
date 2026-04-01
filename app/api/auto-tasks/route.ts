@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { sendLINEBroadcast } from '../../lib/line-notify'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -245,6 +246,15 @@ export async function PUT(req: NextRequest) {
       .single()
 
     if (error) throw error
+
+    // タスク完了時にLINE通知
+    if (status === 'completed' && data) {
+      const completedTask = data as Record<string, unknown>
+      await sendLINEBroadcast(
+        `タスク完了\n━━━━━━━━━━━━━\n${completedTask.department}: ${completedTask.title}\n${(completedTask.description as string || '').substring(0, 100)}\n━━━━━━━━━━━━━`
+      ).catch(() => {})
+    }
+
     return NextResponse.json({ task: data })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error'
