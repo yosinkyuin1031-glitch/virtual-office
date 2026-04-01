@@ -221,6 +221,26 @@ export const knowledgeBase: KnowledgeEntry[] = [
     learnedAt: '2026-03-27',
     priority: 'medium',
   },
+
+  // === 事業ルール追加 ===
+  {
+    id: 'br-005',
+    category: 'business_rule',
+    title: '外部投稿の自動化禁止',
+    content: 'SNS・LINE・GBP等への外部投稿は自動化しない方針。AI社員の役割は「そのまま使える完成度の原稿・資料を作る」まで。実際の投稿・発信は大口さんが確認して手動で行う。',
+    source: 'feedback',
+    learnedAt: '2026-03-27',
+    priority: 'high',
+  },
+  {
+    id: 'br-006',
+    category: 'business_rule',
+    title: '全アプリ共通の契約ルール',
+    content: '①再登録不可（解約済みメールはブロック） ②最低契約期間6ヶ月（月額プラン） ③早期解約金（残り月数×月額料金） ④解約時is_active=false→/suspendedリダイレクト',
+    source: 'feedback',
+    learnedAt: '2026-04-01',
+    priority: 'high',
+  },
 ]
 
 // カテゴリ別に知識を取得するヘルパー

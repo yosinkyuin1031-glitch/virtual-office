@@ -197,7 +197,7 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
             <h2 className="text-xl font-bold text-gray-800">AI Solutions</h2>
             <p className="text-sm text-gray-500">会長：大口 陽平</p>
             <p className="text-xs text-amber-700 mt-1 font-medium">
-              Mission - 「治療院の経営をテクノロジーで変える」
+              Mission - 「できない」を「できる」に変え、光を灯す。
             </p>
           </div>
         </div>
@@ -562,20 +562,49 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function ProductBoard({ setChatTarget }: { setChatTarget: (emp: Employee) => void }) {
   const [filterCat, setFilterCat] = useState<string>('all')
+  const [filterRank, setFilterRank] = useState<string>('all')
   const cats = Object.entries(productCategories)
-  const filtered = filterCat === 'all' ? products : products.filter(p => p.category === filterCat)
-  const activeCount = products.filter(p => p.status === 'active').length
-  const devCount = products.filter(p => p.status === 'development').length
+  const catFiltered = filterCat === 'all' ? products : products.filter(p => p.category === filterCat)
+  const filtered = filterRank === 'all' ? catFiltered : catFiltered.filter(p => p.rank === filterRank)
+  const rankA = products.filter(p => p.rank === 'A').length
+  const rankB = products.filter(p => p.rank === 'B').length
+  const rankC = products.filter(p => p.rank === 'C').length
 
   return (
     <div className="space-y-4 pb-8">
       <div className="text-center mb-4">
         <h2 className="text-lg font-bold text-gray-800">制作物ボード</h2>
         <p className="text-[10px] text-gray-400 mt-1">
-          全{products.length}プロダクト | 稼働中 {activeCount} | 開発中 {devCount} | AI社員{allEmployeesList.length}名が担当
+          全{products.length}プロダクト | A:{rankA} B:{rankB} C:{rankC}
         </p>
       </div>
 
+      {/* ランクフィルター */}
+      <div className="flex gap-2 justify-center">
+        {[
+          { key: 'all', label: `すべて (${products.length})`, bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-600' },
+          { key: 'A', label: `A (${rankA})`, bg: 'bg-green-50', border: 'border-green-400', text: 'text-green-700' },
+          { key: 'B', label: `B (${rankB})`, bg: 'bg-yellow-50', border: 'border-yellow-400', text: 'text-yellow-700' },
+          { key: 'C', label: `C (${rankC})`, bg: 'bg-red-50', border: 'border-red-400', text: 'text-red-600' },
+        ].map(r => (
+          <button
+            key={r.key}
+            onClick={() => setFilterRank(r.key)}
+            className={`text-[11px] font-bold px-4 py-1.5 rounded-full border transition ${
+              filterRank === r.key ? `${r.bg} ${r.border} ${r.text}` : 'border-gray-200 text-gray-400 bg-white'
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex justify-center gap-4 text-[9px] text-gray-400">
+        <span>A = 出していいレベル</span>
+        <span>B = ほぼ完成（微調整残り）</span>
+        <span>C = 未完成・要修正</span>
+      </div>
+
+      {/* カテゴリフィルター */}
       <div className="flex flex-wrap gap-1.5 justify-center">
         <button
           onClick={() => setFilterCat('all')}
@@ -624,16 +653,18 @@ function ProductCard({ product, onClickMember }: { product: Product; onClickMemb
       <div className="p-3 pb-2">
         <div className="flex items-start justify-between mb-1">
           <span className="text-xl">{product.icon}</span>
-          <span
-            className="text-[8px] px-1.5 py-0.5 rounded-full"
-            style={{
-              backgroundColor: product.status === 'active' ? '#22C55E14' : product.status === 'development' ? '#F59E0B14' : '#64748B14',
-              color: product.status === 'active' ? '#16A34A' : product.status === 'development' ? '#D97706' : '#64748B',
-              border: `1px solid ${product.status === 'active' ? '#22C55E33' : product.status === 'development' ? '#F59E0B33' : '#64748B33'}`,
-            }}
-          >
-            {product.status === 'active' ? '稼働中' : product.status === 'development' ? '開発中' : '計画中'}
-          </span>
+          <div className="flex items-center gap-1">
+            <span
+              className="text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center"
+              style={{
+                backgroundColor: product.rank === 'A' ? '#22C55E18' : product.rank === 'B' ? '#F59E0B18' : '#EF444418',
+                color: product.rank === 'A' ? '#16A34A' : product.rank === 'B' ? '#D97706' : '#DC2626',
+                border: `2px solid ${product.rank === 'A' ? '#22C55E' : product.rank === 'B' ? '#F59E0B' : '#EF4444'}`,
+              }}
+            >
+              {product.rank}
+            </span>
+          </div>
         </div>
         <h4 className="text-xs font-bold text-gray-800 leading-tight">{product.name}</h4>
         <p className="text-[9px] text-gray-400 mt-0.5 leading-snug line-clamp-2">{product.description}</p>

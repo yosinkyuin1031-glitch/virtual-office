@@ -14,8 +14,12 @@ interface ContextItem {
 
 const CATEGORIES = [
   { key: 'mission_vision', label: 'ミッション・ビジョン', icon: '🧭' },
+  { key: 'brand', label: 'ブランド・ポジション', icon: '💎' },
   { key: 'focus', label: '重点施策', icon: '🎯' },
   { key: 'yearly', label: '年度目標', icon: '📅' },
+  { key: 'work_design', label: '週間設計', icon: '🗓️' },
+  { key: 'campaign', label: 'キャンペーン', icon: '📣' },
+  { key: 'btob_sales', label: 'BtoB販売導線', icon: '🤝' },
   { key: 'rules', label: 'ルール・方針', icon: '📋' },
   { key: 'other', label: 'その他', icon: '💬' },
 ]
