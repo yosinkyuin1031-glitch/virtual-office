@@ -563,12 +563,16 @@ function OrgChart({ setChatTarget }: { setChatTarget: (emp: Employee) => void })
 function ProductBoard({ setChatTarget }: { setChatTarget: (emp: Employee) => void }) {
   const [filterCat, setFilterCat] = useState<string>('all')
   const [filterRank, setFilterRank] = useState<string>('all')
+  const [filterAppType, setFilterAppType] = useState<string>('all')
   const cats = Object.entries(productCategories)
-  const catFiltered = filterCat === 'all' ? products : products.filter(p => p.category === filterCat)
+  const typeFiltered = filterAppType === 'all' ? products : products.filter(p => p.appType === filterAppType)
+  const catFiltered = filterCat === 'all' ? typeFiltered : typeFiltered.filter(p => p.category === filterCat)
   const filtered = filterRank === 'all' ? catFiltered : catFiltered.filter(p => p.rank === filterRank)
   const rankA = products.filter(p => p.rank === 'A').length
   const rankB = products.filter(p => p.rank === 'B').length
   const rankC = products.filter(p => p.rank === 'C').length
+  const originalCount = products.filter(p => p.appType === 'original').length
+  const genericCount = products.filter(p => p.appType === 'generic').length
 
   return (
     <div className="space-y-4 pb-8">
@@ -577,6 +581,29 @@ function ProductBoard({ setChatTarget }: { setChatTarget: (emp: Employee) => voi
         <p className="text-[10px] text-gray-400 mt-1">
           全{products.length}プロダクト | A:{rankA} B:{rankB} C:{rankC}
         </p>
+      </div>
+
+      {/* アプリ種別フィルター */}
+      <div className="flex gap-2 justify-center">
+        {[
+          { key: 'all', label: `すべて (${products.length})`, bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-600' },
+          { key: 'original', label: `オリジナル (${originalCount})`, bg: 'bg-purple-50', border: 'border-purple-400', text: 'text-purple-700' },
+          { key: 'generic', label: `汎用ツール (${genericCount})`, bg: 'bg-cyan-50', border: 'border-cyan-400', text: 'text-cyan-700' },
+        ].map(r => (
+          <button
+            key={r.key}
+            onClick={() => setFilterAppType(r.key)}
+            className={`text-[11px] font-bold px-4 py-1.5 rounded-full border transition ${
+              filterAppType === r.key ? `${r.bg} ${r.border} ${r.text}` : 'border-gray-200 text-gray-400 bg-white'
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex justify-center gap-4 text-[9px] text-gray-400">
+        <span>オリジナル = 独自開発の専門アプリ</span>
+        <span>汎用ツール = 業種問わず使えるツール</span>
       </div>
 
       {/* ランクフィルター */}
@@ -654,6 +681,15 @@ function ProductCard({ product, onClickMember }: { product: Product; onClickMemb
         <div className="flex items-start justify-between mb-1">
           <span className="text-xl">{product.icon}</span>
           <div className="flex items-center gap-1">
+            <span
+              className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
+                product.appType === 'original'
+                  ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                  : 'bg-cyan-50 text-cyan-600 border border-cyan-200'
+              }`}
+            >
+              {product.appType === 'original' ? 'Original' : 'Generic'}
+            </span>
             <span
               className="text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center"
               style={{

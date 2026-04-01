@@ -38,6 +38,7 @@ export interface Product {
   assignedTo: number[] // employee IDs
   description: string
   icon: string
+  appType: 'original' | 'generic' // original=オリジナル開発アプリ generic=汎用ツール（どこでも使える）
 }
 
 export interface CloudUsage {
@@ -1018,85 +1019,85 @@ export const departments: Department[] = [
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export const products: Product[] = [
   // ━━━ 整体院アプリ ━━━
-  { id: 'customer-mgmt', name: '顧客管理シート', url: 'https://customer-mgmt.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 14], description: 'マルチテナント対応・離反アラート・AI分析・CSV取込', icon: '👥' },
-  { id: 'reservation', name: '予約管理', url: 'https://reservation-app-steel.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 14], description: 'LINE予約ページ付き・カレンダー表示', icon: '📅' },
-  { id: 'web-monshin', name: 'WEB問診', url: 'https://web-monshin.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 14], description: 'LINE導線・名寄せ精度向上済み', icon: '📝' },
-  { id: 'kensa-sheet', name: '検査シート作成', url: 'https://kensa-sheet-app.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 13, 14], description: '歪み分析・セルフケア印刷・SaaS Auth+RLS完了', icon: '🔬' },
-  { id: 'menu-manager', name: 'メニュー管理', url: 'https://menu-manager.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6], description: 'メニュー・価格表・POP管理', icon: '🍽️' },
-  { id: 'sleep-app', name: '睡眠管理アプリ', category: 'clinic-app', status: 'active', rank: 'C', assignedTo: [6, 12], description: '睡眠データ記録・分析（URL未設定）', icon: '😴' },
-  { id: 'line-auto', name: 'LINE自動化', url: 'https://line-automation.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [7, 14], description: 'API連携・スケジュール実行（12ヶ月ステップ未統合）', icon: '💬' },
-  { id: 'line-delivery', name: 'LINE配信アプリ', url: 'https://line-delivery.vercel.app', category: 'btob-saas', status: 'active', rank: 'B', assignedTo: [7, 14], description: '治療家向けLINE配信・ステップ配信SaaS', icon: '📨' },
-  { id: 'rental-salon', name: 'レンタルサロン予約決済', url: 'https://rental-salon.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'Stripe決済・空き時間管理・予約カレンダー', icon: '💈' },
+  { id: 'customer-mgmt', name: '顧客管理シート', url: 'https://customer-mgmt.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 14], description: 'マルチテナント対応・離反アラート・AI分析・CSV取込', icon: '👥', appType: 'original' },
+  { id: 'reservation', name: '予約管理', url: 'https://reservation-app-steel.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 14], description: 'LINE予約ページ付き・カレンダー表示', icon: '📅', appType: 'original' },
+  { id: 'web-monshin', name: 'WEB問診', url: 'https://web-monshin.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 14], description: 'LINE導線・名寄せ精度向上済み', icon: '📝', appType: 'original' },
+  { id: 'kensa-sheet', name: '検査シート作成', url: 'https://kensa-sheet-app.vercel.app', category: 'clinic-app', status: 'active', rank: 'A', assignedTo: [6, 13, 14], description: '歪み分析・セルフケア印刷・SaaS Auth+RLS完了', icon: '🔬', appType: 'original' },
+  { id: 'menu-manager', name: 'メニュー管理', url: 'https://menu-manager.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6], description: 'メニュー・価格表・POP管理', icon: '🍽️', appType: 'original' },
+  { id: 'sleep-app', name: '睡眠管理アプリ', category: 'clinic-app', status: 'active', rank: 'C', assignedTo: [6, 12], description: '睡眠データ記録・分析（URL未設定）', icon: '😴', appType: 'original' },
+  { id: 'line-auto', name: 'LINE自動化', url: 'https://line-automation.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [7, 14], description: 'API連携・スケジュール実行（12ヶ月ステップ未統合）', icon: '💬', appType: 'original' },
+  { id: 'line-delivery', name: 'LINE配信アプリ', url: 'https://line-delivery.vercel.app', category: 'btob-saas', status: 'active', rank: 'B', assignedTo: [7, 14], description: '治療家向けLINE配信・ステップ配信SaaS', icon: '📨', appType: 'original' },
+  { id: 'rental-salon', name: 'レンタルサロン予約決済', url: 'https://rental-salon.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'Stripe決済・空き時間管理・予約カレンダー', icon: '💈', appType: 'original' },
 
   // ━━━ 訪問鍼灸アプリ ━━━
-  { id: 'houmon-staff', name: '訪問鍼灸スタッフ管理', url: 'https://houmon-staff-manager.vercel.app', category: 'houmon-app', status: 'active', rank: 'B', assignedTo: [9, 14], description: 'スタッフシフト・勤怠管理', icon: '👨‍⚕️' },
-  { id: 'receipt-manager', name: 'レセプト管理', url: 'https://receipt-manager-taupe.vercel.app', category: 'houmon-app', status: 'active', rank: 'B', assignedTo: [9, 14], description: '保険請求・施術報告書・別添フォーマット', icon: '🧾' },
-  { id: 'sales-manager', name: '営業管理アプリ', url: 'https://sales-manager-orpin.vercel.app', category: 'houmon-app', status: 'active', rank: 'B', assignedTo: [8, 14], description: 'CSV取り込み改善済み・営業リスト管理', icon: '📈' },
+  { id: 'houmon-staff', name: '訪問鍼灸スタッフ管理', url: 'https://houmon-staff-manager.vercel.app', category: 'houmon-app', status: 'active', rank: 'B', assignedTo: [9, 14], description: 'スタッフシフト・勤怠管理', icon: '👨‍⚕️', appType: 'original' },
+  { id: 'receipt-manager', name: 'レセプト管理', url: 'https://receipt-manager-taupe.vercel.app', category: 'houmon-app', status: 'active', rank: 'B', assignedTo: [9, 14], description: '保険請求・施術報告書・別添フォーマット', icon: '🧾', appType: 'original' },
+  { id: 'sales-manager', name: '営業管理アプリ', url: 'https://sales-manager-orpin.vercel.app', category: 'houmon-app', status: 'active', rank: 'B', assignedTo: [8, 14], description: 'CSV取り込み改善済み・営業リスト管理', icon: '📈', appType: 'original' },
 
   // ━━━ BtoB SaaS製品 ━━━
-  { id: 'ai-master', name: '治療家AIマスター', url: 'https://ai-master.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [12, 11], description: '症状分析・施術提案・経営相談AI・Auth+DB保存', icon: '🧠' },
-  { id: 'ai-tools', name: '整体院AIツール', url: 'https://seitai-ai-tools.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [12, 14], description: 'ブログ生成・診断・クイズ・Auth+DB保存', icon: '🤖' },
-  { id: 'meo-winner', name: 'MEO勝ち上げくん', url: 'https://meo-kachiagekun.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [13, 11, 14], description: 'Supabase Auth・RLS・GSC連携・AI改善提案・モニター10人', icon: '🏆' },
-  { id: 'meo-checker-self', name: 'MEOチェッカー（自社用）', url: 'https://meo-tracker.vercel.app', category: 'btob-saas', status: 'active', rank: 'B', assignedTo: [13, 14], description: '自社MEO順位トラッキング', icon: '📍' },
-  { id: 'meo-checker-dist', name: 'MEOチェッカー（配布用）', url: 'https://meo-checker-three.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [13, 14], description: 'モニター向け無料配布ツール', icon: '📦' },
-  { id: 'clinicmark', name: 'クリニックマーク', category: 'btob-saas', status: 'active', rank: 'C', assignedTo: [12, 14], description: 'マーケティング管理生成サイト（URL未設定）', icon: '✨' },
-  { id: 'kensa-saas', name: '検査シートSaaS', category: 'btob-saas', status: 'development', rank: 'C', assignedTo: [13, 11], description: 'Stripe月額課金・マルチテナント化進行中', icon: '🔬' },
-  { id: 'virtual-office', name: 'バーチャルオフィス', url: 'https://virtual-office-pearl.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [14, 12], description: 'AI社員24名・PDCA自動サイクル・タスクエンジン', icon: '🏢' },
-  { id: 'capillary-scope', name: '毛細血管スコープ導入', url: 'https://capillary-scope-package.vercel.app', category: 'btob-saas', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'POP・解説動画・事例・LINE配信テンプレートハブ', icon: '🔬' },
+  { id: 'ai-master', name: '治療家AIマスター', url: 'https://ai-master.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [12, 11], description: '症状分析・施術提案・経営相談AI・Auth+DB保存', icon: '🧠', appType: 'original' },
+  { id: 'ai-tools', name: '整体院AIツール', url: 'https://seitai-ai-tools.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [12, 14], description: 'ブログ生成・診断・クイズ・Auth+DB保存', icon: '🤖', appType: 'original' },
+  { id: 'meo-winner', name: 'MEO勝ち上げくん', url: 'https://meo-kachiagekun.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [13, 11, 14], description: 'Supabase Auth・RLS・GSC連携・AI改善提案・モニター10人', icon: '🏆', appType: 'original' },
+  { id: 'meo-checker-self', name: 'MEOチェッカー（自社用）', url: 'https://meo-tracker.vercel.app', category: 'btob-saas', status: 'active', rank: 'B', assignedTo: [13, 14], description: '自社MEO順位トラッキング', icon: '📍', appType: 'original' },
+  { id: 'meo-checker-dist', name: 'MEOチェッカー（配布用）', url: 'https://meo-checker-three.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [13, 14], description: 'モニター向け無料配布ツール', icon: '📦', appType: 'original' },
+  { id: 'clinicmark', name: 'クリニックマーク', category: 'btob-saas', status: 'active', rank: 'C', assignedTo: [12, 14], description: 'マーケティング管理生成サイト（URL未設定）', icon: '✨', appType: 'original' },
+  { id: 'kensa-saas', name: '検査シートSaaS', category: 'btob-saas', status: 'development', rank: 'C', assignedTo: [13, 11], description: 'Stripe月額課金・マルチテナント化進行中', icon: '🔬', appType: 'original' },
+  { id: 'virtual-office', name: 'バーチャルオフィス', url: 'https://virtual-office-pearl.vercel.app', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [14, 12], description: 'AI社員24名・PDCA自動サイクル・タスクエンジン', icon: '🏢', appType: 'original' },
+  { id: 'capillary-scope', name: '毛細血管スコープ導入', url: 'https://capillary-scope-package.vercel.app', category: 'btob-saas', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'POP・解説動画・事例・LINE配信テンプレートハブ', icon: '🔬', appType: 'original' },
 
   // ━━━ サイト ━━━
-  { id: 'ec-shop', name: 'ECサイト（物販+サブスク）', url: 'https://ec-shop-cyan.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'サプリ・物販のオンライン販売・Stripe決済', icon: '🛒' },
-  { id: 'hp-content', name: 'HPコンテンツ管理', url: 'https://hp-content-manager.vercel.app', category: 'site', status: 'active', rank: 'A', assignedTo: [18, 14], description: 'ブログ生成・リッチエディタ', icon: '🌐' },
-  { id: 'salon-academy', name: 'サロン経営アカデミー', url: 'https://salon-academy-rho.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [20, 14], description: '6グループ13カテゴリ（Stripe/APIキー未設定）', icon: '🎓' },
-  { id: 'fan-channel-library', name: 'ファンチャンネルライブラリー', url: 'https://fan-channel-library.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [15, 14], description: 'FCL記事販売PF（診断アプリPFへ進化中）', icon: '📚' },
-  { id: 'kawaguchimura-seminar', name: '川口村経営セミナー', url: 'https://kawaguchimura-seminar.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'セミナー動画アーカイブ・YouTube埋め込み', icon: '🎥' },
+  { id: 'ec-shop', name: 'ECサイト（物販+サブスク）', url: 'https://ec-shop-cyan.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'サプリ・物販のオンライン販売・Stripe決済', icon: '🛒', appType: 'original' },
+  { id: 'hp-content', name: 'HPコンテンツ管理', url: 'https://hp-content-manager.vercel.app', category: 'site', status: 'active', rank: 'A', assignedTo: [18, 14], description: 'ブログ生成・リッチエディタ', icon: '🌐', appType: 'generic' },
+  { id: 'salon-academy', name: 'サロン経営アカデミー', url: 'https://salon-academy-rho.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [20, 14], description: '6グループ13カテゴリ（Stripe/APIキー未設定）', icon: '🎓', appType: 'original' },
+  { id: 'fan-channel-library', name: 'ファンチャンネルライブラリー', url: 'https://fan-channel-library.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [15, 14], description: 'FCL記事販売PF（診断アプリPFへ進化中）', icon: '📚', appType: 'original' },
+  { id: 'kawaguchimura-seminar', name: '川口村経営セミナー', url: 'https://kawaguchimura-seminar.vercel.app', category: 'site', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'セミナー動画アーカイブ・YouTube埋め込み', icon: '🎥', appType: 'original' },
 
   // ━━━ 無料診断系 ━━━
-  { id: 'sleep-checker', name: '睡眠チェック分析', url: 'https://sleep-check.vercel.app', category: 'diagnostic', status: 'active', rank: 'A', assignedTo: [6, 12], description: '睡眠品質チェック・3テンプレート・Stripe連携', icon: '🌙' },
-  { id: 'sleep-check-single', name: '睡眠チェック（単品版）', url: 'https://sleep-check-single.vercel.app', category: 'diagnostic', status: 'active', rank: 'A', assignedTo: [6, 12], description: '睡眠チェック単品アプリ・ライト4,980円', icon: '💤' },
-  { id: 'nutrition-check', name: '栄養バランスチェック', url: 'https://nutrition-check-app.vercel.app', category: 'diagnostic', status: 'active', rank: 'C', assignedTo: [6, 12], description: '401エラー発生中・認証設定要修正', icon: '🥗' },
-  { id: 'gut-health-check', name: '腸内環境チェック', url: 'https://gut-health-check.vercel.app', category: 'diagnostic', status: 'active', rank: 'A', assignedTo: [6, 12], description: '腸内環境分析・改善提案', icon: '🦠' },
-  { id: 'golf-swing', name: 'ゴルフスイング診断', url: 'https://golf-swing-green.vercel.app', category: 'diagnostic', status: 'active', rank: 'B', assignedTo: [12, 14], description: 'スイング動画AI分析・フォーム改善アドバイス', icon: '⛳' },
+  { id: 'sleep-checker', name: '睡眠チェック分析', url: 'https://sleep-check.vercel.app', category: 'diagnostic', status: 'active', rank: 'A', assignedTo: [6, 12], description: '睡眠品質チェック・3テンプレート・Stripe連携', icon: '🌙', appType: 'original' },
+  { id: 'sleep-check-single', name: '睡眠チェック（単品版）', url: 'https://sleep-check-single.vercel.app', category: 'diagnostic', status: 'active', rank: 'A', assignedTo: [6, 12], description: '睡眠チェック単品アプリ・ライト4,980円', icon: '💤', appType: 'original' },
+  { id: 'nutrition-check', name: '栄養バランスチェック', url: 'https://nutrition-check-app.vercel.app', category: 'diagnostic', status: 'active', rank: 'C', assignedTo: [6, 12], description: '401エラー発生中・認証設定要修正', icon: '🥗', appType: 'original' },
+  { id: 'gut-health-check', name: '腸内環境チェック', url: 'https://gut-health-check.vercel.app', category: 'diagnostic', status: 'active', rank: 'A', assignedTo: [6, 12], description: '腸内環境分析・改善提案', icon: '🦠', appType: 'original' },
+  { id: 'golf-swing', name: 'ゴルフスイング診断', url: 'https://golf-swing-green.vercel.app', category: 'diagnostic', status: 'active', rank: 'B', assignedTo: [12, 14], description: 'スイング動画AI分析・フォーム改善アドバイス', icon: '⛳', appType: 'original' },
 
   // ━━━ マーケティングツール ━━━
-  { id: 'capillary-scope-lp', name: '毛細血管スコープLP', url: 'https://capillary-scope-lp.vercel.app', category: 'marketing', status: 'active', rank: 'A', assignedTo: [20, 17], description: '毛細血管スコープ導入の営業LP', icon: '🩸' },
-  { id: 'ad-manager', name: '広告管理ツール', url: 'https://ad-manager-mu.vercel.app', category: 'marketing', status: 'active', rank: 'A', assignedTo: [5, 14], description: 'Google Ads API連携・カスタムKPI', icon: '📊' },
-  { id: 'heatscope', name: 'HeatScope', url: 'https://heatscope.vercel.app', category: 'marketing', status: 'active', rank: 'A', assignedTo: [5, 14], description: 'ヒートマップ16機能完了・8サイト計測中', icon: '🔥' },
+  { id: 'capillary-scope-lp', name: '毛細血管スコープLP', url: 'https://capillary-scope-lp.vercel.app', category: 'marketing', status: 'active', rank: 'A', assignedTo: [20, 17], description: '毛細血管スコープ導入の営業LP', icon: '🩸', appType: 'original' },
+  { id: 'ad-manager', name: '広告管理ツール', url: 'https://ad-manager-mu.vercel.app', category: 'marketing', status: 'active', rank: 'A', assignedTo: [5, 14], description: 'Google Ads API連携・カスタムKPI', icon: '📊', appType: 'generic' },
+  { id: 'heatscope', name: 'HeatScope', url: 'https://heatscope.vercel.app', category: 'marketing', status: 'active', rank: 'A', assignedTo: [5, 14], description: 'ヒートマップ16機能完了・8サイト計測中', icon: '🔥', appType: 'generic' },
 
   // ━━━ LP ━━━
-  { id: 'lp-builder', name: 'LP作成ツール', url: 'https://lp-builder-weld.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [17, 14], description: '10テンプレ・3訴求軸・道のりセクション・ヒーロー7カスタム', icon: '🏗️' },
-  { id: 'premium-lp', name: '高額メニューLP', url: 'https://premium-lp.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [19, 17], description: '睡眠/頭髪/ダイエット3コース', icon: '💎' },
-  { id: 'clinic-saas-lp', name: 'BtoB販売LP（ClinicApps）', url: 'https://clinic-saas-lp.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [20, 17], description: '治療院DXツール販売・Stripe決済', icon: '🤝' },
-  { id: 'jiritsu-lp', name: '自律神経失調症LP', category: 'lp', status: 'active', rank: 'C', assignedTo: [17, 19], description: '自律神経失調症LP（URL未設定）', icon: '🧠' },
-  { id: 'symptom-lps', name: '症状別LP', url: 'https://symptom-lps.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [17, 19], description: '脊柱管狭窄症・坐骨神経痛・腰痛・膝痛・睡眠改善', icon: '🩻' },
-  { id: 'kensa-lp', name: '検査アプリLP', category: 'lp', status: 'active', rank: 'C', assignedTo: [17, 19], description: '検査シートアプリ専用LP（URL未設定）', icon: '🔬' },
+  { id: 'lp-builder', name: 'LP作成ツール', url: 'https://lp-builder-weld.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [17, 14], description: '10テンプレ・3訴求軸・道のりセクション・ヒーロー7カスタム', icon: '🏗️', appType: 'generic' },
+  { id: 'premium-lp', name: '高額メニューLP', url: 'https://premium-lp.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [19, 17], description: '睡眠/頭髪/ダイエット3コース', icon: '💎', appType: 'original' },
+  { id: 'clinic-saas-lp', name: 'BtoB販売LP（ClinicApps）', url: 'https://clinic-saas-lp.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [20, 17], description: '治療院DXツール販売・Stripe決済', icon: '🤝', appType: 'original' },
+  { id: 'jiritsu-lp', name: '自律神経失調症LP', category: 'lp', status: 'active', rank: 'C', assignedTo: [17, 19], description: '自律神経失調症LP（URL未設定）', icon: '🧠', appType: 'original' },
+  { id: 'symptom-lps', name: '症状別LP', url: 'https://symptom-lps.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [17, 19], description: '脊柱管狭窄症・坐骨神経痛・腰痛・膝痛・睡眠改善', icon: '🩻', appType: 'original' },
+  { id: 'kensa-lp', name: '検査アプリLP', category: 'lp', status: 'active', rank: 'C', assignedTo: [17, 19], description: '検査シートアプリ専用LP（URL未設定）', icon: '🔬', appType: 'original' },
 
   // ━━━ コンテンツ ━━━
-  { id: 'fb-templates', name: 'Facebook投稿テンプレート', category: 'content', status: 'active', rank: 'B', assignedTo: [20, 7], description: 'BtoB向け5投稿＋7日間シリーズ', icon: '📘' },
-  { id: 'instagram-posts', name: 'Instagram投稿', category: 'content', status: 'active', rank: 'B', assignedTo: [7, 23], description: '画像＋キャプション自動生成', icon: '📸' },
-  { id: 'seo-articles', name: 'SEO記事', category: 'content', status: 'active', rank: 'B', assignedTo: [18, 7], description: '症状別95キーワード対応', icon: '📰' },
-  { id: 'gbp-posts', name: 'GBP投稿', category: 'content', status: 'active', rank: 'B', assignedTo: [5, 7], description: 'Googleビジネスプロフィール投稿', icon: '📍' },
-  { id: 'gmb-posts', name: 'GMB投稿管理', category: 'content', status: 'active', rank: 'B', assignedTo: [5, 7], description: 'Googleマップ投稿の一括管理', icon: '🗺️' },
+  { id: 'fb-templates', name: 'Facebook投稿テンプレート', category: 'content', status: 'active', rank: 'B', assignedTo: [20, 7], description: 'BtoB向け5投稿＋7日間シリーズ', icon: '📘', appType: 'original' },
+  { id: 'instagram-posts', name: 'Instagram投稿', category: 'content', status: 'active', rank: 'B', assignedTo: [7, 23], description: '画像＋キャプション自動生成', icon: '📸', appType: 'original' },
+  { id: 'seo-articles', name: 'SEO記事', category: 'content', status: 'active', rank: 'B', assignedTo: [18, 7], description: '症状別95キーワード対応', icon: '📰', appType: 'original' },
+  { id: 'gbp-posts', name: 'GBP投稿', category: 'content', status: 'active', rank: 'B', assignedTo: [5, 7], description: 'Googleビジネスプロフィール投稿', icon: '📍', appType: 'original' },
+  { id: 'gmb-posts', name: 'GMB投稿管理', category: 'content', status: 'active', rank: 'B', assignedTo: [5, 7], description: 'Googleマップ投稿の一括管理', icon: '🗺️', appType: 'original' },
 
   // ━━━ メディア（YouTube 4チャンネル + 動画ツール）━━━
-  { id: 'youtube-healing', name: 'YouTube月光ヒーリング', category: 'media', status: 'active', rank: 'A', assignedTo: [15, 16, 22], description: 'メインch・2時間動画2本+Shorts12本/日・登録500名', icon: '🎵' },
-  { id: 'youtube-lofi', name: 'YouTube Lo-Fi Cafe BGM', category: 'media', status: 'active', rank: 'B', assignedTo: [15, 16], description: '第2ch・Lo-Fi系BGM・海外リスナー向け', icon: '☕' },
-  { id: 'youtube-nature', name: 'YouTube Nature Sound ASMR', category: 'media', status: 'active', rank: 'B', assignedTo: [15, 16], description: '第3ch・自然音ASMR・環境音', icon: '🌿' },
-  { id: 'youtube-meditation', name: 'YouTube ゆるり瞑想', category: 'media', status: 'active', rank: 'B', assignedTo: [15, 16], description: '第4ch・瞑想・マインドフルネス', icon: '🧘' },
-  { id: 'video-forge', name: 'VideoForge動画エディタ', url: 'https://video-forge-nu.vercel.app', category: 'media', status: 'active', rank: 'A', assignedTo: [22, 14], description: '19ツール搭載・FFmpeg.wasm・治療家テンプレ50種', icon: '🎬' },
+  { id: 'youtube-healing', name: 'YouTube月光ヒーリング', category: 'media', status: 'active', rank: 'A', assignedTo: [15, 16, 22], description: 'メインch・2時間動画2本+Shorts12本/日・登録500名', icon: '🎵', appType: 'original' },
+  { id: 'youtube-lofi', name: 'YouTube Lo-Fi Cafe BGM', category: 'media', status: 'active', rank: 'B', assignedTo: [15, 16], description: '第2ch・Lo-Fi系BGM・海外リスナー向け', icon: '☕', appType: 'original' },
+  { id: 'youtube-nature', name: 'YouTube Nature Sound ASMR', category: 'media', status: 'active', rank: 'B', assignedTo: [15, 16], description: '第3ch・自然音ASMR・環境音', icon: '🌿', appType: 'original' },
+  { id: 'youtube-meditation', name: 'YouTube ゆるり瞑想', category: 'media', status: 'active', rank: 'B', assignedTo: [15, 16], description: '第4ch・瞑想・マインドフルネス', icon: '🧘', appType: 'original' },
+  { id: 'video-forge', name: 'VideoForge動画エディタ', url: 'https://video-forge-nu.vercel.app', category: 'media', status: 'active', rank: 'A', assignedTo: [22, 14], description: '19ツール搭載・FFmpeg.wasm・治療家テンプレ50種', icon: '🎬', appType: 'generic' },
 
   // ━━━ ツール ━━━
-  { id: 'tsuyomi-worksheet', name: '強みワークシート', url: 'https://tsuyomi-worksheet.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [17, 7], description: '強み・差別化・ストーリーの言語化', icon: '💪' },
-  { id: 'invoice-forge', name: '請求書作成アプリ', url: 'https://invoice-forge-ashy.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '請求書作成・PDF出力・LINE/email送信', icon: '🧾' },
-  { id: 'hearing-sheet', name: 'ヒアリングシート', url: 'https://hearing-sheet.vercel.app', category: 'tool', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'アプリ開発ヒアリング（Gmail未設定）', icon: '📝' },
-  { id: 'project-hub', name: 'プロジェクト管理', url: 'https://project-hub-three-chi.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [14, 1], description: '全プロジェクト一覧・カテゴリフィルター・検索', icon: '📋' },
-  { id: 'quarterly-dashboard', name: '数字比較ダッシュボード', url: 'https://quarterly-dashboard-nu.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '四半期売上3年比較・目標設定・グラフ表示', icon: '📊' },
-  { id: 'koteihi', name: '固定費管理', url: 'https://koteihi-kanri.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '4カテゴリ固定費管理・月額年額換算・支払アラート', icon: '💰' },
-  { id: 'vision-sheet', name: 'ビジョンシート', category: 'tool', status: 'active', rank: 'C', assignedTo: [10, 14], description: '経営ビジョン・目標設定シート（URL未設定）', icon: '🔭' },
-  { id: 'keiei-dashboard', name: '経営ダッシュボード', category: 'tool', status: 'active', rank: 'C', assignedTo: [10, 14], description: 'YouTube統計・売上KPI表示（URL未設定）', icon: '📊' },
-  { id: 'task-notify-bot', name: 'タスク通知bot', category: 'tool', status: 'active', rank: 'C', assignedTo: [14, 1], description: 'LINEタスクリマインダー（URL未設定）', icon: '🔔' },
-  { id: 'point-management', name: 'ポイント管理システム', url: 'https://point-management-nine.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'Square/会費ペイ連動・プラン管理・ポイント付与', icon: '🎁' },
-  { id: 'proposal-generator', name: '提案書ジェネレーター', url: 'https://proposal-generator-gold.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [24, 12], description: '施術提案書の自動生成・リスク5項目・方針詳細', icon: '📄' },
+  { id: 'tsuyomi-worksheet', name: '強みワークシート', url: 'https://tsuyomi-worksheet.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [17, 7], description: '強み・差別化・ストーリーの言語化', icon: '💪', appType: 'generic' },
+  { id: 'invoice-forge', name: '請求書作成アプリ', url: 'https://invoice-forge-ashy.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '請求書作成・PDF出力・LINE/email送信', icon: '🧾', appType: 'generic' },
+  { id: 'hearing-sheet', name: 'ヒアリングシート', url: 'https://hearing-sheet.vercel.app', category: 'tool', status: 'active', rank: 'B', assignedTo: [20, 14], description: 'アプリ開発ヒアリング（Gmail未設定）', icon: '📝', appType: 'generic' },
+  { id: 'project-hub', name: 'プロジェクト管理', url: 'https://project-hub-three-chi.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [14, 1], description: '全プロジェクト一覧・カテゴリフィルター・検索', icon: '📋', appType: 'generic' },
+  { id: 'quarterly-dashboard', name: '数字比較ダッシュボード', url: 'https://quarterly-dashboard-nu.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '四半期売上3年比較・目標設定・グラフ表示', icon: '📊', appType: 'generic' },
+  { id: 'koteihi', name: '固定費管理', url: 'https://koteihi-kanri.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [10, 14], description: '4カテゴリ固定費管理・月額年額換算・支払アラート', icon: '💰', appType: 'generic' },
+  { id: 'vision-sheet', name: 'ビジョンシート', category: 'tool', status: 'active', rank: 'C', assignedTo: [10, 14], description: '経営ビジョン・目標設定シート（URL未設定）', icon: '🔭', appType: 'generic' },
+  { id: 'keiei-dashboard', name: '経営ダッシュボード', category: 'tool', status: 'active', rank: 'C', assignedTo: [10, 14], description: 'YouTube統計・売上KPI表示（URL未設定）', icon: '📊', appType: 'generic' },
+  { id: 'task-notify-bot', name: 'タスク通知bot', category: 'tool', status: 'active', rank: 'C', assignedTo: [14, 1], description: 'LINEタスクリマインダー（URL未設定）', icon: '🔔', appType: 'generic' },
+  { id: 'point-management', name: 'ポイント管理システム', url: 'https://point-management-nine.vercel.app', category: 'clinic-app', status: 'active', rank: 'B', assignedTo: [6, 14], description: 'Square/会費ペイ連動・プラン管理・ポイント付与', icon: '🎁', appType: 'original' },
+  { id: 'proposal-generator', name: '提案書ジェネレーター', url: 'https://proposal-generator-gold.vercel.app', category: 'tool', status: 'active', rank: 'A', assignedTo: [24, 12], description: '施術提案書の自動生成・リスク5項目・方針詳細', icon: '📄', appType: 'original' },
 ]
 
 // カテゴリ定義
