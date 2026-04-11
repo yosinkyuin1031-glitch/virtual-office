@@ -7,6 +7,8 @@ import {
   getJSTDateRange,
   logActivity,
 } from '../../../lib/pdca-utils'
+import { classifyTaskByUnit } from '../../../lib/business-units'
+import { sendLINEBroadcast } from '../../../lib/line-notify'
 import { employeePrompts, getEmployeePromptsByDepartment } from '../../../lib/employee-prompts'
 
 export const runtime = 'nodejs'
@@ -80,16 +82,31 @@ export async function GET(request: NextRequest) {
 
         const result = await callClaude(client, systemPrompt, userMessage, tokenLimit)
 
-        // 5. タスクを完了に更新
+        // 5. 実行サマリーを抽出
+        const summaryBlock = extractExecutionSummary(result)
+
+        // 6. タスクを完了に更新（完了時刻・詳細内容を記録）
+        // completion_noteに全結果を保存（最大5000文字）
+        const completionNote = [
+          `【${employeeName}が自動実行】`,
+          '',
+          summaryBlock.summary,
+          '',
+          '--- 成果物 ---',
+          summaryBlock.deliverable.substring(0, 4000),
+        ].join('\n').substring(0, 5000)
+
         await supabase
           .from('vo_tasks')
           .update({
             status: 'completed',
+            completed_at: new Date().toISOString(),
+            completion_note: completionNote,
             updated_at: new Date().toISOString(),
           })
           .eq('id', task.id)
 
-        // 6. 実行結果をcommands形式で保存（他の部分から参照可能に）
+        // 7. 実行結果をcommands形式で保存（他の部分から参照可能に）
         await supabase.from('commands').insert({
           instruction: `【タスク自動実行】${task.title}\n${task.description || ''}`,
           status: 'completed',
@@ -100,20 +117,19 @@ export async function GET(request: NextRequest) {
           completed_at: new Date().toISOString(),
         })
 
-        // 7. 活動ログ: 完了
-        const summary = result.substring(0, 200)
+        // 8. 活動ログ: 完了
         await logActivity(employeeName, department, 'タスク完了',
-          `${task.title}\n結果: ${summary}`)
+          `${task.title}\n${summaryBlock.summary.substring(0, 300)}`)
 
         results.push({
           id: task.id,
           title: task.title,
           department,
           status: 'completed',
-          summary,
+          summary: summaryBlock.summary,
         })
 
-        // 8. 連鎖タスクの検知
+        // 9. 連鎖タスクの検知
         // タスク結果の中に他部署への依頼が含まれていれば自動生成
         await detectFollowUpTasks(supabase, task, result, today)
 
@@ -140,6 +156,43 @@ export async function GET(request: NextRequest) {
           error: errMsg,
         })
       }
+    }
+
+    // LINE自動完了報告を送信（実行結果がある場合のみ）
+    if (results.length > 0) {
+      const completed = results.filter(r => r.status === 'completed')
+      const errors = results.filter(r => r.status === 'error')
+
+      let lineReport = `🤖 自動完了報告\n`
+
+      for (const r of completed) {
+        const unit = classifyTaskByUnit(r.department, r.title)
+        lineReport += `\n✅ 【${unit}】${r.title}\n`
+        // サマリーの箇条書き部分を追加（LINEは5000文字制限あるので簡潔に）
+        if (r.summary) {
+          lineReport += `━━━━━━━━━━━\n`
+          // サマリーから最大300文字抽出
+          const briefSummary = r.summary.substring(0, 300)
+          lineReport += `${briefSummary}\n`
+        }
+      }
+
+      for (const r of errors) {
+        const unit = classifyTaskByUnit(r.department, r.title)
+        lineReport += `\n⚠️ 【${unit}】${r.title}\nエラー発生→確認が必要です\n`
+      }
+
+      lineReport += `\n完了：${completed.length}件`
+      if (errors.length > 0) {
+        lineReport += ` / エラー：${errors.length}件`
+      }
+
+      // LINE文字数制限対策（5000文字超は切り詰め）
+      if (lineReport.length > 4900) {
+        lineReport = lineReport.substring(0, 4900) + '\n...(省略)'
+      }
+
+      await sendLINEBroadcast(lineReport)
     }
 
     return NextResponse.json({
@@ -237,7 +290,15 @@ function buildTaskSystemPrompt(
 ) {
   const base = employee?.systemPrompt || `あなたは大口ヘルスケアグループのAI社員です。与えられたタスクを確実に実行してください。`
 
-  return `${base}
+  return `あなたはAI Solutionsのバーチャル社員です。以下の行動指針に従って動いてください。
+- Facebook投稿タスクはアプリ事業のみ
+- MEO勝ち上げ君はモニター中のため運用タスク不要
+- タスクtitleは25文字以内
+- 実態のないタスクは生成しない
+- CCがやること（自動）と大口さんがやること（確認）を明確に分ける
+- YouTube完了報告は日報にまとめる
+
+${base}
 
 【タスク実行モード】
 あなたは今、自動タスク実行エンジンから呼び出されています。
@@ -254,10 +315,23 @@ function buildTaskSystemPrompt(
    - 完璧に整った文章にしない。実際の人間が書いたような「揺れ」を入れる
    - 「いや、正確に言うと」「ここだけの話」「正直に言うと」のような生っぽい表現を使う
    - 1文の長さをバラバラにする。短い文と長い文を混ぜる
-5. 他の部署との連携が必要な場合は【連携依頼】として明記すること。
-6. 回答はプレーンテキストで、マークダウン記号は使わないこと。
-7. 優先度: ${task.priority || 'normal'}
-8. 所属: ${task.department || employee?.department || '全社'}`
+6. 他の部署との連携が必要な場合は【連携依頼】として明記すること。
+7. 回答はプレーンテキストで、マークダウン記号は使わないこと。
+8. 優先度: ${task.priority || 'normal'}
+9. 所属: ${task.department || employee?.department || '全社'}
+
+【出力フォーマット（必須）】
+回答の冒頭に必ず以下の形式で実行サマリーを記載すること。その後に成果物本体を続けること。
+
+---実行サマリー---
+実行内容:
+・やったことを箇条書きで2〜4行（具体的に）
+・数値があれば数値を含める
+生成物: あり/なし（ありの場合は種類を記載。例: Facebook投稿文、提案書、分析レポート等）
+次回アクション: 次に必要なアクションがあれば1〜2行で記載。なければ「なし」
+---実行サマリー終了---
+
+（ここから成果物本体を記載）`
 }
 
 // タスクをユーザーメッセージに変換
@@ -291,6 +365,47 @@ function buildTaskUserMessage(task: {
   lines.push('上記のタスクを実行し、結果を報告してください。')
 
   return lines.join('\n')
+}
+
+// AIの出力から実行サマリーブロックを抽出
+function extractExecutionSummary(result: string): { summary: string; deliverable: string } {
+  // ---実行サマリー--- ... ---実行サマリー終了--- を抽出
+  const summaryMatch = result.match(/---実行サマリー---([\s\S]*?)---実行サマリー終了---/)
+  if (summaryMatch) {
+    const summary = summaryMatch[1].trim()
+    // サマリー終了後が成果物本体
+    const afterSummary = result.split('---実行サマリー終了---')[1] || ''
+    return {
+      summary,
+      deliverable: afterSummary.trim(),
+    }
+  }
+
+  // フォーマットに従っていない場合のフォールバック
+  // 先頭300文字をサマリーとして扱う
+  const lines = result.split('\n').filter(l => l.trim())
+  const summaryLines: string[] = []
+  let remaining = result
+
+  // 箇条書き行（・や- や数字.で始まる行）を最大5行抽出
+  for (const line of lines.slice(0, 10)) {
+    if (line.match(/^[・\-\d]/) || line.includes('実行') || line.includes('完了') || line.includes('作成')) {
+      summaryLines.push(line.trim())
+      if (summaryLines.length >= 5) break
+    }
+  }
+
+  if (summaryLines.length > 0) {
+    return {
+      summary: summaryLines.join('\n'),
+      deliverable: remaining,
+    }
+  }
+
+  return {
+    summary: result.substring(0, 300),
+    deliverable: result,
+  }
 }
 
 // 連鎖タスクの検知: 実行結果に他部署への依頼が含まれていれば自動生成

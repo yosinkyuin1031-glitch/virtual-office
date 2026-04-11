@@ -10,7 +10,7 @@ import GoalsEditor from './components/GoalsEditor'
 import ContextEditor from './components/ContextEditor'
 import AutoTasksPanel from './components/AutoTasksPanel'
 import PDCADashboard from './components/PDCADashboard'
-// YouTubeDashboard は内部管理に移行（画面表示なし）
+import YouTubeDashboard from './components/YouTubeDashboard'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 共通コンポーネント
@@ -211,6 +211,9 @@ function HomeView({ setChatTarget, setView }: { setChatTarget: (emp: Employee) =
 
       {/* B2. 自動生成タスク */}
       <AutoTasksPanel />
+
+      {/* YouTube管理ダッシュボード */}
+      <YouTubeDashboard />
 
       {/* C. 事業方針エリア */}
       <ContextEditor />

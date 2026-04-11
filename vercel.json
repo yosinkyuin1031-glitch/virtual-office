@@ -12,40 +12,15 @@
     "app/api/pdca/*/route.ts": {
       "memory": 1024,
       "maxDuration": 120
+    },
+    "app/api/automation/route.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "app/api/webhook/*/route.ts": {
+      "memory": 512,
+      "maxDuration": 30
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/pdca/kpi-sync",
-      "schedule": "50 21 * * *"
-    },
-    {
-      "path": "/api/pdca/morning",
-      "schedule": "0 22 * * *"
-    },
-    {
-      "path": "/api/pdca/handoff",
-      "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/pdca/ceo-brain",
-      "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/pdca/evening",
-      "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/pdca/weekly",
-      "schedule": "0 22 * * 0"
-    },
-    {
-      "path": "/api/pdca/task-engine",
-      "schedule": "*/10 * * * *"
-    }
-  ]
+  "crons": []
 }

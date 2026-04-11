@@ -106,7 +106,7 @@ export const performance2025 = {
 export const btobPricing = {
   apps: [
     { name: '検査アプリ', monthly: '5,500円', buyout: '55,000〜110,000円', priority: 1 },
-    { name: '顧客管理シート', monthly: '4,980円', buyout: '49,800円', priority: 2 },
+    { name: 'Clinic Core', monthly: '4,980円', buyout: '49,800円', priority: 2 },
     { name: '予約管理', monthly: '2,980円', buyout: '29,800円', priority: 3 },
     { name: 'WEB問診', monthly: '2,980円', buyout: '29,800円', priority: 4 },
     { name: 'MEO勝ち上げくん', monthly: '2,980円', buyout: '29,800円', priority: 5 },

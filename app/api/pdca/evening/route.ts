@@ -10,6 +10,7 @@ import {
   savePDCAReport,
   isDuplicateExecution,
 } from '../../../lib/pdca-utils'
+import { sendLINEBroadcast } from '../../../lib/line-notify'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -98,7 +99,15 @@ export async function GET(request: NextRequest) {
     const morningPriorities = morningReport?.[0]?.priority_tasks || 'なし'
 
     // Claude API 1回で日報全体を生成
-    const systemPrompt = `あなたはミコ。AI Solutions社の秘書。毎晩22時に全社の活動を集計し、会長に報告する日報を作成する。
+    const systemPrompt = `あなたはAI Solutionsのバーチャル社員です。以下の行動指針に従って動いてください。
+- Facebook投稿タスクはアプリ事業のみ
+- MEO勝ち上げ君はモニター中のため運用タスク不要
+- タスクtitleは25文字以内
+- 実態のないタスクは生成しない
+- CCがやること（自動）と大口さんがやること（確認）を明確に分ける
+- YouTube完了報告は日報にまとめる
+
+あなたはミコ。AI Solutions社の秘書。毎晩22時に全社の活動を集計し、会長に報告する日報を作成する。
 
 【役割】
 - 当日の活動を部署ごとに簡潔にまとめる
@@ -204,6 +213,67 @@ ${morningPriorities}
       tasks_summary: taskStats,
       activity_count: todayActivity?.length || 0,
     }, { onConflict: 'snapshot_date' })
+
+    // YouTube本日の投稿まとめを取得
+    const { data: ytPosts } = await supabase
+      .from('vo_youtube_posts')
+      .select('channel, video_type, status')
+      .gte('posted_at', startUTC)
+      .lte('posted_at', endUTC)
+
+    // チャンネル別に集計
+    const ytSummary: Record<string, { main: number; shorts: number; failed: number }> = {}
+    for (const p of ytPosts || []) {
+      if (!ytSummary[p.channel]) ytSummary[p.channel] = { main: 0, shorts: 0, failed: 0 }
+      if (p.status === 'failed') {
+        ytSummary[p.channel].failed++
+      } else if (p.video_type === 'shorts') {
+        ytSummary[p.channel].shorts++
+      } else {
+        ytSummary[p.channel].main++
+      }
+    }
+
+    // LINE日報を送信（日報本文 + YouTubeまとめ）
+    let lineReport = `📋 全社日報 ${today}\n━━━━━━━━━━━━━\n`
+    lineReport += `タスク完了率: ${completionRate}%（${taskStats.completed}/${taskStats.total}件）\n`
+    lineReport += `活動件数: ${todayActivity?.length || 0}件\n`
+
+    if (report) {
+      lineReport += `\n${report.substring(0, 1500)}\n`
+    }
+
+    if (insights) {
+      lineReport += `\n💡 気づき\n${insights.substring(0, 500)}\n`
+    }
+
+    if (alert && alert !== '特になし') {
+      lineReport += `\n🚨 アラート\n${alert.substring(0, 300)}\n`
+    }
+
+    // YouTube投稿まとめ
+    const ytChannelNames = Object.keys(ytSummary)
+    if (ytChannelNames.length > 0) {
+      lineReport += `\n━━━━━━━━━━━━━\n`
+      lineReport += `📹 YouTube本日の投稿\n`
+      for (const ch of ytChannelNames) {
+        const s = ytSummary[ch]
+        const parts: string[] = []
+        if (s.main > 0) parts.push(`本編${s.main}本`)
+        if (s.shorts > 0) parts.push(`Shorts${s.shorts}本`)
+        if (s.failed > 0) parts.push(`失敗${s.failed}本`)
+        lineReport += `✅ ${ch} ${parts.join('・')}\n`
+      }
+    } else {
+      lineReport += `\n📹 YouTube: 本日の投稿なし\n`
+    }
+
+    // LINE文字数制限
+    if (lineReport.length > 4900) {
+      lineReport = lineReport.substring(0, 4900) + '\n...(省略)'
+    }
+
+    await sendLINEBroadcast(lineReport)
 
     return NextResponse.json({
       success: true,

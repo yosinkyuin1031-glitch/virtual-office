@@ -29,7 +29,6 @@ interface TaskStats {
 export default function PDCADashboard() {
   const [reports, setReports] = useState<PDCAReport[]>([])
   const [taskStats, setTaskStats] = useState<TaskStats>({ total: 0, completed: 0, in_progress: 0, pending: 0, rate: 0 })
-  const [expanded, setExpanded] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
@@ -68,7 +67,7 @@ export default function PDCADashboard() {
 
   useEffect(() => {
     fetchData()
-    const timer = setInterval(fetchData, 60000) // 1分ごと更新
+    const timer = setInterval(fetchData, 60000)
     return () => clearInterval(timer)
   }, [fetchData])
 
@@ -76,7 +75,6 @@ export default function PDCADashboard() {
   const latestEvening = reports.find(r => r.cycle_type === 'evening')
   const latestWeekly = reports.find(r => r.cycle_type === 'weekly')
 
-  // 健全度を抽出（CEOブレインの結果から）
   const healthMatch = latestMorning?.kpi_status?.match(/(\d)\s*\/\s*5/)
   const healthScore = healthMatch ? parseInt(healthMatch[1]) : null
 
@@ -119,9 +117,7 @@ export default function PDCADashboard() {
           <span className="text-[10px] text-gray-400">自動更新中</span>
         </div>
 
-        {/* 4つのメトリクスカード */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          {/* 健全度 */}
           <div className={`rounded-xl p-3 border ${healthScore ? getHealthColor(healthScore).bg : 'bg-gray-50'} ${healthScore ? getHealthColor(healthScore).border : 'border-gray-200'}`}>
             <p className="text-[10px] text-gray-500 mb-1">組織健全度</p>
             <div className="flex items-end gap-1">
@@ -137,7 +133,6 @@ export default function PDCADashboard() {
             )}
           </div>
 
-          {/* タスク消化率 */}
           <div className="rounded-xl p-3 border bg-blue-50 border-blue-200">
             <p className="text-[10px] text-gray-500 mb-1">タスク消化率</p>
             <div className="flex items-end gap-1">
@@ -150,7 +145,6 @@ export default function PDCADashboard() {
             <p className="text-[9px] text-gray-400 mt-1">{taskStats.completed}/{taskStats.total}件完了</p>
           </div>
 
-          {/* 進行中タスク */}
           <div className="rounded-xl p-3 border bg-amber-50 border-amber-200">
             <p className="text-[10px] text-gray-500 mb-1">進行中</p>
             <div className="flex items-end gap-1">
@@ -160,7 +154,6 @@ export default function PDCADashboard() {
             <p className="text-[9px] text-gray-400 mt-1">AI社員が実行中</p>
           </div>
 
-          {/* 待機タスク */}
           <div className="rounded-xl p-3 border bg-gray-50 border-gray-200">
             <p className="text-[10px] text-gray-500 mb-1">待機中</p>
             <div className="flex items-end gap-1">
@@ -172,173 +165,180 @@ export default function PDCADashboard() {
         </div>
       </div>
 
-      {/* PDCAレポートカード */}
+      {/* PDCAレポート - 3つとも常に展開表示 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* 朝礼（レイア） */}
-        <ReportCard
-          title="朝礼"
-          icon="🌅"
-          speaker="レイア"
-          color="amber"
-          report={latestMorning}
-          expanded={expanded === 'morning'}
-          onToggle={() => setExpanded(expanded === 'morning' ? null : 'morning')}
-          getTimeLabel={getTimeLabel}
-          renderContent={() => (
-            <div className="space-y-3">
-              {latestMorning?.morning_message && (
+        <div className="rounded-xl border border-amber-200 overflow-hidden bg-white shadow-sm">
+          <div className="p-4 border-b border-amber-200 bg-amber-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🌅</span>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-700 mb-1">レイアからのメッセージ</p>
-                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {latestMorning.morning_message}
-                  </p>
+                  <p className="text-xs font-bold text-amber-800">朝礼</p>
+                  <p className="text-[10px] text-gray-400">レイア</p>
                 </div>
-              )}
-              {latestMorning?.priority_tasks && (
-                <div>
-                  <p className="text-[10px] font-bold text-amber-700 mb-1">今日の最優先事項</p>
-                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {typeof latestMorning.priority_tasks === 'string'
-                      ? latestMorning.priority_tasks
-                      : JSON.stringify(latestMorning.priority_tasks)}
-                  </p>
+              </div>
+              {latestMorning ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-[10px] text-gray-400">{getTimeLabel(latestMorning.executed_at)}</span>
                 </div>
-              )}
-              {latestMorning?.corrective_tasks && Array.isArray(latestMorning.corrective_tasks) && (
-                <p className="text-[10px] text-gray-400">
-                  是正タスク {latestMorning.corrective_tasks.length}件を自動生成
-                </p>
+              ) : (
+                <span className="text-[10px] text-gray-300">未実行</span>
               )}
             </div>
-          )}
-        />
+          </div>
+          <div className="p-4">
+            {latestMorning ? (
+              <div className="space-y-3">
+                {latestMorning.morning_message && (
+                  <div>
+                    <p className="text-[10px] font-bold text-amber-700 mb-1">レイアからのメッセージ</p>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      {latestMorning.morning_message}
+                    </p>
+                  </div>
+                )}
+                {latestMorning.priority_tasks && (
+                  <div>
+                    <p className="text-[10px] font-bold text-amber-700 mb-1">今日の最優先事項</p>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      {typeof latestMorning.priority_tasks === 'string'
+                        ? latestMorning.priority_tasks
+                        : JSON.stringify(latestMorning.priority_tasks)}
+                    </p>
+                  </div>
+                )}
+                {latestMorning.corrective_tasks && Array.isArray(latestMorning.corrective_tasks) && (
+                  <p className="text-[10px] text-gray-400">
+                    是正タスク {latestMorning.corrective_tasks.length}件を自動生成
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 text-center py-4">レポートなし</p>
+            )}
+          </div>
+        </div>
 
         {/* 日報（ミコ） */}
-        <ReportCard
-          title="日報"
-          icon="🌙"
-          speaker="ミコ"
-          color="purple"
-          report={latestEvening}
-          expanded={expanded === 'evening'}
-          onToggle={() => setExpanded(expanded === 'evening' ? null : 'evening')}
-          getTimeLabel={getTimeLabel}
-          renderContent={() => (
-            <div className="space-y-3">
-              {latestEvening?.department_reports && (
+        <div className="rounded-xl border border-purple-200 overflow-hidden bg-white shadow-sm">
+          <div className="p-4 border-b border-purple-200 bg-purple-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🌙</span>
                 <div>
-                  <p className="text-[10px] font-bold text-purple-700 mb-1">部署別レポート</p>
-                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {typeof latestEvening.department_reports === 'string'
-                      ? latestEvening.department_reports
-                      : JSON.stringify(latestEvening.department_reports)}
-                  </p>
+                  <p className="text-xs font-bold text-purple-800">日報</p>
+                  <p className="text-[10px] text-gray-400">ミコ</p>
                 </div>
-              )}
-              {latestEvening?.completion_rate !== undefined && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-500">完了率:</span>
-                  <span className="text-sm font-bold text-purple-700">{latestEvening.completion_rate}%</span>
+              </div>
+              {latestEvening ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                  <span className="text-[10px] text-gray-400">{getTimeLabel(latestEvening.executed_at)}</span>
                 </div>
+              ) : (
+                <span className="text-[10px] text-gray-300">未実行</span>
               )}
             </div>
-          )}
-        />
+          </div>
+          <div className="p-4">
+            {latestEvening ? (
+              <div className="space-y-3">
+                {latestEvening.department_reports && (
+                  <div>
+                    <p className="text-[10px] font-bold text-purple-700 mb-1">部署別レポート</p>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      {typeof latestEvening.department_reports === 'string'
+                        ? latestEvening.department_reports
+                        : JSON.stringify(latestEvening.department_reports)}
+                    </p>
+                  </div>
+                )}
+                {latestEvening.completion_rate !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-500">完了率:</span>
+                    <span className="text-sm font-bold text-purple-700">{latestEvening.completion_rate}%</span>
+                  </div>
+                )}
+                {latestEvening.priority_recalculation && Array.isArray(latestEvening.priority_recalculation) && latestEvening.priority_recalculation.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-purple-700 mb-1">明日の優先タスク</p>
+                    <ul className="space-y-1">
+                      {latestEvening.priority_recalculation.map((t, i) => (
+                        <li key={i} className="text-xs text-gray-600 flex gap-1">
+                          <span className={`text-[10px] px-1 rounded ${t.priority === 'high' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                            {t.priority}
+                          </span>
+                          <span>{t.department}: {t.task}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 text-center py-4">レポートなし</p>
+            )}
+          </div>
+        </div>
 
-        {/* 週次（レイア） */}
-        <ReportCard
-          title="週次レビュー"
-          icon="📊"
-          speaker="レイア"
-          color="blue"
-          report={latestWeekly}
-          expanded={expanded === 'weekly'}
-          onToggle={() => setExpanded(expanded === 'weekly' ? null : 'weekly')}
-          getTimeLabel={getTimeLabel}
-          renderContent={() => (
-            <div className="space-y-3">
-              {latestWeekly?.weekly_review_message && (
+        {/* 週次レビュー（レイア） */}
+        <div className="rounded-xl border border-blue-200 overflow-hidden bg-white shadow-sm">
+          <div className="p-4 border-b border-blue-200 bg-blue-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📊</span>
                 <div>
-                  <p className="text-[10px] font-bold text-blue-700 mb-1">レイアの週次メッセージ</p>
-                  <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {latestWeekly.weekly_review_message}
-                  </p>
+                  <p className="text-xs font-bold text-blue-800">週次レビュー</p>
+                  <p className="text-[10px] text-gray-400">レイア</p>
                 </div>
-              )}
-              {latestWeekly?.weekly_kpi_trend && (
-                <p className="text-[10px] text-gray-400">
-                  KPIスナップショット {Array.isArray(latestWeekly.weekly_kpi_trend) ? latestWeekly.weekly_kpi_trend.length : 0}日分を分析
-                </p>
+              </div>
+              {latestWeekly ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-[10px] text-gray-400">{getTimeLabel(latestWeekly.executed_at)}</span>
+                </div>
+              ) : (
+                <span className="text-[10px] text-gray-300">未実行</span>
               )}
             </div>
-          )}
-        />
+          </div>
+          <div className="p-4">
+            {latestWeekly ? (
+              <div className="space-y-3">
+                {latestWeekly.weekly_review_message && (
+                  <div>
+                    <p className="text-[10px] font-bold text-blue-700 mb-1">レイアの週次メッセージ</p>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      {latestWeekly.weekly_review_message}
+                    </p>
+                  </div>
+                )}
+                {latestWeekly.weekly_kpi_trend && (
+                  <p className="text-[10px] text-gray-400">
+                    KPIスナップショット {Array.isArray(latestWeekly.weekly_kpi_trend) ? latestWeekly.weekly_kpi_trend.length : 0}日分を分析
+                  </p>
+                )}
+                {latestWeekly.corrective_tasks && Array.isArray(latestWeekly.corrective_tasks) && latestWeekly.corrective_tasks.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-blue-700 mb-1">是正タスク</p>
+                    <ul className="space-y-1">
+                      {latestWeekly.corrective_tasks.map((t, i) => (
+                        <li key={i} className="text-xs text-gray-600">
+                          {String(t.title || t.task || JSON.stringify(t))}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 text-center py-4">レポートなし</p>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-  )
-}
-
-// レポートカードコンポーネント
-function ReportCard({
-  title,
-  icon,
-  speaker,
-  color,
-  report,
-  expanded,
-  onToggle,
-  getTimeLabel,
-  renderContent,
-}: {
-  title: string
-  icon: string
-  speaker: string
-  color: 'amber' | 'purple' | 'blue'
-  report: PDCAReport | undefined
-  expanded: boolean
-  onToggle: () => void
-  getTimeLabel: (s: string) => string
-  renderContent: () => React.ReactNode
-}) {
-  const colorMap = {
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', dot: 'bg-amber-400' },
-    purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', dot: 'bg-purple-400' },
-    blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', dot: 'bg-blue-400' },
-  }
-  const c = colorMap[color]
-
-  return (
-    <div className={`rounded-xl border ${c.border} overflow-hidden bg-white shadow-sm`}>
-      <button
-        onClick={onToggle}
-        className={`w-full p-4 text-left hover:${c.bg} transition`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{icon}</span>
-            <div>
-              <p className={`text-xs font-bold ${c.text}`}>{title}</p>
-              <p className="text-[10px] text-gray-400">{speaker}</p>
-            </div>
-          </div>
-          {report ? (
-            <div className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${c.dot} animate-pulse`} />
-              <span className="text-[10px] text-gray-400">{getTimeLabel(report.executed_at)}</span>
-            </div>
-          ) : (
-            <span className="text-[10px] text-gray-300">未実行</span>
-          )}
-        </div>
-      </button>
-
-      {expanded && report && (
-        <div className={`px-4 pb-4 border-t ${c.border} ${c.bg}`}>
-          <div className="pt-3">
-            {renderContent()}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

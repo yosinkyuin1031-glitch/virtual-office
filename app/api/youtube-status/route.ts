@@ -1,223 +1,118 @@
 import { NextResponse } from 'next/server'
-import { promises as fs } from 'node:fs'
-import { exec } from 'node:child_process'
-import { promisify } from 'node:util'
+import { getSupabase } from '../../lib/pdca-utils'
 
-const execAsync = promisify(exec)
+export const runtime = 'nodejs'
 
-// チャンネル定義
+// チャンネル定義（4チャンネル）
 const CHANNELS = [
   {
     name: '月光ヒーリング',
-    logPath: '/Users/ooguchiyouhei/youtube-healing-music/cron.log',
     cronSchedule: '本編18:00 / Shorts 9:00,14:00,20:00',
+    hasLive: true,
   },
   {
     name: 'Lo-Fi Cafe BGM',
-    logPath: '/Users/ooguchiyouhei/youtube-lofi-bgm/cron.log',
-    cronSchedule: '本編18:00 / Shorts 12:00,18:00,21:00',
+    cronSchedule: '本編18:00 / Shorts 12:00,21:00',
+    hasLive: false,
   },
   {
     name: 'Nature Sound ASMR',
-    logPath: '/Users/ooguchiyouhei/youtube-nature-asmr/cron.log',
-    cronSchedule: '本編17:00 / Shorts 10:00,15:00,19:00',
+    cronSchedule: '本編17:00 / Shorts 10:00,19:00',
+    hasLive: false,
   },
   {
     name: 'ゆるり瞑想',
-    logPath: '/Users/ooguchiyouhei/youtube-meditation/cron.log',
-    cronSchedule: '本編20:00 / Shorts 8:00,16:00,22:00',
+    cronSchedule: '本編16:00 / Shorts 8:00,22:00',
+    hasLive: false,
   },
-] as const
-
-const LIVE_PID_PATH = '/Users/ooguchiyouhei/youtube-healing-music/output/live/stream.pid'
-
-// cron.logの末尾から最新の実行ブロックをパースする
-function parseLatestRun(logContent: string): {
-  lastUpload: string | null
-  lastStatus: 'success' | 'failed' | 'unknown'
-  lastVideoId: string | null
-  lastTitle: string | null
-} {
-  // 末尾から読むために行を逆順で処理
-  const lines = logContent.split('\n')
-
-  let lastUpload: string | null = null
-  let lastStatus: 'unknown' | 'success' | 'failed' = 'unknown'
-  let lastVideoId: string | null = null
-  let lastTitle: string | null = null
-
-  // 最後の「実行日時」ブロックを見つけるため、末尾から検索
-  // 最新の実行ブロック内の情報を収集
-  let foundBlock = false
-
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i]
-
-    // アップロード完了を見つけたら成功
-    if (!foundBlock && line.includes('アップロード完了!')) {
-      lastStatus = 'success'
-      foundBlock = true
-    }
-
-    // 失敗マーカー
-    if (!foundBlock && line.includes('\u274C')) {
-      // ❌
-      lastStatus = 'failed'
-      foundBlock = true
-    }
-
-    // 動画IDを取得
-    if (foundBlock && !lastVideoId) {
-      const videoIdMatch = line.match(/動画ID:\s*(.+)/)
-      if (videoIdMatch) {
-        lastVideoId = videoIdMatch[1].trim()
-      }
-    }
-
-    // タイトルを取得
-    if (foundBlock && !lastTitle) {
-      const titleMatch = line.match(/タイトル:\s*(.+)/)
-      if (titleMatch) {
-        lastTitle = titleMatch[1].trim()
-      }
-    }
-
-    // 実行日時を取得（この実行ブロックの開始点）
-    if (foundBlock && !lastUpload) {
-      const dateMatch = line.match(/実行日時:\s*(.+)/)
-      if (dateMatch) {
-        lastUpload = parseDateString(dateMatch[1].trim())
-        break // 最新ブロックの情報が揃った
-      }
-    }
-
-    // 実行日時まで遡ってもブロックが始まらなかった場合を考慮し、
-    // 200行以上遡ったら打ち切り
-    if (foundBlock && lines.length - 1 - i > 200) break
-  }
-
-  // ブロックが見つからなかった場合、最後の実行日時だけでも取得
-  if (!foundBlock) {
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const dateMatch = lines[i].match(/実行日時:\s*(.+)/)
-      if (dateMatch) {
-        lastUpload = parseDateString(dateMatch[1].trim())
-        // この実行ブロック内にエラーがないかチェック
-        for (let j = i; j < Math.min(i + 100, lines.length); j++) {
-          if (lines[j].includes('\u274C') || lines[j].includes('Error') || lines[j].includes('Traceback')) {
-            lastStatus = 'failed'
-            break
-          }
-          if (lines[j].includes('アップロード完了!')) {
-            lastStatus = 'success'
-            break
-          }
-        }
-        break
-      }
-    }
-  }
-
-  return { lastUpload, lastStatus, lastVideoId, lastTitle }
-}
-
-// 日本語日時文字列をISO形式に変換
-// 例: "2026年03月28日 20:00" -> "2026-03-28T20:00:00"
-function parseDateString(dateStr: string): string | null {
-  const match = dateStr.match(/(\d{4})年(\d{2})月(\d{2})日\s+(\d{2}):(\d{2})/)
-  if (match) {
-    return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00`
-  }
-  return dateStr
-}
-
-// PIDが生きているかチェック
-async function isProcessRunning(pid: number): Promise<boolean> {
-  try {
-    // kill -0 はプロセスの存在確認（シグナルは送らない）
-    await execAsync(`kill -0 ${pid}`)
-    return true
-  } catch {
-    return false
-  }
-}
-
-// ファイルの末尾を読む（大きなログファイル対応）
-async function readTail(filePath: string, bytes: number = 10000): Promise<string> {
-  try {
-    const stat = await fs.stat(filePath)
-    const fileSize = stat.size
-    const readSize = Math.min(bytes, fileSize)
-    const fd = await fs.open(filePath, 'r')
-    const buffer = Buffer.alloc(readSize)
-    await fd.read(buffer, 0, readSize, fileSize - readSize)
-    await fd.close()
-    return buffer.toString('utf-8')
-  } catch {
-    return ''
-  }
-}
+]
 
 export async function GET() {
   try {
-    // 各チャンネルのステータスを並列で取得
+    const supabase = getSupabase()
+
+    // 各チャンネルの最新投稿をDBから取得（本編・Shorts別に最新1件ずつ）
     const channelResults = await Promise.all(
       CHANNELS.map(async (channel) => {
-        try {
-          const logContent = await readTail(channel.logPath)
-          if (!logContent) {
-            return {
-              name: channel.name,
-              lastUpload: null,
-              lastStatus: 'unknown' as const,
-              lastVideoId: null,
-              lastTitle: null,
-              cronSchedule: channel.cronSchedule,
-            }
-          }
-          const parsed = parseLatestRun(logContent)
-          return {
-            name: channel.name,
-            lastUpload: parsed.lastUpload,
-            lastStatus: parsed.lastStatus,
-            lastVideoId: parsed.lastVideoId,
-            lastTitle: parsed.lastTitle,
-            cronSchedule: channel.cronSchedule,
-          }
-        } catch {
-          return {
-            name: channel.name,
-            lastUpload: null,
-            lastStatus: 'unknown' as const,
-            lastVideoId: null,
-            lastTitle: null,
-            cronSchedule: channel.cronSchedule,
-          }
+        // 最新の本編投稿
+        const { data: latestMain } = await supabase
+          .from('vo_youtube_posts')
+          .select('*')
+          .eq('channel', channel.name)
+          .eq('video_type', 'main')
+          .order('posted_at', { ascending: false })
+          .limit(1)
+
+        // 最新のShorts投稿
+        const { data: latestShorts } = await supabase
+          .from('vo_youtube_posts')
+          .select('*')
+          .eq('channel', channel.name)
+          .eq('video_type', 'shorts')
+          .order('posted_at', { ascending: false })
+          .limit(1)
+
+        // 今日の投稿数
+        const now = new Date()
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        todayStart.setHours(todayStart.getHours() - 9) // JST→UTC
+
+        const { data: todayPosts } = await supabase
+          .from('vo_youtube_posts')
+          .select('id, video_type, status')
+          .eq('channel', channel.name)
+          .gte('posted_at', todayStart.toISOString())
+
+        const todayMain = (todayPosts || []).filter(p => p.video_type === 'main' && p.status === 'success').length
+        const todayShorts = (todayPosts || []).filter(p => p.video_type === 'shorts' && p.status === 'success').length
+        const todayFailed = (todayPosts || []).filter(p => p.status === 'failed').length
+
+        const main = latestMain?.[0] || null
+        const shorts = latestShorts?.[0] || null
+
+        // 最新の投稿（本編 or Shorts で新しい方）
+        const latest = main && shorts
+          ? (new Date(main.posted_at) > new Date(shorts.posted_at) ? main : shorts)
+          : main || shorts
+
+        return {
+          name: channel.name,
+          cronSchedule: channel.cronSchedule,
+          hasLive: channel.hasLive,
+          lastUpload: latest?.posted_at || null,
+          lastStatus: latest?.status === 'success' ? 'success' as const
+            : latest?.status === 'failed' ? 'failed' as const
+            : 'unknown' as const,
+          lastVideoId: latest?.video_id || null,
+          lastTitle: latest?.title || null,
+          today: {
+            main: todayMain,
+            shorts: todayShorts,
+            failed: todayFailed,
+          },
+          latestMain: main ? {
+            title: main.title,
+            video_id: main.video_id,
+            status: main.status,
+            posted_at: main.posted_at,
+          } : null,
+          latestShorts: shorts ? {
+            title: shorts.title,
+            video_id: shorts.video_id,
+            status: shorts.status,
+            posted_at: shorts.posted_at,
+          } : null,
         }
       })
     )
 
-    // ライブ配信の状態を確認
-    let liveStream: { running: boolean; pid: number | null; channel: string } = {
-      running: false,
-      pid: null,
-      channel: '月光ヒーリング',
-    }
-
-    try {
-      const pidContent = await fs.readFile(LIVE_PID_PATH, 'utf-8')
-      const pid = parseInt(pidContent.trim(), 10)
-      if (!isNaN(pid)) {
-        const running = await isProcessRunning(pid)
-        liveStream = { running, pid, channel: '月光ヒーリング' }
-      }
-    } catch {
-      // PIDファイルが存在しない場合はデフォルト値のまま
-    }
-
     return NextResponse.json({
       channels: channelResults,
-      liveStream,
+      liveStream: {
+        running: false, // ライブ状態はローカルでしか確認できないため、別途対応
+        pid: null,
+        channel: '月光ヒーリング',
+      },
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

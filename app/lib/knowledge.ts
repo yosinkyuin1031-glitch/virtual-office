@@ -196,7 +196,7 @@ export const knowledgeBase: KnowledgeEntry[] = [
     id: 'qa-001',
     category: 'quality',
     title: '外部展開を見据えた品質',
-    content: '顧客管理シートは外部展開予定。不具合を根本から潰す。全角/半角スペース、部分一致、表記ゆれのエッジケースを事前に潰す。場当たり的でなく根本的・汎用的な解決。',
+    content: 'Clinic Coreは外部展開予定。不具合を根本から潰す。全角/半角スペース、部分一致、表記ゆれのエッジケースを事前に潰す。場当たり的でなく根本的・汎用的な解決。',
     source: 'feedback',
     learnedAt: '2026-03-27',
     priority: 'high',

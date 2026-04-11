@@ -14,6 +14,8 @@ interface Task {
   batch_id: string
   generated_by: string | null
   created_at: string
+  completed_at: string | null
+  completion_note: string | null
 }
 
 const priorityConfig = {
@@ -53,6 +55,7 @@ export default function AutoTasksPanel() {
   const [filter, setFilter] = useState<string>('active')
   const [toast, setToast] = useState('')
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
   const [showAdd, setShowAdd] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDept, setNewDept] = useState('経営層')
@@ -187,6 +190,15 @@ export default function AutoTasksPanel() {
     } catch {
       showToast('追加に失敗しました')
     }
+  }
+
+  const toggleTask = (taskId: string) => {
+    setExpandedTasks(prev => {
+      const next = new Set(prev)
+      if (next.has(taskId)) next.delete(taskId)
+      else next.add(taskId)
+      return next
+    })
   }
 
   const toggleDept = (dept: string) => {
@@ -444,6 +456,15 @@ export default function AutoTasksPanel() {
                                       LINE
                                     </span>
                                   )}
+                                  {/* 完了タスクで詳細がある場合、展開ボタン */}
+                                  {task.status === 'completed' && task.completion_note && (
+                                    <button
+                                      onClick={() => toggleTask(task.id)}
+                                      className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition"
+                                    >
+                                      {expandedTasks.has(task.id) ? '詳細を閉じる' : '実行詳細'}
+                                    </button>
+                                  )}
                                 </div>
                                 {task.description && task.description !== task.title && (
                                   <p className="text-xs text-gray-400 mt-1 line-clamp-2">{task.description}</p>
@@ -451,7 +472,22 @@ export default function AutoTasksPanel() {
                                 {task.due_date && (
                                   <p className="text-[10px] text-gray-300 mt-1">
                                     期限: {task.due_date}
+                                    {task.completed_at && (
+                                      <span className="ml-2 text-green-500">
+                                        完了: {new Date(task.completed_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    )}
                                   </p>
+                                )}
+
+                                {/* completion_note展開表示 */}
+                                {expandedTasks.has(task.id) && task.completion_note && (
+                                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                    <p className="text-[10px] font-bold text-green-700 mb-2">実行結果</p>
+                                    <pre className="text-xs text-gray-700 whitespace-pre-wrap font-sans leading-relaxed max-h-96 overflow-y-auto">
+                                      {task.completion_note}
+                                    </pre>
+                                  </div>
                                 )}
                               </div>
 

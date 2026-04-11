@@ -10,6 +10,7 @@ import {
   savePDCAReport,
   isDuplicateExecution,
 } from '../../../lib/pdca-utils'
+import { BUSINESS_UNITS, classifyTaskByUnit } from '../../../lib/business-units'
 import { sendLINEBroadcast } from '../../../lib/line-notify'
 
 export const runtime = 'nodejs'
@@ -67,29 +68,76 @@ export async function GET(request: NextRequest) {
       .order('executed_at', { ascending: false })
       .limit(1)
 
+    // 6. 昨晩の振り分け確認結果を取得
+    const { data: assignments } = await supabase
+      .from('vo_task_assignments')
+      .select('*')
+      .eq('task_date', today)
+      .not('user_response', 'is', null)
+
+    // 7. 定期タスクマスターから今日該当分を取得
+    const todayDate = new Date(today + 'T00:00:00+09:00')
+    const dayOfMonthNum = todayDate.getDate()
+    const lastDayOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0).getDate()
+    const isLastDay = dayOfMonthNum === lastDayOfMonth
+
+    const { data: recurringTasks } = await supabase
+      .from('vo_recurring_tasks')
+      .select('*')
+      .eq('is_active', true)
+
+    // 日付にマッチする定期タスクを抽出
+    const todayRecurring = (recurringTasks || []).filter(rt => {
+      if (rt.day_type === 'exact' && rt.day_of_month === dayOfMonthNum) return true
+      if (rt.day_type === 'reminder' && rt.day_of_month === dayOfMonthNum) return true
+      if (rt.day_type === 'last_day' && isLastDay) return true
+      return false
+    })
+
     const goalsText = (goals || []).map(g => `- ${g.label}: 目標${g.value} / 現在${g.current || '未測定'}`).join('\n')
     const contextText = (contexts || []).map(c => `[${c.category}] ${c.title}: ${c.content}`).join('\n')
     const tasksText = (pendingTasks || []).map(t => `- [${t.priority}] ${t.department}: ${t.title} (期限: ${t.due_date || '未設定'})`).join('\n')
     const activityText = (recentActivity || []).slice(0, 15).map(a => `- ${a.employee_name}(${a.department}): ${a.action} - ${a.detail?.substring(0, 80)}`).join('\n')
     const eveningInsight = lastEvening?.[0]?.daily_summary ? JSON.stringify(lastEvening[0].daily_summary) : 'なし'
 
-    // Claude API 1回で全て生成
-    const systemPrompt = `あなたはレイア。AI Solutions社のCEO。会長（大口陽平）の右腕として、毎朝全社の状況を確認し、的確な判断を下す。
+    // 振り分け結果テキスト
+    const assignmentText = (assignments || []).length > 0
+      ? (assignments || []).map(a => `- [${a.business_unit}] ${a.task_title}: ${a.user_response === 'auto' ? '自動実行' : a.user_response === 'confirm' ? '確認必要' : 'スキップ'}`).join('\n')
+      : '振り分け結果なし（デフォルト判定）'
+
+    // Claude API 1回で全て生成（5事業×2分類形式）
+    const systemPrompt = `あなたはAI Solutionsのバーチャル社員です。以下の行動指針に従って動いてください。
+- Facebook投稿タスクはアプリ事業のみ
+- MEO勝ち上げ君はモニター中のため運用タスク不要
+- タスクtitleは25文字以内
+- 実態のないタスクは生成しない
+- CCがやること（自動）と大口さんがやること（確認）を明確に分ける
+- YouTube完了報告は日報にまとめる
+
+あなたはレイア。AI Solutions社のCEO。会長（大口陽平）の右腕として、毎朝全社の状況を確認し、的確な判断を下す。
 
 【ビジョン】挑戦を諦めない人が増え、温かく支え合える社会。
 【ミッション】「できない」を「できる」に変え、光を灯す。
 
-【4事業】
-1. 整体院経営（安定収益・ノウハウの源泉）
-2. 訪問鍼灸リハビリ（スタッフ拡大でスケール）
+【5事業】
+1. 大口神経整体院（安定収益・ノウハウの源泉）
+2. 晴陽鍼灸院（訪問鍼灸リハビリ・スタッフ拡大でスケール）
 3. 治療機器販売（BR・血管顕微鏡のBtoB）
-4. アプリ開発BtoB SaaS（ストック型収益）
+4. アプリ事業（BtoB SaaS・ストック型収益）
+5. 治療家コミュニティ（FCL・セミナー・コンサル）
 
 あなたの役割:
 - KPIの進捗を冷静に分析し、遅れている項目を特定
-- 遅れているKPIに対して、具体的な是正タスクを生成
-- 今日1日の最優先事項を決定
+- 各タスクを5事業に振り分け、「自動でやること」「大口さんが確認すること」に分類
+- 会長の振り分け指示があれば最優先で反映する
 - 全社員を鼓舞する朝礼メッセージを生成
+
+【重要: タスク生成の注意事項】
+- タスクのtitleは必ず25文字以内に収めること。途中で切れたタスクは絶対に出さない。
+- タスクのdescriptionは100文字以内に収めること。
+- MEO勝ち上げくんについて: モニター11名が稼働中だが、大口さん側でのアクティブな運用作業は現在していない。タスクとして出す場合は「モニターFB確認」「安定性チェック」程度に留めること。大量のMEO運用タスクは生成しない。
+- YouTube自動投稿について: 4チャンネル（月光ヒーリング・Lo-Fi Cafe BGM・Nature Sound ASMR・ゆるり瞑想）がcronで完全自動運用中。YouTube関連のタスクは「分析確認」「戦略見直し」程度。投稿作業のタスクは出さない。
+- Facebook投稿タスクはアプリ事業（BtoB SaaS・アプリ販売）のみ生成すること。整体院・訪問鍼灸・治療機器販売・治療家コミュニティのFacebook投稿タスクは生成しない。
 
 出力フォーマット（厳守）:
 ===ANALYSIS===
@@ -97,10 +145,12 @@ KPI進捗の分析（各KPIの状態を簡潔に）
 ===TASKS===
 [
   {
+    "business_unit": "大口神経整体院|晴陽鍼灸院|治療機器販売|アプリ事業|治療家コミュニティ",
     "department": "部署名",
     "employee_name": "担当者名",
     "title": "タスク名（25文字以内）",
     "description": "具体的アクション",
+    "task_type": "auto|confirm",
     "priority": "high/normal",
     "due_date": "YYYY-MM-DD"
   }
@@ -127,7 +177,10 @@ ${activityText || 'なし'}
 【昨晩のPDCA分析】
 ${eveningInsight}
 
-上記を踏まえて、朝のPDCAサイクルを実行してください。`
+【会長の振り分け指示（昨晩の返信）】
+${assignmentText}
+
+上記を踏まえて、朝のPDCAサイクルを実行してください。タスクは必ず5事業のいずれかに分類し、auto（AI社員が自動実行）かconfirm（大口さんが確認）に振り分けてください。`
 
     const result = await callClaude(client, systemPrompt, userMessage)
 
@@ -172,6 +225,15 @@ ${eveningInsight}
         `${morningMessage}\n\n【本日の最優先事項】\n${priorities}`)
     }
 
+    // 振り分け結果を反映済みに更新
+    if (assignments && assignments.length > 0) {
+      const ids = assignments.map(a => a.id)
+      await supabase
+        .from('vo_task_assignments')
+        .update({ reflected_in_morning: true })
+        .in('id', ids)
+    }
+
     // KPIスナップショット保存
     await supabase.from('vo_kpi_snapshots').upsert({
       snapshot_date: today,
@@ -196,11 +258,32 @@ ${eveningInsight}
       morning_message: morningMessage,
     })
 
-    // LINE朝礼メッセージ送信
+    // LINE朝礼メッセージ送信（5事業別×2分類形式）
     const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][new Date(new Date().getTime() + 9 * 60 * 60 * 1000).getDay()]
+
+    // タスクを5事業別に振り分け
     const allTodayTasks = [...(pendingTasks || []), ...insertedTasks]
-    const highTasks = allTodayTasks.filter(t => (t as Record<string, unknown>).priority === 'high')
-    const normalTasks = allTodayTasks.filter(t => (t as Record<string, unknown>).priority !== 'high')
+    const tasksByUnit: Record<string, { auto: Array<Record<string, unknown>>; confirm: Array<Record<string, unknown>> }> = {}
+    for (const unit of BUSINESS_UNITS) {
+      tasksByUnit[unit.name] = { auto: [], confirm: [] }
+    }
+
+    // 新規生成タスク（business_unit付き）
+    if (tasksJSON && Array.isArray(tasksJSON)) {
+      for (const t of tasksJSON) {
+        const unitName = t.business_unit || classifyTaskByUnit(t.department || '', t.title || '')
+        if (!tasksByUnit[unitName]) tasksByUnit[unitName] = { auto: [], confirm: [] }
+        const type = t.task_type === 'confirm' ? 'confirm' : 'auto'
+        tasksByUnit[unitName][type].push(t)
+      }
+    }
+
+    // 既存タスク（部署名から推定）
+    for (const t of (pendingTasks || [])) {
+      const unitName = classifyTaskByUnit(t.department || '', t.title || '')
+      if (!tasksByUnit[unitName]) tasksByUnit[unitName] = { auto: [], confirm: [] }
+      tasksByUnit[unitName].auto.push(t)
+    }
 
     let lineMessage = `AI Solutions 朝礼\n${today}(${dayOfWeek})\n━━━━━━━━━━━━━\n`
 
@@ -212,29 +295,54 @@ ${eveningInsight}
       lineMessage += `\n${priorities}\n`
     }
 
+    // 定期タスクセクション（該当日のみ表示）
+    if (todayRecurring.length > 0) {
+      lineMessage += `\n━━━━━━━━━━━━━\n`
+      lineMessage += `📅 本日の定期タスク（${todayRecurring.length}件）\n\n`
+      for (const rt of todayRecurring) {
+        lineMessage += `✅ 【${rt.business_unit}】${rt.title}\n`
+      }
+    }
+
+    // 定期タスクをtasksByUnitにも追加（confirmとして）
+    for (const rt of todayRecurring) {
+      const unitName = rt.business_unit || 'その他'
+      if (!tasksByUnit[unitName]) tasksByUnit[unitName] = { auto: [], confirm: [] }
+      tasksByUnit[unitName].confirm.push({ title: rt.title, department: rt.business_unit })
+    }
+
+    // 5事業別タスク表示
+    for (const unit of BUSINESS_UNITS) {
+      const tasks = tasksByUnit[unit.name]
+      if (!tasks) continue
+      const autoCount = tasks.auto.length
+      const confirmCount = tasks.confirm.length
+      if (autoCount === 0 && confirmCount === 0) continue
+
+      lineMessage += `\n━━━━━━━━━━━━━\n`
+      lineMessage += `${unit.emoji} ${unit.name}\n`
+
+      if (autoCount > 0) {
+        lineMessage += `\n🤖 自動でやること（${autoCount}件）\n`
+        for (const t of tasks.auto.slice(0, 5)) {
+          const task = t as Record<string, unknown>
+          lineMessage += `・${task.title}\n`
+        }
+        if (autoCount > 5) lineMessage += `  ...他${autoCount - 5}件\n`
+      }
+
+      if (confirmCount > 0) {
+        lineMessage += `\n✅ 大口さんが確認すること（${confirmCount}件）\n`
+        for (const t of tasks.confirm.slice(0, 5)) {
+          const task = t as Record<string, unknown>
+          lineMessage += `・${task.title}\n`
+        }
+        if (confirmCount > 5) lineMessage += `  ...他${confirmCount - 5}件\n`
+      }
+    }
+
     lineMessage += `\n━━━━━━━━━━━━━\n`
-    lineMessage += `本日のタスク（${allTodayTasks.length}件）\n`
-
-    if (highTasks.length > 0) {
-      lineMessage += `\n最優先（${highTasks.length}件）\n`
-      for (const t of highTasks.slice(0, 10)) {
-        const task = t as Record<string, unknown>
-        lineMessage += `${task.department}: ${task.title}\n`
-      }
-    }
-
-    if (normalTasks.length > 0) {
-      lineMessage += `\n通常（${normalTasks.length}件）\n`
-      for (const t of normalTasks.slice(0, 10)) {
-        const task = t as Record<string, unknown>
-        lineMessage += `${task.department}: ${task.title}\n`
-      }
-      if (normalTasks.length > 10) {
-        lineMessage += `...他${normalTasks.length - 10}件\n`
-      }
-    }
-
-    lineMessage += `\n新規生成: ${insertedTasks.length}件\n━━━━━━━━━━━━━`
+    lineMessage += `新規生成: ${insertedTasks.length}件`
 
     const lineSent = await sendLINEBroadcast(lineMessage)
 

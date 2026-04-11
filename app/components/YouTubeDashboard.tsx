@@ -10,6 +10,10 @@ interface ChannelStatus {
   lastVideoId: string | null
   lastTitle: string | null
   cronSchedule: string
+  hasLive?: boolean
+  today?: { main: number; shorts: number; failed: number }
+  latestMain?: { title: string; video_id: string; status: string; posted_at: string } | null
+  latestShorts?: { title: string; video_id: string; status: string; posted_at: string } | null
 }
 
 interface LiveStreamStatus {
@@ -75,7 +79,24 @@ interface AnalyticsData {
   collected_at: string | null
 }
 
-type TabType = 'status' | 'analytics' | 'strategy'
+interface YouTubePost {
+  id: string
+  channel: string
+  video_type: string
+  title: string | null
+  video_id: string | null
+  category: string | null
+  status: string
+  posted_at: string
+}
+
+interface PostsData {
+  posts: YouTubePost[]
+  summary: Record<string, { main: number; shorts: number; failed: number }>
+  today: { total: number; success: number; failed: number }
+}
+
+type TabType = 'status' | 'analytics' | 'posts' | 'strategy'
 
 export default function YouTubeDashboard() {
   const [status, setStatus] = useState<YouTubeStatus | null>(null)
@@ -86,6 +107,7 @@ export default function YouTubeDashboard() {
   const [collapsed, setCollapsed] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('status')
   const [collecting, setCollecting] = useState(false)
+  const [postsData, setPostsData] = useState<PostsData | null>(null)
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -112,12 +134,24 @@ export default function YouTubeDashboard() {
     }
   }, [])
 
+  const fetchPosts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/youtube/report?days=7')
+      if (!res.ok) return
+      const data = await res.json()
+      setPostsData(data)
+    } catch {
+      // silent
+    }
+  }, [])
+
   useEffect(() => {
     fetchStatus()
     fetchAnalytics()
-    const interval = setInterval(fetchStatus, 60000)
+    fetchPosts()
+    const interval = setInterval(() => { fetchStatus(); fetchPosts() }, 60000)
     return () => clearInterval(interval)
-  }, [fetchStatus, fetchAnalytics])
+  }, [fetchStatus, fetchAnalytics, fetchPosts])
 
   const handleRestartLive = async () => {
     if (restarting) return
@@ -209,7 +243,7 @@ export default function YouTubeDashboard() {
   }
 
   const failedCount = status.channels.filter(c => c.lastStatus === 'failed').length
-  const allOk = failedCount === 0 && status.liveStream.running
+  const allOk = failedCount === 0
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -221,6 +255,11 @@ export default function YouTubeDashboard() {
         <div className="flex items-center gap-2">
           <span className="text-lg">📺</span>
           <span className="text-sm font-bold text-white">YouTube管理</span>
+          {postsData?.today && postsData.today.total > 0 && (
+            <span className="text-[10px] text-gray-400">
+              今日{postsData.today.total}本投稿
+            </span>
+          )}
           {analytics?.summary && (
             <span className="text-[10px] text-gray-400">
               {formatNumber(analytics.summary.total_subscribers)}人 / {formatNumber(analytics.summary.total_views)}回
@@ -230,8 +269,7 @@ export default function YouTubeDashboard() {
             <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[10px] font-bold">正常</span>
           ) : (
             <span className="px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full text-[10px] font-bold animate-pulse">
-              {failedCount > 0 && `${failedCount}ch異常`}
-              {!status.liveStream.running && ' LIVE停止'}
+              {failedCount}ch投稿失敗
             </span>
           )}
         </div>
@@ -244,6 +282,7 @@ export default function YouTubeDashboard() {
           <div className="flex gap-1 bg-gray-800/50 rounded-lg p-0.5">
             {([
               { id: 'status' as TabType, label: '稼働状態' },
+              { id: 'posts' as TabType, label: `投稿履歴${postsData?.today ? ` (${postsData.today.total})` : ''}` },
               { id: 'analytics' as TabType, label: 'アナリティクス' },
               { id: 'strategy' as TabType, label: '成長戦略' },
             ]).map(tab => (
@@ -290,22 +329,118 @@ export default function YouTubeDashboard() {
                 )}
               </div>
 
-              {/* チャンネル一覧 */}
+              {/* チャンネル一覧（4チャンネル） */}
               {status.channels.map((ch) => (
-                <div key={ch.name} className="flex items-center justify-between p-2 bg-gray-800/50 rounded-lg">
-                  <div className="flex-1 min-w-0">
+                <div key={ch.name} className="p-2.5 bg-gray-800/50 rounded-lg space-y-1.5">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-[11px] font-medium text-gray-200 truncate">{ch.name}</p>
+                      <p className="text-[11px] font-medium text-gray-200">{ch.name}</p>
                       {getStatusBadge(ch.lastStatus)}
                     </div>
-                    <p className="text-[9px] text-gray-500 truncate mt-0.5">{ch.lastTitle || '-'}</p>
+                    <div className="flex items-center gap-2 text-[9px]">
+                      {ch.today && (ch.today.main > 0 || ch.today.shorts > 0) ? (
+                        <>
+                          <span className="text-blue-400">本編{ch.today.main}</span>
+                          <span className="text-purple-400">Shorts{ch.today.shorts}</span>
+                          {ch.today.failed > 0 && <span className="text-red-400">失敗{ch.today.failed}</span>}
+                        </>
+                      ) : (
+                        <span className="text-gray-600">今日の投稿なし</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <p className="text-[10px] text-gray-400">{getTimeAgo(ch.lastUpload)}</p>
-                    <p className="text-[9px] text-gray-600">{ch.cronSchedule.split(' / ')[0]}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] text-gray-500 truncate flex-1">{ch.lastTitle || ch.cronSchedule}</p>
+                    <p className="text-[9px] text-gray-600 flex-shrink-0 ml-2">{getTimeAgo(ch.lastUpload)}</p>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* === 投稿履歴タブ === */}
+          {activeTab === 'posts' && (
+            <div className="space-y-3">
+              {postsData ? (
+                <>
+                  {/* 今日のサマリー */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-gray-800/50 rounded-lg p-2.5 text-center">
+                      <p className="text-[9px] text-gray-500">今日の投稿</p>
+                      <p className="text-lg font-bold text-white">{postsData.today.total}</p>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-lg p-2.5 text-center">
+                      <p className="text-[9px] text-gray-500">成功</p>
+                      <p className="text-lg font-bold text-green-400">{postsData.today.success}</p>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-lg p-2.5 text-center">
+                      <p className="text-[9px] text-gray-500">失敗</p>
+                      <p className="text-lg font-bold text-red-400">{postsData.today.failed}</p>
+                    </div>
+                  </div>
+
+                  {/* チャンネル別集計（7日間） */}
+                  {Object.keys(postsData.summary).length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-bold mb-2">7日間 チャンネル別</p>
+                      <div className="space-y-1">
+                        {Object.entries(postsData.summary).map(([ch, counts]) => (
+                          <div key={ch} className="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg">
+                            <span className="text-[10px] text-white font-medium">{ch}</span>
+                            <div className="flex gap-3 text-[9px]">
+                              <span className="text-blue-400">本編 {counts.main}</span>
+                              <span className="text-purple-400">Shorts {counts.shorts}</span>
+                              {counts.failed > 0 && <span className="text-red-400">失敗 {counts.failed}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 最新投稿一覧 */}
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-bold mb-2">最新投稿</p>
+                    <div className="space-y-1 max-h-64 overflow-y-auto">
+                      {postsData.posts.slice(0, 20).map((post) => (
+                        <div key={post.id} className="flex items-center gap-2 p-2 bg-gray-800/30 rounded-lg">
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                            post.status === 'success' ? 'bg-green-500' : 'bg-red-500'
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[9px] text-gray-500">{post.channel}</span>
+                              <span className={`text-[8px] px-1 py-0.5 rounded ${
+                                post.video_type === 'shorts'
+                                  ? 'bg-purple-500/20 text-purple-400'
+                                  : 'bg-blue-500/20 text-blue-400'
+                              }`}>
+                                {post.video_type === 'shorts' ? 'Shorts' : '本編'}
+                              </span>
+                            </div>
+                            <p className="text-[9px] text-gray-300 truncate">
+                              {post.title || '(タイトルなし)'}
+                            </p>
+                          </div>
+                          <span className="text-[9px] text-gray-600 flex-shrink-0">
+                            {post.posted_at ? new Date(post.posted_at).toLocaleString('ja-JP', {
+                              month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                            }) : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {postsData.posts.length === 0 && (
+                    <p className="text-center text-xs text-gray-500 py-4">
+                      まだ投稿データがありません。次回の自動投稿から記録されます。
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-center text-xs text-gray-500 py-6 animate-pulse">読み込み中...</p>
+              )}
             </div>
           )}
 
@@ -551,7 +686,7 @@ export default function YouTubeDashboard() {
               {' | '}
               Status: {new Date(status.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
             </p>
-            <button onClick={() => { fetchStatus(); fetchAnalytics() }} className="text-[10px] text-indigo-400 hover:text-indigo-300">
+            <button onClick={() => { fetchStatus(); fetchAnalytics(); fetchPosts() }} className="text-[10px] text-indigo-400 hover:text-indigo-300">
               更新
             </button>
           </div>
