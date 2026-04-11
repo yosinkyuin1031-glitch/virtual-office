@@ -24,7 +24,7 @@ export const documents: Document[] = [
     category: 'operations',
     status: 'final',
     updatedAt: '2026-04-11',
-    contentHtml: \`<h1>治療機器販売事業 事業概要</h1>
+    contentHtml: `<h1>治療機器販売事業 事業概要</h1>
 
 <h2>事業形態</h2>
 <ul>
@@ -103,7 +103,7 @@ export const documents: Document[] = [
 <li><strong>整体院：</strong>大口神経整体院で実際に使用、デモ会場として活用</li>
 <li><strong>コンサル事業：</strong>治療家メンバーへの紹介経路</li>
 <li><strong>アプリ事業：</strong>成瀬先生（体質推進協会）との腸内アプリ連携から機器販売への発展可能性</li>
-</ul>\`
+</ul>`
   },
 
   // ==========================================
@@ -116,7 +116,7 @@ export const documents: Document[] = [
     category: 'operations',
     status: 'final',
     updatedAt: '2026-04-11',
-    contentHtml: \`<h1>アプリ販売事業 事業概要</h1>
+    contentHtml: `<h1>アプリ販売事業 事業概要</h1>
 
 <h2>事業形態・屋号</h2>
 <ul>
@@ -236,7 +236,7 @@ export const documents: Document[] = [
 <li>BtoB販売導線の自動化（FB→LINE→デモ→契約→オンボーディング）</li>
 <li>セキュリティ基準（feedback_security_standard.md）の全商品適用状況チェック</li>
 <li>年内50社・月商50万に向けた月次進捗ダッシュボード</li>
-</ol>\`
+</ol>`
   },
 
   // ==========================================
@@ -249,7 +249,7 @@ export const documents: Document[] = [
     category: 'operations',
     status: 'final',
     updatedAt: '2026-04-11',
-    contentHtml: \`<h1>コンサル事業 事業概要</h1>
+    contentHtml: `<h1>コンサル事業 事業概要</h1>
 
 <h2>事業の成り立ち</h2>
 <p>もともと「川口村」という治療家コミュニティがあり、大口はそこに参加していた。<strong>川口村メンバーの中で独立している先生の売上・経営をサポートしよう</strong>という目的で、<strong>西村先生と大口の2名</strong>で共同提供する形で始めた事業。</p>
@@ -333,7 +333,7 @@ export const documents: Document[] = [
 <li>現メンバーは川口村内の信頼関係ベース。次期以降は募集・選考プロセスが必要</li>
 <li>西村先生との役割分担・収益分配ルールは要確定</li>
 <li>この事業は TrainingClinic（川口先生共同の治療院×ミニジム）とは別物</li>
-</ul>\`
+</ul>`
   },
 
   // ==========================================
@@ -346,7 +346,7 @@ export const documents: Document[] = [
     category: 'operations',
     status: 'final',
     updatedAt: '2026-04-11',
-    contentHtml: \`<h1>晴陽鍼灸院 事業概要</h1>
+    contentHtml: `<h1>晴陽鍼灸院 事業概要</h1>
 
 <h2>基本情報</h2>
 <ul>
@@ -475,7 +475,7 @@ export const documents: Document[] = [
 <li><strong>業務フロー自動化：</strong>連絡・同意書・支払いなど属人化している部分を減らす</li>
 <li><strong>採用ページ・業務委託募集の導線づくり：</strong>人材確保の課題に対応</li>
 <li><strong>月商目標達成に向けた逆算：</strong>現80万→最低目標160万まで2倍必要。患者数ベースで必要人数・必要訪問件数を常に見える化</li>
-</ol>\`
+</ol>`
   },
 
   {
@@ -485,7 +485,7 @@ export const documents: Document[] = [
     category: 'operations',
     status: 'final',
     updatedAt: '2026-04-11',
-    contentHtml: \`<h1>大口神経整体院 事業概要</h1>
+    contentHtml: `<h1>大口神経整体院 事業概要</h1>
 
 <h2>基本情報</h2>
 <ul>
@@ -693,7 +693,7 @@ export const documents: Document[] = [
 <li>初回は問診・検査で90〜120分</li>
 <li>服装はスカートや固いジーンズNG、動きやすい服装で</li>
 <li>薬や病院で診断された内容があれば持参</li>
-</ol>\`
+</ol>`
   },
 
   // ==========================================
@@ -706,7 +706,7 @@ export const documents: Document[] = [
     category: 'operations',
     status: 'final',
     updatedAt: '2026-04-10',
-    contentHtml: \`<h1>経営理念・院の軸・行動指針・タスク整理</h1>
+    contentHtml: `<h1>経営理念・院の軸・行動指針・タスク整理</h1>
 
 <h2>院の立ち位置</h2>
 <p>「病院と整体院のあいだで、筋骨格だけではなく神経まで含めて身体を見直す場所」</p>
@@ -891,7 +891,7 @@ export const documents: Document[] = [
 <li>外注でもいいもの</li>
 <li>捨ててもいいもの</li>
 </ul>
-<p>開業ビジョンシートはブラッシュアップして部屋の壁に貼っておく</p>\`
+<p>開業ビジョンシートはブラッシュアップして部屋の壁に貼っておく</p>`
   },
   // ==========================================
   // カラダマップ FB投稿＋LINE案内（2026-04-02 v2）
