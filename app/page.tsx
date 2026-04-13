@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { departments, allEmployeesList, products, productCategories } from './lib/data'
 import type { Employee, Product } from './lib/data'
@@ -8,6 +8,41 @@ import { documents } from './lib/documents'
 import type { Document } from './lib/documents'
 import PixelCharacter from './components/PixelCharacter'
 import ChatModal from './components/ChatModal'
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 型定義
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+interface Goal {
+  id: string
+  key: string
+  label: string
+  value: string
+  category: string
+  sort_order: number
+}
+
+interface ContextItem {
+  id: string
+  category: string
+  title: string
+  content: string
+}
+
+interface Task {
+  id: string
+  department: string
+  title: string
+  description: string
+  priority: string
+  status: string
+  due_date: string | null
+  assignee_type?: string
+  employee_name?: string
+  completed_at: string | null
+  completion_note: string | null
+  created_at: string
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 共通コンポーネント
@@ -134,6 +169,405 @@ function PostCard({ doc }: { doc: Document }) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 事業別フィルタリング設定
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const goalFilterMap: Record<string, { categories: string[]; labelKeywords: string[] }> = {
+  seitai: { categories: ['整体', '院'], labelKeywords: ['整体', '院', 'カルテ', '単価', 'サブスク', '来院', '物販'] },
+  houmon: { categories: ['訪問', '鍼灸'], labelKeywords: ['訪問', '鍼灸', 'スタッフ', 'ケアマネ'] },
+  'app-biz': { categories: ['アプリ', 'SaaS', 'BtoB', 'MRR'], labelKeywords: ['アプリ', 'SaaS', 'BtoB', 'MRR', '導入'] },
+  consulting: { categories: ['コンサル'], labelKeywords: ['コンサル', '秘密基地', '勉強会'] },
+  device: { categories: ['機器', '販売'], labelKeywords: ['機器', 'BR', '顕微鏡'] },
+}
+
+const contextFilterMap: Record<string, { categories: string[]; contentKeywords: string[] }> = {
+  seitai: { categories: ['operations', 'yearly', 'campaign', 'work_design'], contentKeywords: ['整体', '院', '患者', '施術'] },
+  houmon: { categories: [], contentKeywords: ['訪問', '鍼灸', 'ケアマネ', 'リハビリ'] },
+  'app-biz': { categories: ['btob_sales'], contentKeywords: ['アプリ', 'BtoB', 'SaaS', 'カラダマップ', 'MEO'] },
+  consulting: { categories: [], contentKeywords: ['コンサル', '秘密基地', '勉強会'] },
+  device: { categories: [], contentKeywords: ['機器', 'BR', '顕微鏡'] },
+}
+
+const taskDeptMap: Record<string, string[]> = {
+  seitai: ['整体'],
+  houmon: ['訪問'],
+  'app-biz': ['AI', 'BtoB', 'プロダクト', 'カスタマー'],
+  consulting: ['コンサル'],
+  device: ['機器'],
+}
+
+function filterGoals(goals: Goal[], businessId: string): Goal[] {
+  const filter = goalFilterMap[businessId]
+  if (!filter) return []
+  return goals.filter(g => {
+    const catMatch = filter.categories.some(kw => (g.category || '').includes(kw))
+    const labelMatch = filter.labelKeywords.some(kw => (g.label || '').includes(kw))
+    return catMatch || labelMatch
+  })
+}
+
+function filterContexts(contexts: ContextItem[], businessId: string): ContextItem[] {
+  const filter = contextFilterMap[businessId]
+  if (!filter) return []
+  return contexts.filter(c => {
+    const catMatch = filter.categories.includes(c.category)
+    const contentMatch = filter.contentKeywords.some(kw =>
+      (c.title || '').includes(kw) || (c.content || '').includes(kw)
+    )
+    return catMatch || contentMatch
+  })
+}
+
+function filterTasks(tasks: Task[], businessId: string): Task[] {
+  const deptKeywords = taskDeptMap[businessId]
+  if (!deptKeywords) return []
+  return tasks.filter(t =>
+    deptKeywords.some(kw => (t.department || '').includes(kw))
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 方針・KPIタブ
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function ContextKpiView({ businessId, color }: { businessId: string; color: string }) {
+  const [goals, setGoals] = useState<Goal[]>([])
+  const [contexts, setContexts] = useState<ContextItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      fetch('/api/goals').then(r => r.json()),
+      fetch('/api/context').then(r => r.json()),
+    ]).then(([goalsRes, contextRes]) => {
+      setGoals(goalsRes.goals || [])
+      setContexts(contextRes.contexts || [])
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [])
+
+  const bizGoals = filterGoals(goals, businessId)
+  const bizContexts = filterContexts(contexts, businessId)
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-sm text-gray-400">読み込み中...</p>
+      </div>
+    )
+  }
+
+  const kpiColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316']
+
+  return (
+    <div className="space-y-6">
+      {/* KPI Cards */}
+      {bizGoals.length > 0 && (
+        <div>
+          <h3 className="text-xs font-bold text-gray-600 mb-3 flex items-center gap-1.5">
+            <span className="w-1 h-4 rounded-full" style={{ backgroundColor: color }} />
+            KPI / 目標
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {bizGoals.map((goal, i) => {
+              const cardColor = kpiColors[i % kpiColors.length]
+              return (
+                <div
+                  key={goal.id}
+                  className="rounded-xl border p-3"
+                  style={{ backgroundColor: cardColor + '08', borderColor: cardColor + '25' }}
+                >
+                  <p className="text-[10px] text-gray-500 leading-tight mb-1">{goal.label}</p>
+                  <p className="text-sm font-bold" style={{ color: cardColor }}>{goal.value}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Context Items */}
+      {bizContexts.length > 0 && (
+        <div>
+          <h3 className="text-xs font-bold text-gray-600 mb-3 flex items-center gap-1.5">
+            <span className="w-1 h-4 rounded-full" style={{ backgroundColor: color }} />
+            方針 / コンテキスト
+          </h3>
+          <div className="space-y-2">
+            {bizContexts.map(ctx => (
+              <div key={ctx.id} className="bg-gray-50 rounded-lg border border-gray-200 p-3">
+                <h4 className="text-xs font-bold text-gray-700 mb-1">{ctx.title}</h4>
+                <p className="text-[11px] text-gray-500 leading-relaxed whitespace-pre-wrap">{ctx.content}</p>
+                <span className="text-[9px] text-gray-300 mt-1 inline-block">{ctx.category}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {bizGoals.length === 0 && bizContexts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-2xl mb-2">🎯</p>
+          <p className="text-sm text-gray-400">この事業のKPI・方針はまだ登録されていません</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// タスクタブ
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function getDueDateBadge(dueDate: string | null): { label: string; className: string } | null {
+  if (!dueDate) return null
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const due = new Date(dueDate)
+  due.setHours(0, 0, 0, 0)
+  const diff = due.getTime() - now.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days < 0) return { label: `${Math.abs(days)}日超過`, className: 'bg-red-100 text-red-700 border-red-200' }
+  if (days === 0) return { label: '今日', className: 'bg-red-50 text-red-600 border-red-200' }
+  if (days <= 7) return { label: `${days}日後`, className: 'bg-yellow-50 text-yellow-700 border-yellow-200' }
+  return { label: dueDate.slice(5), className: 'bg-gray-50 text-gray-500 border-gray-200' }
+}
+
+function getPriorityBadge(priority: string): { label: string; className: string } {
+  if (priority === 'high') return { label: '高', className: 'bg-red-50 text-red-600 border-red-200' }
+  if (priority === 'low') return { label: '低', className: 'bg-gray-50 text-gray-400 border-gray-200' }
+  return { label: '中', className: 'bg-blue-50 text-blue-500 border-blue-200' }
+}
+
+function getAssigneeBadge(task: Task): string {
+  if (task.assignee_type === 'owner') return '大口'
+  if (task.assignee_type === 'both') return '両方'
+  if (task.employee_name) return task.employee_name
+  return 'CC自動'
+}
+
+function TasksView({ businessId, color }: { businessId: string; color: string }) {
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showCompleted, setShowCompleted] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newDueDate, setNewDueDate] = useState('')
+  const [newPriority, setNewPriority] = useState('normal')
+  const [adding, setAdding] = useState(false)
+
+  const fetchTasks = useCallback(() => {
+    setLoading(true)
+    fetch('/api/auto-tasks?status=all')
+      .then(r => r.json())
+      .then(res => setTasks(res.tasks || []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => { fetchTasks() }, [fetchTasks])
+
+  const bizTasks = filterTasks(tasks, businessId)
+  const pendingTasks = bizTasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled')
+  const completedTasks = bizTasks.filter(t => t.status === 'completed')
+
+  const toggleTask = async (task: Task) => {
+    const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+    // Optimistic update
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null } : t))
+    try {
+      await fetch('/api/auto-tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: task.id, status: newStatus }),
+      })
+    } catch {
+      fetchTasks() // revert on error
+    }
+  }
+
+  const addTask = async () => {
+    if (!newTitle.trim()) return
+    setAdding(true)
+    try {
+      // Determine department based on businessId
+      const deptNames: Record<string, string> = {
+        seitai: '整体院事業部',
+        houmon: '訪問鍼灸事業部',
+        'app-biz': 'AI開発部',
+        consulting: 'コンサル事業部',
+        device: '治療機器販売部',
+      }
+      const res = await fetch('/api/auto-tasks-add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          department: deptNames[businessId] || '経営層',
+          title: newTitle.trim(),
+          description: '',
+          priority: newPriority,
+          due_date: newDueDate || null,
+        }),
+      })
+      if (!res.ok) {
+        // Fallback: try direct insert via a simple approach
+        // The auto-tasks POST generates tasks via AI, so we need a separate endpoint
+        // Let's just refetch
+      }
+      setNewTitle('')
+      setNewDueDate('')
+      setNewPriority('normal')
+      fetchTasks()
+    } catch {
+      // ignore
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-sm text-gray-400">読み込み中...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Add task form */}
+      <div className="bg-gray-50 rounded-xl border border-gray-200 p-3">
+        <div className="flex flex-wrap gap-2 items-end">
+          <div className="flex-1 min-w-[180px]">
+            <input
+              type="text"
+              placeholder="新しいタスクを追加..."
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addTask() }}
+              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-300 focus:border-amber-400 focus:outline-none"
+              maxLength={25}
+            />
+          </div>
+          <input
+            type="date"
+            value={newDueDate}
+            onChange={e => setNewDueDate(e.target.value)}
+            className="text-[10px] px-2 py-2 rounded-lg border border-gray-300 focus:border-amber-400 focus:outline-none"
+          />
+          <select
+            value={newPriority}
+            onChange={e => setNewPriority(e.target.value)}
+            className="text-[10px] px-2 py-2 rounded-lg border border-gray-300 focus:border-amber-400 focus:outline-none"
+          >
+            <option value="high">高</option>
+            <option value="normal">中</option>
+            <option value="low">低</option>
+          </select>
+          <button
+            onClick={addTask}
+            disabled={adding || !newTitle.trim()}
+            className="text-xs px-4 py-2 rounded-lg text-white font-bold disabled:opacity-50 transition"
+            style={{ backgroundColor: color }}
+          >
+            {adding ? '...' : '追加'}
+          </button>
+        </div>
+      </div>
+
+      {/* Pending tasks */}
+      <div>
+        <h3 className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1.5">
+          <span className="w-1 h-4 rounded-full" style={{ backgroundColor: color }} />
+          未完了タスク
+          <span className="text-[9px] font-normal text-gray-400">({pendingTasks.length})</span>
+        </h3>
+        {pendingTasks.length === 0 ? (
+          <p className="text-[11px] text-gray-400 py-4 text-center">未完了タスクはありません</p>
+        ) : (
+          <div className="space-y-1.5">
+            {pendingTasks.map(task => {
+              const dueBadge = getDueDateBadge(task.due_date)
+              const priBadge = getPriorityBadge(task.priority)
+              const assignee = getAssigneeBadge(task)
+              return (
+                <div key={task.id} className="bg-white rounded-lg border border-gray-200 p-3 flex items-start gap-2.5 hover:shadow-sm transition">
+                  <button
+                    onClick={() => toggleTask(task)}
+                    className="mt-0.5 w-4 h-4 rounded border-2 border-gray-300 hover:border-amber-400 flex-shrink-0 transition"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-gray-800 leading-snug">{task.title}</p>
+                    {task.description && (
+                      <p className="text-[10px] text-gray-400 mt-0.5 leading-snug line-clamp-2">{task.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {dueBadge && (
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${dueBadge.className}`}>{dueBadge.label}</span>
+                      )}
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${priBadge.className}`}>{priBadge.label}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-500 border border-purple-200">{assignee}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Completed tasks */}
+      {completedTasks.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1.5 hover:text-gray-600 transition"
+          >
+            <span>{showCompleted ? '▼' : '▶'}</span>
+            完了済み
+            <span className="text-[9px] font-normal">({completedTasks.length})</span>
+          </button>
+          {showCompleted && (
+            <div className="space-y-1.5">
+              {completedTasks.map(task => {
+                const priBadge = getPriorityBadge(task.priority)
+                const assignee = getAssigneeBadge(task)
+                return (
+                  <div key={task.id} className="bg-gray-50 rounded-lg border border-gray-100 p-3 flex items-start gap-2.5 opacity-60">
+                    <button
+                      onClick={() => toggleTask(task)}
+                      className="mt-0.5 w-4 h-4 rounded border-2 border-green-400 bg-green-400 flex-shrink-0 flex items-center justify-center transition"
+                    >
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 leading-snug line-through">{task.title}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full border ${priBadge.className}`}>{priBadge.label}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-500 border border-purple-200">{assignee}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {bizTasks.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-2xl mb-2">✅</p>
+          <p className="text-sm text-gray-400">この事業のタスクはまだありません</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 事業別ビュー
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -164,6 +598,8 @@ const businessConfig: Record<BusinessId, {
     productCategories: ['clinic-app'],
     documentCategories: ['operations', 'sns'],
     channels: [
+      { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
+      { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
       { id: 'instagram', label: 'Instagram', icon: '📸', keywords: ['instagram', 'insta'] },
       { id: 'gbp', label: 'GBP(MEO)', icon: '📍', keywords: ['gbp', 'google', 'gmb', 'meo'] },
       { id: 'blog', label: 'ブログ(SEO)', icon: '📝', keywords: ['blog', 'seo', 'ブログ', '記事'] },
@@ -180,6 +616,8 @@ const businessConfig: Record<BusinessId, {
     productCategories: ['houmon-app'],
     documentCategories: ['operations'],
     channels: [
+      { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
+      { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
       { id: 'instagram', label: 'Instagram', icon: '📸', keywords: ['instagram', 'insta'] },
       { id: 'gbp', label: 'GBP(MEO)', icon: '📍', keywords: ['gbp', 'google', 'gmb', 'meo'] },
       { id: 'blog', label: 'ブログ(SEO)', icon: '📝', keywords: ['blog', 'seo', 'ブログ', '記事'] },
@@ -194,6 +632,8 @@ const businessConfig: Record<BusinessId, {
     productCategories: ['btob-saas'],
     documentCategories: ['btob'],
     channels: [
+      { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
+      { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
       { id: 'facebook', label: 'Facebook', icon: '📘', keywords: ['facebook', 'fb'] },
       { id: 'threads', label: 'Threads', icon: '🧵', keywords: ['threads'] },
       { id: 'oc', label: 'オープンチャット', icon: '💬', keywords: ['oc', 'オープンチャット'] },
@@ -208,6 +648,8 @@ const businessConfig: Record<BusinessId, {
     productCategories: [],
     documentCategories: ['consulting'],
     channels: [
+      { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
+      { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
       { id: 'facebook', label: 'Facebook', icon: '📘', keywords: ['facebook', 'fb'] },
       { id: 'apps', label: 'アプリ', icon: '📱', keywords: [] },
     ],
@@ -220,6 +662,8 @@ const businessConfig: Record<BusinessId, {
     productCategories: [],
     documentCategories: ['device'],
     channels: [
+      { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
+      { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
       { id: 'facebook', label: 'Facebook', icon: '📘', keywords: ['facebook', 'fb'] },
       { id: 'apps', label: 'アプリ', icon: '📱', keywords: [] },
     ],
@@ -237,6 +681,11 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
   const config = businessConfig[businessId]
   const [activeChannel, setActiveChannel] = useState(config.channels[0].id)
 
+  // Reset active channel when business changes
+  useEffect(() => {
+    setActiveChannel(config.channels[0].id)
+  }, [businessId, config.channels])
+
   // Get data
   const bizProducts = config.productCategories.length > 0
     ? products.filter(p => config.productCategories.includes(p.category))
@@ -248,31 +697,36 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
   // Current channel
   const currentChannel = config.channels.find(c => c.id === activeChannel) || config.channels[0]
   const isAppsChannel = currentChannel.id === 'apps'
+  const isContextChannel = currentChannel.id === 'context'
+  const isTasksChannel = currentChannel.id === 'tasks'
+  const isSpecialChannel = isAppsChannel || isContextChannel || isTasksChannel
 
   // Filter docs for current channel
-  const channelDocs = isAppsChannel ? [] : bizDocuments.filter(d => matchChannel(d, currentChannel))
+  const channelDocs = isSpecialChannel ? [] : bizDocuments.filter(d => matchChannel(d, currentChannel))
 
-  // Docs that don't match any channel (show in first non-apps channel as fallback)
-  const unmatchedDocs = bizDocuments.filter(d => !config.channels.some(c => c.id !== 'apps' && matchChannel(d, c)))
+  // Docs that don't match any channel (show in first content channel as fallback)
+  const unmatchedDocs = bizDocuments.filter(d => !config.channels.some(c => c.id !== 'apps' && c.id !== 'context' && c.id !== 'tasks' && matchChannel(d, c)))
 
   // Count per channel
   const channelCounts: Record<string, number> = {}
+  const firstContentChannel = config.channels.find(c => c.id !== 'apps' && c.id !== 'context' && c.id !== 'tasks')
   config.channels.forEach(ch => {
     if (ch.id === 'apps') {
       channelCounts[ch.id] = bizProducts.length
+    } else if (ch.id === 'context' || ch.id === 'tasks') {
+      // No count badge for these special tabs
+      channelCounts[ch.id] = 0
     } else {
       let count = bizDocuments.filter(d => matchChannel(d, ch)).length
-      // Add unmatched to first non-apps channel
-      if (ch.id === config.channels.find(c => c.id !== 'apps')?.id) {
+      if (ch.id === firstContentChannel?.id) {
         count += unmatchedDocs.length
       }
       channelCounts[ch.id] = count
     }
   })
 
-  // Final docs to show (include unmatched if this is the first non-apps channel)
-  const firstContentChannel = config.channels.find(c => c.id !== 'apps')
-  const docsToShow = isAppsChannel
+  // Final docs to show
+  const docsToShow = isSpecialChannel
     ? []
     : activeChannel === firstContentChannel?.id
       ? [...channelDocs, ...unmatchedDocs]
@@ -327,7 +781,11 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
 
       {/* Channel content */}
       <div className="bg-white rounded-b-2xl border-2 border-t-0 p-4 shadow-sm min-h-[300px]" style={{ borderColor: config.color + '33' }}>
-        {isAppsChannel ? (
+        {isContextChannel ? (
+          <ContextKpiView businessId={businessId} color={config.color} />
+        ) : isTasksChannel ? (
+          <TasksView businessId={businessId} color={config.color} />
+        ) : isAppsChannel ? (
           /* アプリ一覧 */
           bizProducts.length === 0 ? (
             <div className="text-center py-12">
@@ -413,6 +871,82 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ホーム画面（簡素化版）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function ContextInput() {
+  const [text, setText] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const detectDepartments = (input: string): string[] => {
+    const tags: string[] = []
+    if (/整体|院|患者|施術/.test(input)) tags.push('整体院事業部')
+    if (/訪問|鍼灸|ケアマネ|リハビリ/.test(input)) tags.push('訪問鍼灸事業部')
+    if (/アプリ|SaaS|BtoB|カラダマップ|MEO勝ち上げ/.test(input)) { tags.push('AI開発部'); tags.push('BtoB営業部') }
+    if (/コンサル|秘密基地|勉強会/.test(input)) tags.push('コンサル事業部')
+    if (/機器|BR|顕微鏡/.test(input)) tags.push('治療機器販売部')
+    return tags.length > 0 ? tags : ['経営層']
+  }
+
+  const handleSave = async () => {
+    if (!text.trim()) return
+    setSaving(true)
+    try {
+      const deptTags = detectDepartments(text)
+      await fetch('/api/memos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: text.trim(),
+          category: 'context',
+          source: 'web',
+          department_tags: deptTags,
+        }),
+      })
+      setText('')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch {
+      // ignore
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-amber-200 p-4 shadow-sm">
+      <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+        コンテキスト入力（自動振り分け）
+      </h3>
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="事業に関するメモや方針を入力すると、キーワードで自動的に該当事業部に振り分けられます..."
+        className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 focus:border-amber-400 focus:outline-none resize-none"
+        rows={3}
+      />
+      <div className="flex items-center justify-between mt-2">
+        <div>
+          {saved && (
+            <span className="text-[10px] text-green-600 font-medium">保存しました</span>
+          )}
+          {text.trim() && !saved && (
+            <span className="text-[9px] text-gray-400">
+              振り分け先: {detectDepartments(text).join(', ')}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving || !text.trim()}
+          className="text-xs px-4 py-2 rounded-lg bg-amber-500 text-white font-bold disabled:opacity-50 hover:bg-amber-600 transition"
+        >
+          {saving ? '保存中...' : '保存'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function HomeView() {
   const quickApps = [
@@ -525,6 +1059,9 @@ function HomeView() {
           })}
         </div>
       </div>
+
+      {/* コンテキスト入力エリア */}
+      <ContextInput />
     </div>
   )
 }
