@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 import { logActivity } from '../../lib/pdca-utils'
 import {
   detectCategory,
@@ -7,19 +7,11 @@ import {
   detectBusinessTags,
 } from '../../lib/memo-utils'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-
 // Webhook認証（PLAUD_WEBHOOK_SECRET）
 function verifyWebhookAuth(request: NextRequest): boolean {
   const secret = process.env.PLAUD_WEBHOOK_SECRET
   if (!secret) return true // 未設定時はスキップ（開発用）
 
-  // Authorizationヘッダー or クエリパラメータで認証
   const authHeader = request.headers.get('authorization')
   if (authHeader === `Bearer ${secret}`) return true
 
@@ -31,7 +23,6 @@ function verifyWebhookAuth(request: NextRequest): boolean {
 
 // メモを保存し、必要なら company_context へ昇格
 async function processMemo(
-  supabase: ReturnType<typeof createClient>,
   content: string,
   title: string
 ): Promise<{ memoId: string; category: string; promoted: boolean }> {
@@ -39,7 +30,8 @@ async function processMemo(
   const department_tags = detectDepartmentTags(cleaned)
   const business_tags = detectBusinessTags(cleaned)
 
-  const { data: memo, error: memoError } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: memo, error: memoError } = await (supabase as any)
     .from('chairman_memos')
     .insert({
       content: cleaned,
@@ -56,7 +48,8 @@ async function processMemo(
 
   let promoted = false
   if (category === 'direction' || category === 'insight') {
-    const { error: ctxError } = await supabase.from('company_context').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: ctxError } = await (supabase as any).from('company_context').insert({
       title: title.slice(0, 50) || cleaned.slice(0, 50),
       content: cleaned,
       category,
@@ -67,7 +60,8 @@ async function processMemo(
     })
     if (!ctxError) {
       promoted = true
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('chairman_memos')
         .update({ promoted_to_context: true })
         .eq('id', memo.id)
@@ -111,8 +105,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = getSupabase()
-
     // 文字起こし全文をメモとして保存
     const contentParts: string[] = []
     if (title) contentParts.push(`【${title}】`)
@@ -121,14 +113,14 @@ export async function POST(request: NextRequest) {
     const fullContent = contentParts.join('\n\n')
 
     const { memoId, category, promoted } = await processMemo(
-      supabase,
       fullContent,
       title || (transcript.slice(0, 30) + '...')
     )
 
     // plaud_synced_files にも記録（重複防止用）
     const fileId = `webhook_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    await supabase.from('plaud_synced_files').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('plaud_synced_files').insert({
       drive_file_id: fileId,
       file_name: title || `Plaud録音_${new Date().toISOString().slice(0, 10)}`,
       memo_id: memoId,
