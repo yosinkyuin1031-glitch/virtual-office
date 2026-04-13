@@ -24,6 +24,10 @@
     "app/api/plaud-sync/route.ts": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "app/api/plaud-webhook/route.ts": {
+      "memory": 512,
+      "maxDuration": 30
     }
   },
   "crons": [
