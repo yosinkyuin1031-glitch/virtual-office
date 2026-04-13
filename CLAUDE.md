@@ -54,7 +54,7 @@
 - 「治療家がアプリを作っている日常」を自然に発信
 - ポジション訴求はしない・自然に「アプリの人」として認知を積む
 - CTAは「LPの動画を見てください」
-- カラダマップLP：https://clinic-saas-lp.vercel.app/systems/kensa
+- カラダマップLP：https://karadamap-lp.vercel.app/
 
 ## 通知・報告のルール
 - YouTube投稿完了は個別通知不要・22時の日報にまとめて含める
