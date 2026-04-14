@@ -58,6 +58,86 @@ export function detectDepartmentTags(text: string): string[] {
   return Array.from(tags)
 }
 
+// 長文を事業トピックごとに分割する
+export interface TopicBlock {
+  content: string
+  business_tags: string[]
+  department_tags: string[]
+  category: string
+  title: string
+}
+
+export function splitByTopics(text: string): TopicBlock[] {
+  // 段落で分割（空行 or 句点+改行）
+  const paragraphs = text
+    .split(/\n{2,}|(?<=[。．\.\!！\?？])\s*\n/)
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+
+  if (paragraphs.length === 0) return []
+
+  // 各段落に事業タグを付与
+  const tagged = paragraphs.map(p => ({
+    text: p,
+    biz: detectBusinessTags(p),
+    dept: detectDepartmentTags(p),
+  }))
+
+  // 同じ事業タグの連続する段落をまとめる
+  const blocks: TopicBlock[] = []
+  let currentBlock: { texts: string[]; biz: Set<string>; dept: Set<string> } = {
+    texts: [],
+    biz: new Set(),
+    dept: new Set(),
+  }
+
+  const bizKey = (tags: string[]) => tags.sort().join(',') || '_none_'
+
+  for (let i = 0; i < tagged.length; i++) {
+    const t = tagged[i]
+    const prevKey = bizKey(Array.from(currentBlock.biz))
+    const thisKey = bizKey(t.biz)
+
+    // 事業タグが変わったら新ブロック（ただし空タグは前のブロックに吸収）
+    if (currentBlock.texts.length > 0 && t.biz.length > 0 && prevKey !== '_none_' && thisKey !== prevKey) {
+      // 前のブロックを確定
+      const content = currentBlock.texts.join('\n')
+      const { category, cleaned } = detectCategory(content)
+      blocks.push({
+        content: cleaned,
+        business_tags: Array.from(currentBlock.biz),
+        department_tags: Array.from(currentBlock.dept),
+        category,
+        title: cleaned.slice(0, 50),
+      })
+      currentBlock = { texts: [], biz: new Set(), dept: new Set() }
+    }
+
+    currentBlock.texts.push(t.text)
+    t.biz.forEach(b => currentBlock.biz.add(b))
+    t.dept.forEach(d => currentBlock.dept.add(d))
+  }
+
+  // 最後のブロック
+  if (currentBlock.texts.length > 0) {
+    const content = currentBlock.texts.join('\n')
+    const { category, cleaned } = detectCategory(content)
+    blocks.push({
+      content: cleaned,
+      business_tags: Array.from(currentBlock.biz),
+      department_tags: Array.from(currentBlock.dept),
+      category,
+      title: cleaned.slice(0, 50),
+    })
+  }
+
+  // ブロックが1つしかなければそのまま返す
+  // 全部同じ事業なら分割しない
+  if (blocks.length <= 1) return blocks
+
+  return blocks
+}
+
 export function detectCategory(text: string): { category: string; cleaned: string } {
   const trimmed = text.trim()
   if (trimmed.startsWith('方針:') || trimmed.startsWith('方針：')) {

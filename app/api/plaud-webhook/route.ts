@@ -5,7 +5,9 @@ import {
   detectCategory,
   detectDepartmentTags,
   detectBusinessTags,
+  splitByTopics,
 } from '../../lib/memo-utils'
+import type { TopicBlock } from '../../lib/memo-utils'
 
 // Webhook認証（PLAUD_WEBHOOK_SECRET）
 function verifyWebhookAuth(request: NextRequest): boolean {
@@ -105,17 +107,59 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 文字起こし全文をメモとして保存
+    // 文字起こし全文を組み立て
     const contentParts: string[] = []
-    if (title) contentParts.push(`【${title}】`)
     if (summary) contentParts.push(`[要約] ${summary}`)
     if (transcript) contentParts.push(transcript)
     const fullContent = contentParts.join('\n\n')
 
-    const { memoId, category, promoted } = await processMemo(
-      fullContent,
-      title || (transcript.slice(0, 30) + '...')
-    )
+    // トピックごとに分割
+    const blocks = splitByTopics(fullContent)
+
+    const results: {
+      memoId: string
+      category: string
+      promoted: boolean
+      business_tags: string[]
+      department_tags: string[]
+      title: string
+    }[] = []
+
+    if (blocks.length > 1) {
+      // 複数トピック：それぞれ個別に保存
+      for (const block of blocks) {
+        const result = await processMemo(
+          block.content,
+          title ? `${title} - ${block.business_tags.join('/')}` : block.title
+        )
+        results.push({
+          ...result,
+          business_tags: block.business_tags,
+          department_tags: block.department_tags,
+          title: block.title,
+        })
+      }
+    } else {
+      // 単一トピック：従来通り
+      const singleContent = title ? `【${title}】\n\n${fullContent}` : fullContent
+      const result = await processMemo(
+        singleContent,
+        title || (transcript.slice(0, 30) + '...')
+      )
+      const block: TopicBlock = blocks[0] || {
+        content: fullContent,
+        business_tags: detectBusinessTags(fullContent),
+        department_tags: detectDepartmentTags(fullContent),
+        category: result.category,
+        title: (title || transcript.slice(0, 50)),
+      }
+      results.push({
+        ...result,
+        business_tags: block.business_tags,
+        department_tags: block.department_tags,
+        title: block.title,
+      })
+    }
 
     // plaud_synced_files にも記録（重複防止用）
     const fileId = `webhook_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -123,24 +167,37 @@ export async function POST(request: NextRequest) {
     await (supabase as any).from('plaud_synced_files').insert({
       drive_file_id: fileId,
       file_name: title || `Plaud録音_${new Date().toISOString().slice(0, 10)}`,
-      memo_id: memoId,
+      memo_id: results[0]?.memoId,
       content_preview: fullContent.slice(0, 200),
     })
 
     // 活動ログ
+    const promotedCount = results.filter(r => r.promoted).length
     await logActivity(
       'CC-PlaudWebhook',
       'AI開発部',
       'plaud_webhook',
-      `Plaud録音受信: ${title || '無題'} (${category})${promoted ? ' → company_context昇格' : ''}`
+      `Plaud録音受信: ${title || '無題'} (${results.length}トピックに分割${promotedCount > 0 ? `, ${promotedCount}件昇格` : ''})`
     )
 
     return NextResponse.json({
       success: true,
-      memo_id: memoId,
-      category,
-      promoted,
-      message: 'Plaud録音を会長メモに保存しました',
+      split_count: results.length,
+      blocks: results.map(r => ({
+        memo_id: r.memoId,
+        category: r.category,
+        promoted: r.promoted,
+        business_tags: r.business_tags,
+        department_tags: r.department_tags,
+        title: r.title,
+      })),
+      // 後方互換
+      memo_id: results[0]?.memoId,
+      category: results[0]?.category,
+      promoted: results.some(r => r.promoted),
+      message: results.length > 1
+        ? `${results.length}トピックに分割して保存しました`
+        : 'Plaud録音を会長メモに保存しました',
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

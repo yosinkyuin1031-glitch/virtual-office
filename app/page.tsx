@@ -996,7 +996,10 @@ function ContextInput() {
   const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [savedInfo, setSavedInfo] = useState<{category: string; promoted: boolean; departments: string[]; businesses: string[]} | null>(null)
+  const [savedInfo, setSavedInfo] = useState<{
+    splitCount: number
+    blocks: {category: string; promoted: boolean; business_tags: string[]; department_tags: string[]; title: string}[]
+  } | null>(null)
   const [mode, setMode] = useState<'quick' | 'plaud'>('quick')
 
   const detectDepartments = (input: string): string[] => {
@@ -1046,9 +1049,16 @@ function ContextInput() {
         })
         const data = await res.json()
         if (data.success) {
-          const depts = detectDepartments(text)
-          const bizs = detectBusinesses(text)
-          setSavedInfo({ category: data.category, promoted: data.promoted, departments: depts, businesses: bizs })
+          setSavedInfo({
+            splitCount: data.split_count || 1,
+            blocks: data.blocks || [{
+              category: data.category,
+              promoted: data.promoted,
+              business_tags: detectBusinesses(text),
+              department_tags: detectDepartments(text).map((d: string) => d),
+              title: text.slice(0, 50),
+            }],
+          })
         }
       } else {
         const deptTags = detectDepartments(text)
@@ -1145,17 +1155,28 @@ function ContextInput() {
       {/* 保存結果 */}
       {saved && savedInfo && (
         <div className="mt-2 p-2.5 rounded-lg bg-green-50 border border-green-200 text-[10px]">
-          <p className="font-bold text-green-700 mb-1">保存完了</p>
-          <div className="flex flex-wrap gap-1">
-            <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700">{categoryLabel[savedInfo.category] || savedInfo.category}</span>
-            {savedInfo.departments.map(d => (
-              <span key={d} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{d}</span>
-            ))}
-            {savedInfo.businesses.map(b => (
-              <span key={b} className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{b}</span>
-            ))}
-          </div>
-          {savedInfo.promoted && <p className="mt-1 text-green-700 font-bold">→ company_contextに昇格しました</p>}
+          <p className="font-bold text-green-700 mb-1">
+            {savedInfo.splitCount > 1
+              ? `${savedInfo.splitCount}トピックに分割して保存しました`
+              : '保存完了'}
+          </p>
+          {savedInfo.blocks.map((block, i) => (
+            <div key={i} className={`${i > 0 ? 'mt-2 pt-2 border-t border-green-200' : ''}`}>
+              {savedInfo.splitCount > 1 && (
+                <p className="text-[9px] text-gray-500 mb-1">#{i + 1} {block.title.slice(0, 30)}...</p>
+              )}
+              <div className="flex flex-wrap gap-1">
+                <span className={`px-2 py-0.5 rounded-full font-bold ${block.category === 'direction' ? 'bg-red-100 text-red-700' : block.category === 'insight' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+                  {categoryLabel[block.category] || block.category}
+                </span>
+                {block.business_tags.map(b => {
+                  const bizLabel: Record<string, string> = { seitai: '整体院', houmon: '訪問鍼灸', app_sales: 'アプリ事業', consulting: 'コンサル', device: '治療機器' }
+                  return <span key={b} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{bizLabel[b] || b}</span>
+                })}
+              </div>
+              {block.promoted && <p className="mt-0.5 text-green-700 font-bold text-[9px]">→ company_contextに昇格</p>}
+            </div>
+          ))}
         </div>
       )}
       {saved && !savedInfo && (
