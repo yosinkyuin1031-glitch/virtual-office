@@ -83,9 +83,10 @@ function stripHtmlToText(html: string): string {
 // SNS投稿カード
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function PostCard({ doc }: { doc: Document }) {
+function PostCard({ doc, onHide }: { doc: Document; onHide?: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   const plainText = stripHtmlToText(doc.contentHtml)
   const preview = plainText.slice(0, 120) + (plainText.length > 120 ? '...' : '')
@@ -107,6 +108,17 @@ function PostCard({ doc }: { doc: Document }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
+  }
+
+  const handleHide = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirming) {
+      setConfirming(true)
+      setTimeout(() => setConfirming(false), 3000)
+      return
+    }
+    onHide?.(doc.id)
+    setConfirming(false)
   }
 
   const categoryConfig: Record<string, { label: string; color: string }> = {
@@ -137,16 +149,30 @@ function PostCard({ doc }: { doc: Document }) {
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-50 text-yellow-600 border border-yellow-200">下書き</span>
             )}
           </div>
-          <button
-            onClick={handleCopy}
-            className={`text-[10px] px-2.5 py-1 rounded-lg border transition-all flex-shrink-0 ${
-              copied
-                ? 'bg-green-50 text-green-600 border-green-300'
-                : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300'
-            }`}
-          >
-            {copied ? 'コピーしました!' : 'コピー'}
-          </button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={handleCopy}
+              className={`text-[10px] px-2.5 py-1 rounded-lg border transition-all ${
+                copied
+                  ? 'bg-green-50 text-green-600 border-green-300'
+                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300'
+              }`}
+            >
+              {copied ? 'コピー済' : 'コピー'}
+            </button>
+            {onHide && (
+              <button
+                onClick={handleHide}
+                className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                  confirming
+                    ? 'bg-red-50 text-red-600 border-red-300'
+                    : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-300'
+                }`}
+              >
+                {confirming ? '本当に削除？' : '×'}
+              </button>
+            )}
+          </div>
         </div>
 
         <h4 className="text-xs font-bold text-gray-800 leading-snug mb-1">{doc.title}</h4>
@@ -583,6 +609,8 @@ interface ChannelDef {
 
 const businessConfig: Record<BusinessId, {
   name: string
+  subtitle: string
+  target: string
   icon: string
   color: string
   deptIds: string[]
@@ -592,11 +620,13 @@ const businessConfig: Record<BusinessId, {
 }> = {
   seitai: {
     name: '大口神経整体院',
+    subtitle: '重症症状専門。不調で止まった人生にもう一度光を灯す',
+    target: '50-70代。病院で異常なし・手術を避けたい・他院で改善しなかった方',
     icon: '🏥',
     color: '#1565C0',
     deptIds: ['seitai'],
     productCategories: ['clinic-app'],
-    documentCategories: ['operations', 'sns'],
+    documentCategories: ['operations', 'sns', 'meo'],
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
       { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
@@ -610,11 +640,13 @@ const businessConfig: Record<BusinessId, {
   },
   houmon: {
     name: '晴陽鍼灸院（訪問鍼灸）',
+    subtitle: '鍼灸リハビリを通じて高齢者の「晴れ」を取り戻す',
+    target: '歩行困難な方（年齢問わず）。ケアマネ・家族・整体院からの紹介',
     icon: '🏠',
     color: '#2E7D32',
     deptIds: ['houmon'],
     productCategories: ['houmon-app'],
-    documentCategories: ['operations'],
+    documentCategories: ['operations', 'sns', 'meo'],
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
       { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
@@ -626,11 +658,13 @@ const businessConfig: Record<BusinessId, {
   },
   'app-biz': {
     name: 'アプリ事業（BtoB SaaS）',
+    subtitle: '現場を知る治療家が作ったアプリで、治療・教育・自分の時間に集中できる環境を作る',
+    target: '自費の治療家。開業年数・院の規模は問わない',
     icon: '📱',
     color: '#263238',
     deptIds: ['ai_dev', 'btob', 'product_mgmt', 'customer_success'],
     productCategories: ['btob-saas'],
-    documentCategories: ['btob'],
+    documentCategories: ['btob', 'sns', 'product'],
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
       { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
@@ -642,11 +676,13 @@ const businessConfig: Record<BusinessId, {
   },
   consulting: {
     name: 'コンサル事業',
+    subtitle: '治療家が自分の強みを活かした経営ができ、共に成長できる環境・仲間を作る',
+    target: '売上はあるが仕組み化できていない治療家。川口村以外にも拡大',
     icon: '🧭',
     color: '#FBC02D',
     deptIds: ['consulting'],
-    productCategories: [],
-    documentCategories: ['consulting'],
+    productCategories: ['btob-saas', 'tool'],
+    documentCategories: ['btob', 'operations'],
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
       { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
@@ -656,11 +692,13 @@ const businessConfig: Record<BusinessId, {
   },
   device: {
     name: '治療機器販売',
+    subtitle: 'メニューの幅を広げ売上の柱を増やし、患者に「見える変化」を届ける機器導入支援',
+    target: 'コンサルメンバー＋知り合い中心。メニュー追加・単価アップしたい治療家',
     icon: '🔧',
     color: '#E53935',
     deptIds: ['device_sales'],
-    productCategories: [],
-    documentCategories: ['device'],
+    productCategories: ['marketing', 'btob-saas'],
+    documentCategories: ['btob', 'operations'],
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
       { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
@@ -672,6 +710,9 @@ const businessConfig: Record<BusinessId, {
 
 // Match a document to a channel by keywords in title/id
 function matchChannel(doc: Document, channel: ChannelDef): boolean {
+  // Direct channel match
+  if (doc.channel && doc.channel === channel.id) return true
+  // Keyword fallback
   if (channel.keywords.length === 0) return false
   const haystack = (doc.title + ' ' + doc.id).toLowerCase()
   return channel.keywords.some(kw => haystack.includes(kw))
@@ -680,17 +721,63 @@ function matchChannel(doc: Document, channel: ChannelDef): boolean {
 function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; setChatTarget: (emp: Employee) => void }) {
   const config = businessConfig[businessId]
   const [activeChannel, setActiveChannel] = useState(config.channels[0].id)
+  const [hiddenIds, setHiddenIds] = useState<string[]>([])
+  const [showHidden, setShowHidden] = useState(false)
 
   // Reset active channel when business changes
   useEffect(() => {
     setActiveChannel(config.channels[0].id)
   }, [businessId, config.channels])
 
+  // Load hidden document IDs from localStorage + API
+  useEffect(() => {
+    const stored = localStorage.getItem('vo_hidden_docs')
+    if (stored) setHiddenIds(JSON.parse(stored))
+    fetch('/api/documents').then(r => r.json()).then(res => {
+      if (res.hiddenIds?.length) {
+        setHiddenIds(prev => {
+          const merged = [...new Set([...prev, ...res.hiddenIds])]
+          localStorage.setItem('vo_hidden_docs', JSON.stringify(merged))
+          return merged
+        })
+      }
+    }).catch(() => {})
+  }, [])
+
+  const hideDocument = useCallback((docId: string) => {
+    setHiddenIds(prev => {
+      const next = [...prev, docId]
+      localStorage.setItem('vo_hidden_docs', JSON.stringify(next))
+      return next
+    })
+    fetch('/api/documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: docId }),
+    }).catch(() => {})
+  }, [])
+
+  const restoreDocument = useCallback((docId: string) => {
+    setHiddenIds(prev => {
+      const next = prev.filter(id => id !== docId)
+      localStorage.setItem('vo_hidden_docs', JSON.stringify(next))
+      return next
+    })
+    fetch(`/api/documents?id=${docId}`, { method: 'DELETE' }).catch(() => {})
+  }, [])
+
   // Get data
   const bizProducts = config.productCategories.length > 0
     ? products.filter(p => config.productCategories.includes(p.category))
     : []
-  const bizDocuments = documents.filter(d => config.documentCategories.includes(d.category))
+  const allBizDocuments = documents.filter(d => {
+    // Direct business match
+    if (d.business) return d.business === businessId || d.business === 'all'
+    // Category fallback
+    return config.documentCategories.includes(d.category)
+  })
+  const bizDocuments = allBizDocuments.filter(d => !hiddenIds.includes(d.id))
+  const hiddenDocs = allBizDocuments.filter(d => hiddenIds.includes(d.id))
   const bizDepts = departments.filter(d => config.deptIds.includes(d.id))
   const bizEmployees = bizDepts.flatMap(d => d.employees)
 
@@ -744,6 +831,10 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
               {bizEmployees.length}名 | {bizProducts.length}アプリ | {bizDocuments.length}投稿
             </p>
           </div>
+        </div>
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: config.color + '15' }}>
+          <p className="text-xs font-medium text-gray-700">{config.subtitle}</p>
+          <p className="text-[10px] text-gray-400 mt-1">Target: {config.target}</p>
         </div>
       </div>
 
@@ -834,10 +925,38 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
           ) : (
             <div className="space-y-2">
               {docsToShow.map(doc => (
-                <PostCard key={doc.id} doc={doc} />
+                <PostCard key={doc.id} doc={doc} onHide={hideDocument} />
               ))}
             </div>
           )
+        )}
+
+        {/* 非表示記事の管理 */}
+        {hiddenDocs.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <button
+              onClick={() => setShowHidden(!showHidden)}
+              className="text-[10px] text-gray-400 hover:text-gray-600 flex items-center gap-1"
+            >
+              🗑️ 非表示の記事（{hiddenDocs.length}件）
+              <span className="text-[9px]">{showHidden ? '▲' : '▼'}</span>
+            </button>
+            {showHidden && (
+              <div className="mt-2 space-y-1">
+                {hiddenDocs.map(doc => (
+                  <div key={doc.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                    <span className="text-[10px] text-gray-400 truncate flex-1">{doc.title}</span>
+                    <button
+                      onClick={() => restoreDocument(doc.id)}
+                      className="text-[9px] text-blue-500 hover:text-blue-700 ml-2 whitespace-nowrap"
+                    >
+                      ↩ 復元
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -874,8 +993,11 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
 
 function ContextInput() {
   const [text, setText] = useState('')
+  const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [savedInfo, setSavedInfo] = useState<{category: string; promoted: boolean; departments: string[]; businesses: string[]} | null>(null)
+  const [mode, setMode] = useState<'quick' | 'plaud'>('quick')
 
   const detectDepartments = (input: string): string[] => {
     const tags: string[] = []
@@ -887,24 +1009,65 @@ function ContextInput() {
     return tags.length > 0 ? tags : ['経営層']
   }
 
+  const detectCategory = (input: string): string => {
+    if (/決めた|やる|やらない|方針|戦略|絶対|必ず/.test(input)) return 'direction'
+    if (/気づき|発見|なるほど|わかった|学んだ|知った/.test(input)) return 'insight'
+    return 'general'
+  }
+
+  const detectBusinesses = (input: string): string[] => {
+    const tags: string[] = []
+    if (/整体/.test(input)) tags.push('整体院')
+    if (/訪問|鍼灸|晴陽/.test(input)) tags.push('訪問鍼灸')
+    if (/アプリ|カラダマップ|クリニックコア|Clinic|ポイント管理/.test(input)) tags.push('アプリ事業')
+    if (/コンサル|秘密基地|西村/.test(input)) tags.push('コンサル')
+    if (/BR|機器|血管/.test(input)) tags.push('治療機器')
+    return tags
+  }
+
+  const categoryLabel: Record<string, string> = {
+    direction: '方針・決定',
+    insight: '気づき・発見',
+    general: '一般メモ',
+  }
+
   const handleSave = async () => {
     if (!text.trim()) return
     setSaving(true)
     try {
-      const deptTags = detectDepartments(text)
-      await fetch('/api/memos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: text.trim(),
-          category: 'context',
-          source: 'web',
-          department_tags: deptTags,
-        }),
-      })
+      if (mode === 'plaud') {
+        const res = await fetch('/api/plaud-webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transcript: text.trim(),
+            title: title.trim() || undefined,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          const depts = detectDepartments(text)
+          const bizs = detectBusinesses(text)
+          setSavedInfo({ category: data.category, promoted: data.promoted, departments: depts, businesses: bizs })
+        }
+      } else {
+        const deptTags = detectDepartments(text)
+        await fetch('/api/memos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: text.trim(),
+            category: 'context',
+            source: 'web',
+            department_tags: deptTags,
+          }),
+        })
+        setSavedInfo(null)
+      }
       setText('')
+      setTitle('')
       setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      setTimeout(() => { setSaved(false); setSavedInfo(null) }, 5000)
     } catch {
       // ignore
     } finally {
@@ -912,36 +1075,105 @@ function ContextInput() {
     }
   }
 
+  const currentCategory = detectCategory(text)
+  const currentDepts = detectDepartments(text)
+  const currentBiz = detectBusinesses(text)
+
   return (
     <div className="bg-white rounded-2xl border border-amber-200 p-4 shadow-sm">
-      <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-        <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
-        コンテキスト入力（自動振り分け）
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+          {mode === 'plaud' ? 'Plaudメモ取り込み' : 'コンテキスト入力'}
+        </h3>
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+          <button
+            onClick={() => setMode('quick')}
+            className={`text-[10px] px-2.5 py-1 rounded-md font-bold transition ${mode === 'quick' ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-400'}`}
+          >
+            クイック
+          </button>
+          <button
+            onClick={() => setMode('plaud')}
+            className={`text-[10px] px-2.5 py-1 rounded-md font-bold transition ${mode === 'plaud' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
+          >
+            Plaud
+          </button>
+        </div>
+      </div>
+
+      {mode === 'plaud' && (
+        <input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="タイトル（省略可）"
+          className="w-full text-xs px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-400 focus:outline-none mb-2"
+        />
+      )}
+
       <textarea
         value={text}
         onChange={e => setText(e.target.value)}
-        placeholder="事業に関するメモや方針を入力すると、キーワードで自動的に該当事業部に振り分けられます..."
-        className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 focus:border-amber-400 focus:outline-none resize-none"
-        rows={3}
+        placeholder={mode === 'plaud'
+          ? 'Plaudの文字起こしをここに貼り付け...\n内容を読み取って自動で事業・部署に振り分けます'
+          : '事業に関するメモや方針を入力すると、キーワードで自動的に該当事業部に振り分けられます...'
+        }
+        className={`w-full text-xs px-3 py-2.5 rounded-lg border focus:outline-none resize-none ${mode === 'plaud' ? 'border-indigo-200 focus:border-indigo-400' : 'border-gray-200 focus:border-amber-400'}`}
+        rows={mode === 'plaud' ? 8 : 3}
       />
+
+      {/* 自動分類プレビュー */}
+      {text.trim() && !saved && (
+        <div className={`mt-2 p-2 rounded-lg text-[10px] ${mode === 'plaud' ? 'bg-indigo-50 border border-indigo-100' : 'bg-gray-50'}`}>
+          <div className="flex flex-wrap gap-1.5">
+            <span className={`px-2 py-0.5 rounded-full font-bold ${currentCategory === 'direction' ? 'bg-red-100 text-red-700' : currentCategory === 'insight' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
+              {categoryLabel[currentCategory]}
+            </span>
+            {currentDepts.map(d => (
+              <span key={d} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{d}</span>
+            ))}
+            {currentBiz.map(b => (
+              <span key={b} className="px-2 py-0.5 rounded-full bg-green-100 text-green-700">{b}</span>
+            ))}
+          </div>
+          {mode === 'plaud' && (currentCategory === 'direction' || currentCategory === 'insight') && (
+            <p className="mt-1 text-indigo-600 font-bold">→ company_contextに自動昇格されます</p>
+          )}
+        </div>
+      )}
+
+      {/* 保存結果 */}
+      {saved && savedInfo && (
+        <div className="mt-2 p-2.5 rounded-lg bg-green-50 border border-green-200 text-[10px]">
+          <p className="font-bold text-green-700 mb-1">保存完了</p>
+          <div className="flex flex-wrap gap-1">
+            <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700">{categoryLabel[savedInfo.category] || savedInfo.category}</span>
+            {savedInfo.departments.map(d => (
+              <span key={d} className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{d}</span>
+            ))}
+            {savedInfo.businesses.map(b => (
+              <span key={b} className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{b}</span>
+            ))}
+          </div>
+          {savedInfo.promoted && <p className="mt-1 text-green-700 font-bold">→ company_contextに昇格しました</p>}
+        </div>
+      )}
+      {saved && !savedInfo && (
+        <p className="mt-2 text-[10px] text-green-600 font-medium">保存しました</p>
+      )}
+
       <div className="flex items-center justify-between mt-2">
         <div>
-          {saved && (
-            <span className="text-[10px] text-green-600 font-medium">保存しました</span>
-          )}
-          {text.trim() && !saved && (
-            <span className="text-[9px] text-gray-400">
-              振り分け先: {detectDepartments(text).join(', ')}
-            </span>
+          {text.trim() && (
+            <span className="text-[9px] text-gray-400">{text.length}文字</span>
           )}
         </div>
         <button
           onClick={handleSave}
           disabled={saving || !text.trim()}
-          className="text-xs px-4 py-2 rounded-lg bg-amber-500 text-white font-bold disabled:opacity-50 hover:bg-amber-600 transition"
+          className={`text-xs px-4 py-2 rounded-lg text-white font-bold disabled:opacity-50 transition ${mode === 'plaud' ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-amber-500 hover:bg-amber-600'}`}
         >
-          {saving ? '保存中...' : '保存'}
+          {saving ? '保存中...' : mode === 'plaud' ? '取り込み' : '保存'}
         </button>
       </div>
     </div>
@@ -973,9 +1205,32 @@ function HomeView() {
           <div>
             <h2 className="text-xl font-bold text-gray-800">AI Solutions</h2>
             <p className="text-sm text-gray-500">会長：大口 陽平</p>
-            <p className="text-xs text-amber-700 mt-1 font-medium">
-              Mission - 「できない」を「できる」に変え、光を灯す。
-            </p>
+          </div>
+        </div>
+
+        {/* 理念・ビジョン・ミッション */}
+        <div className="mt-4 pt-4 border-t border-amber-100 space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-3 py-2 border border-amber-100">
+              <p className="text-[9px] font-bold text-amber-500 tracking-wider">VISION</p>
+              <p className="text-xs text-gray-700 font-medium mt-0.5">挑戦を諦めない人が増え、温かく支え合える社会</p>
+            </div>
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg px-3 py-2 border border-orange-100">
+              <p className="text-[9px] font-bold text-orange-500 tracking-wider">MISSION</p>
+              <p className="text-xs text-gray-700 font-medium mt-0.5">「できない」を「できる」に変え、光を灯す</p>
+            </div>
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg px-3 py-2 border border-yellow-100">
+              <p className="text-[9px] font-bold text-yellow-600 tracking-wider">VALUE</p>
+              <p className="text-xs text-gray-700 font-medium mt-0.5">想いを創造し、チャレンジを楽しむ</p>
+            </div>
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg px-3 py-2 border border-emerald-100">
+              <p className="text-[9px] font-bold text-emerald-500 tracking-wider">ROLE</p>
+              <p className="text-xs text-gray-700 font-medium mt-0.5">想いに寄り添い、共に成長できる環境を創るサポーター</p>
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+            <p className="text-[9px] font-bold text-gray-400 tracking-wider">PURPOSE</p>
+            <p className="text-xs text-gray-600 mt-0.5">痛みや不調で止まった人生に「自由にやりたい事をやってもいい」という選択肢を渡す</p>
           </div>
         </div>
 
@@ -1062,6 +1317,123 @@ function HomeView() {
 
       {/* コンテキスト入力エリア */}
       <ContextInput />
+
+      {/* 組織図 */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+          組織図
+        </h3>
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+          {/* 会長 */}
+          <div className="flex justify-center mb-4">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl px-5 py-3 text-center shadow-sm">
+              <p className="text-lg">👑</p>
+              <p className="text-xs font-bold text-amber-800">会長</p>
+              <p className="text-[10px] text-gray-500">大口 陽平</p>
+            </div>
+          </div>
+          <div className="flex justify-center mb-4">
+            <div className="w-px h-4 bg-gray-300" />
+          </div>
+
+          {/* 経営層 */}
+          <div className="flex justify-center gap-2 mb-4 flex-wrap">
+            {departments.filter(d => d.parentDivision === 'executive' || d.parentDivision === 'finance').map(dept => (
+              <div key={dept.id} className="border rounded-lg px-3 py-2 text-center min-w-[80px]" style={{ borderColor: dept.color + '50', backgroundColor: dept.color + '08' }}>
+                <p className="text-sm">{dept.icon}</p>
+                <p className="text-[9px] font-bold" style={{ color: dept.color }}>{dept.name}</p>
+                <p className="text-[8px] text-gray-400">{dept.employees.length}名</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-center mb-4">
+            <div className="w-px h-4 bg-gray-300" />
+          </div>
+
+          {/* 事業部 */}
+          <div className="mb-3">
+            <p className="text-[9px] font-bold text-gray-400 text-center mb-2">事業部</p>
+            <div className="flex justify-center gap-2 flex-wrap">
+              {departments.filter(d => ['seitai', 'houmon', 'consulting', 'device_sales'].includes(d.id)).map(dept => (
+                <div key={dept.id} className="border rounded-lg px-3 py-2 text-center min-w-[80px]" style={{ borderColor: dept.color + '50', backgroundColor: dept.color + '08' }}>
+                  <p className="text-sm">{dept.icon}</p>
+                  <p className="text-[9px] font-bold" style={{ color: dept.color }}>{dept.name}</p>
+                  <p className="text-[8px] text-gray-400">{dept.employees.length}名</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-center mb-3">
+            <div className="w-px h-4 bg-gray-300" />
+          </div>
+
+          {/* AI・開発・営業 */}
+          <div className="mb-3">
+            <p className="text-[9px] font-bold text-gray-400 text-center mb-2">AI・開発・営業</p>
+            <div className="flex justify-center gap-2 flex-wrap">
+              {departments.filter(d => ['ai_dev', 'btob', 'product_mgmt', 'customer_success', 'ad_operations', 'research'].includes(d.id)).map(dept => (
+                <div key={dept.id} className="border rounded-lg px-2.5 py-1.5 text-center min-w-[70px]" style={{ borderColor: dept.color + '50', backgroundColor: dept.color + '08' }}>
+                  <p className="text-sm">{dept.icon}</p>
+                  <p className="text-[8px] font-bold" style={{ color: dept.color }}>{dept.name}</p>
+                  <p className="text-[8px] text-gray-400">{dept.employees.length}名</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-center mb-3">
+            <div className="w-px h-4 bg-gray-300" />
+          </div>
+
+          {/* コンテンツ・メディア */}
+          <div>
+            <p className="text-[9px] font-bold text-gray-400 text-center mb-2">コンテンツ・メディア</p>
+            <div className="flex justify-center gap-2 flex-wrap">
+              {departments.filter(d => ['media', 'lp_web', 'design'].includes(d.id)).map(dept => (
+                <div key={dept.id} className="border rounded-lg px-2.5 py-1.5 text-center min-w-[70px]" style={{ borderColor: dept.color + '50', backgroundColor: dept.color + '08' }}>
+                  <p className="text-sm">{dept.icon}</p>
+                  <p className="text-[8px] font-bold" style={{ color: dept.color }}>{dept.name}</p>
+                  <p className="text-[8px] text-gray-400">{dept.employees.length}名</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 全AI社員一覧 */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-amber-400 rounded-full" />
+          AI社員一覧（{allEmployeesList.length}名）
+        </h3>
+        <div className="space-y-3">
+          {departments.map(dept => (
+            <div key={dept.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-3 py-2 flex items-center gap-2" style={{ backgroundColor: dept.color + '0A', borderBottom: `1px solid ${dept.color}20` }}>
+                <span className="text-sm">{dept.icon}</span>
+                <span className="text-[11px] font-bold" style={{ color: dept.color }}>{dept.name}</span>
+                <span className="text-[9px] text-gray-400 ml-auto">{dept.employees.length}名</span>
+              </div>
+              <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {dept.employees.map(emp => (
+                  <div key={emp.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-gray-50 transition">
+                    <PixelCharacter name={emp.name} color={emp.color} status={emp.status} size={28} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold" style={{ color: emp.color }}>{emp.name}</span>
+                        <StatusBadge status={emp.status} />
+                      </div>
+                      <p className="text-[9px] text-gray-500 truncate">{emp.role}</p>
+                      <p className="text-[8px] text-gray-400 truncate">{emp.currentTask}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
