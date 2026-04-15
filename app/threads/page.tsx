@@ -11,6 +11,8 @@ const supabase = createClient(
 
 type Status = 'pending' | 'approved' | 'posted' | 'skipped'
 
+type Account = 'seitai' | 'houmon'
+
 interface ThreadPost {
   id: string
   date: string
@@ -19,10 +21,16 @@ interface ThreadPost {
   keyword: string
   text: string
   status: Status
+  account: Account
   thread_id: string | null
   views: number | null
   created_at: string
   updated_at: string
+}
+
+const ACCOUNT_CONFIG: Record<Account, { label: string; color: string }> = {
+  seitai: { label: '整体院', color: 'bg-blue-600' },
+  houmon: { label: '訪問鍼灸', color: 'bg-orange-600' },
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -46,17 +54,19 @@ export default function ThreadsPage() {
   const [posts, setPosts] = useState<ThreadPost[]>([])
   const [loading, setLoading] = useState(true)
   const [date, setDate] = useState('')
+  const [account, setAccount] = useState<Account>('seitai')
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
 
-  // 初回: 直近の投稿がある日付を自動検出
+  // アカウント変更時: 直近の投稿がある日付を自動検出
   useEffect(() => {
     async function findLatestDate() {
       const { data } = await supabase
         .from('threads_scheduled_posts')
         .select('date')
+        .eq('account', account)
         .order('date', { ascending: false })
         .limit(1)
       if (data && data.length > 0) {
@@ -66,7 +76,7 @@ export default function ThreadsPage() {
       }
     }
     findLatestDate()
-  }, [])
+  }, [account])
 
   const fetchPosts = useCallback(async () => {
     if (!date) return
@@ -75,17 +85,18 @@ export default function ThreadsPage() {
       .from('threads_scheduled_posts')
       .select('*')
       .eq('date', date)
+      .eq('account', account)
       .order('hour', { ascending: true })
 
     if (!error && data) {
       setPosts(data as ThreadPost[])
     }
     setLoading(false)
-  }, [date])
+  }, [date, account])
 
   useEffect(() => {
     if (date) fetchPosts()
-  }, [date, fetchPosts])
+  }, [date, account, fetchPosts])
 
   const filteredPosts = filter === 'all' ? posts : posts.filter(p => p.status === filter)
 
@@ -161,6 +172,23 @@ export default function ThreadsPage() {
         {/* ヘッダー */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white mb-4">Threads投稿管理</h1>
+
+          {/* アカウント切り替え */}
+          <div className="flex gap-2 mb-4">
+            {(Object.entries(ACCOUNT_CONFIG) as [Account, { label: string; color: string }][]).map(([key, conf]) => (
+              <button
+                key={key}
+                onClick={() => setAccount(key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  account === key
+                    ? `${conf.color} text-white`
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200'
+                }`}
+              >
+                {conf.label}
+              </button>
+            ))}
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
             {/* 日付ピッカー */}
