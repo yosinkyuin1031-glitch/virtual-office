@@ -434,7 +434,7 @@ export async function POST(request: NextRequest) {
       const text = event.message.text.trim()
       if (!text) continue
 
-      // スレッズOKコマンド（Threads投稿一括承認）
+      // スレッズOKコマンド（Threads投稿一括承認 - 整体院のみ）
       if (text === 'スレッズOK' || text === 'スレッズok' || text === 'スレッズＯＫ') {
         const now = new Date()
         const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
@@ -444,12 +444,34 @@ export async function POST(request: NextRequest) {
           .update({ status: 'approved', updated_at: new Date().toISOString() })
           .eq('date', today)
           .eq('status', 'pending')
+          .or('account.eq.seitai,account.is.null')
           .select('id')
         if (error) {
           await replyToLine(event.replyToken, `Threads承認でエラーが発生しました: ${error.message}`)
         } else {
           const count = updated?.length || 0
-          await replyToLine(event.replyToken, `✅ 本日のThreads投稿 ${count}件を全て承認しました。\nスケジュール通りに自動投稿されます。`)
+          await replyToLine(event.replyToken, `✅ 整体院のThreads投稿 ${count}件を承認しました。\nスケジュール通りに自動投稿されます。`)
+        }
+        continue
+      }
+
+      // 訪問スレッズOKコマンド（Threads投稿一括承認 - 訪問鍼灸のみ）
+      if (text === '訪問スレッズOK' || text === '訪問スレッズok' || text === '訪問スレッズＯＫ') {
+        const now = new Date()
+        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+        const today = jst.toISOString().slice(0, 10)
+        const { data: updated, error } = await supabase
+          .from('threads_scheduled_posts')
+          .update({ status: 'approved', updated_at: new Date().toISOString() })
+          .eq('date', today)
+          .eq('status', 'pending')
+          .eq('account', 'houmon')
+          .select('id')
+        if (error) {
+          await replyToLine(event.replyToken, `Threads承認でエラーが発生しました: ${error.message}`)
+        } else {
+          const count = updated?.length || 0
+          await replyToLine(event.replyToken, `✅ 訪問鍼灸のThreads投稿 ${count}件を承認しました。\nスケジュール通りに自動投稿されます。`)
         }
         continue
       }
