@@ -45,16 +45,31 @@ type FilterStatus = 'all' | Status
 export default function ThreadsPage() {
   const [posts, setPosts] = useState<ThreadPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [date, setDate] = useState(() => {
-    const now = new Date()
-    return now.toISOString().split('T')[0]
-  })
+  const [date, setDate] = useState('')
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
 
+  // 初回: 直近の投稿がある日付を自動検出
+  useEffect(() => {
+    async function findLatestDate() {
+      const { data } = await supabase
+        .from('threads_scheduled_posts')
+        .select('date')
+        .order('date', { ascending: false })
+        .limit(1)
+      if (data && data.length > 0) {
+        setDate(data[0].date)
+      } else {
+        setDate(new Date().toISOString().split('T')[0])
+      }
+    }
+    findLatestDate()
+  }, [])
+
   const fetchPosts = useCallback(async () => {
+    if (!date) return
     setLoading(true)
     const { data, error } = await supabase
       .from('threads_scheduled_posts')
@@ -69,8 +84,8 @@ export default function ThreadsPage() {
   }, [date])
 
   useEffect(() => {
-    fetchPosts()
-  }, [fetchPosts])
+    if (date) fetchPosts()
+  }, [date, fetchPosts])
 
   const filteredPosts = filter === 'all' ? posts : posts.filter(p => p.status === filter)
 
