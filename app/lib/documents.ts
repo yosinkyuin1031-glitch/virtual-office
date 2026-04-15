@@ -39,20 +39,20 @@ export const documents: Document[] = [
   {
     id: 'threads-houmon-pinned',
     title: 'Threads固定投稿：晴陽鍼灸院 自己紹介',
-    summary: '訪問鍼灸Threadsアカウント（hare_shinkyuin）のピン留め用投稿。thread_id: 18432291454142422',
+    summary: '訪問鍼灸Threadsアカウント（hare_shinkyuin）のピン留め用投稿。thread_id: 17974179422862108。大口陽平の名前は出さない。',
     category: 'sns' as const,
     business: 'houmon' as const,
     channel: 'threads' as const,
     status: 'final' as const,
     updatedAt: '2026-04-15',
     contentHtml: `大阪市住吉区・平野区・住之江区を中心に<br/>
-訪問鍼灸マッサージをしています、大口陽平です。<br/><br/>
+訪問鍼灸マッサージをしています、晴陽鍼灸院です。<br/><br/>
 通院が難しい方のご自宅や施設に伺って施術しています。<br/><br/>
 腰痛、神経痛、しびれ、膝の痛み。<br/>
 「歳だから仕方ない」と諦めている方にこそ届けたい。<br/><br/>
-健康保険が使えて、1回390円から。<br/>
+健康保険が使えて、1回430円から。<br/>
 同意書も提携の先生が書いてくれるので安心です。<br/><br/>
-痛みで動けない人のところに行くのが、僕たちの仕事です。<br/><br/>
+痛みで動けない人のところに行くのが、私たちの仕事です。<br/><br/>
 ここでは訪問の現場で感じていることや、<br/>
 在宅ケアの話を書いていきます。`,
   },
