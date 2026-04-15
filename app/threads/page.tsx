@@ -20,6 +20,7 @@ interface ThreadPost {
   text: string
   status: Status
   thread_id: string | null
+  views: number | null
   created_at: string
   updated_at: string
 }
@@ -248,10 +249,15 @@ export default function ThreadsPage() {
                     </div>
                   )}
 
-                  {/* thread_id表示（投稿済みの場合） */}
-                  {isPosted && post.thread_id && (
-                    <div className="mb-3 text-xs text-gray-500">
-                      Thread ID: {post.thread_id}
+                  {/* 投稿済み情報 */}
+                  {isPosted && (
+                    <div className="mb-3 flex items-center gap-3 text-xs text-gray-500">
+                      {post.views !== null && post.views > 0 && (
+                        <span className="text-green-400 font-medium">{post.views.toLocaleString()} views</span>
+                      )}
+                      {post.thread_id && (
+                        <span>ID: {post.thread_id}</span>
+                      )}
                     </div>
                   )}
 

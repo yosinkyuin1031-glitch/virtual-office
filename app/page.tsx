@@ -1572,6 +1572,16 @@ export default function VirtualOffice() {
               <span className="text-base">📄</span>
               <span>資料</span>
             </Link>
+
+            {/* Threadsリンク */}
+            <Link
+              href="/threads"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">🧵</span>
+              <span>Threads</span>
+            </Link>
           </nav>
 
           <div className="mt-6 mx-3 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
