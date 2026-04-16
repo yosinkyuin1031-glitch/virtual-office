@@ -219,7 +219,7 @@ export const departmentThemes: DepartmentTheme[] = [
     ],
     apps: [],
     currentTasks: [
-      '治療家爆上げ秘密基地メンバーヒアリング記録の整理',
+      '治療家の秘密基地メンバーヒアリング記録の整理',
       '5事業別競合マップの継続更新',
       '市場トレンド週次レポート作成',
     ],
