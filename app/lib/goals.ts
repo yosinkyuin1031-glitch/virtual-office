@@ -35,7 +35,7 @@ export const businessGoals: BusinessGoals = {
   kpis: [
     { label: '整体院 月商目標', value: '200〜300万円', current: '約240万円', icon: '💰' },
     { label: '訪問鍼灸 月商目標', value: '160〜300万円', current: '—', icon: '🏠' },
-    { label: 'BtoB アプリ導入院数', value: '50院', current: '10院（MEOモニター）', icon: '🏥' },
+    { label: 'BtoB アプリ導入院数', value: '50院', current: '16院（MEOモニター15+C-cure1）', icon: '🏥' },
     { label: '開発プロダクト数', value: '—', current: '45個', icon: '📱' },
     { label: '物販サブスク月額', value: '15万円/月', current: '—', icon: '🛒' },
     { label: 'サブスク会員数', value: '—', current: '27人（月54〜61万円）', icon: '🔄' },
