@@ -666,37 +666,38 @@ function SalesManagementView({ color }: { color: string }) {
   }
 
   const activeAccounts = accounts.filter(a => a.status === 'active')
-  const monthlyAccounts = activeAccounts.filter(a => a.plan_type !== 'onetime')
-  const onetimeAccounts = activeAccounts.filter(a => a.plan_type === 'onetime')
   const pendingAccounts = accounts.filter(a => a.status === 'pending_payment')
   const cancelledAccounts = accounts.filter(a => a.status === 'cancelled')
   const APP_LIST = ['kensa', 'customer']
 
-  // MRR計算（月額のみ）
-  const estimatedMrr = monthlyAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
+  // カテゴリ分類（is_monitorはclinicsテーブルまたはmetadataから取得）
+  const isMonitor = (a: SalesAccount) => a.is_monitor || a.metadata?.is_monitor === true
+  const isMaintenance = (a: SalesAccount) => !isMonitor(a) && a.plan_type !== 'onetime' && !a.selected_apps?.some(app => APP_LIST.includes(app))
+  const isPaidMonthly = (a: SalesAccount) => !isMonitor(a) && a.plan_type !== 'onetime' && a.selected_apps?.some(app => APP_LIST.includes(app))
+  const isOnetime = (a: SalesAccount) => !isMonitor(a) && a.plan_type === 'onetime'
 
-  // アプリ別集計（月額のみ）
+  const paidMonthlyAccounts = activeAccounts.filter(isPaidMonthly)
+  const monitorAccounts = activeAccounts.filter(isMonitor)
+  const maintenanceAccounts = activeAccounts.filter(isMaintenance)
+  const onetimeAccounts = activeAccounts.filter(isOnetime)
+
+  // MRR計算（有料月額 + 管理費のみ）
+  const paidMrr = paidMonthlyAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
+  const maintenanceMrr = maintenanceAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
+  const estimatedMrr = paidMrr + maintenanceMrr
+
+  // アプリ別集計（有料月額のみ）
   const appRevenue: Record<string, { count: number; revenue: number }> = {}
   APP_LIST.forEach(app => { appRevenue[app] = { count: 0, revenue: 0 } })
-  appRevenue['maintenance'] = { count: 0, revenue: 0 }
 
-  monthlyAccounts.forEach(a => {
-    const isMaintenanceAccount = !a.selected_apps?.some(app => APP_LIST.includes(app))
-    if (isMaintenanceAccount) {
-      appRevenue['maintenance'].count += 1
-      appRevenue['maintenance'].revenue += getMonthlyAmount(a)
-    } else {
-      (a.selected_apps || []).forEach(app => {
-        if (APP_LIST.includes(app) && appRevenue[app]) {
-          appRevenue[app].count += 1
-          appRevenue[app].revenue += getMonthlyAmount(a)
-        }
-      })
-    }
+  paidMonthlyAccounts.forEach(a => {
+    (a.selected_apps || []).forEach(app => {
+      if (APP_LIST.includes(app) && appRevenue[app]) {
+        appRevenue[app].count += 1
+        appRevenue[app].revenue += APP_PRICES[app] || 0
+      }
+    })
   })
-
-  // 管理費アカウント（月額のみ）
-  const maintenanceAccounts = monthlyAccounts.filter(a => !a.selected_apps?.some(app => APP_LIST.includes(app)))
 
   // 今月のStripe入金
   const now = new Date()
@@ -709,64 +710,73 @@ function SalesManagementView({ color }: { color: string }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-3 text-center">
           <p className="text-[10px] text-green-600 font-medium">月額契約</p>
-          <p className="text-xl font-bold text-green-700">{monthlyAccounts.length}<span className="text-xs font-normal">件</span></p>
-          {onetimeAccounts.length > 0 && <p className="text-[9px] text-gray-400 mt-0.5">+買い切り{onetimeAccounts.length}件</p>}
+          <p className="text-xl font-bold text-green-700">{paidMonthlyAccounts.length + maintenanceAccounts.length}<span className="text-xs font-normal">社</span></p>
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-3 text-center">
-          <p className="text-[10px] text-purple-600 font-medium">月額MRR</p>
+          <p className="text-[10px] text-purple-600 font-medium">MRR</p>
           <p className="text-xl font-bold text-purple-700">¥{estimatedMrr.toLocaleString()}</p>
         </div>
         <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-200 p-3 text-center">
           <p className="text-[10px] text-amber-600 font-medium">決済待ち</p>
-          <p className="text-xl font-bold text-amber-700">{pendingAccounts.length}<span className="text-xs font-normal">件</span></p>
+          <p className="text-xl font-bold text-amber-700">{pendingAccounts.length}<span className="text-xs font-normal">社</span></p>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-xl border border-blue-200 p-3 text-center">
-          <p className="text-[10px] text-blue-600 font-medium">今月Stripe入金</p>
-          <p className="text-xl font-bold text-blue-700">¥{(currentMonthCharges?.total || 0).toLocaleString()}</p>
+          <p className="text-[10px] text-blue-600 font-medium">全顧客数</p>
+          <p className="text-xl font-bold text-blue-700">{activeAccounts.length + pendingAccounts.length}<span className="text-xs font-normal">社</span></p>
         </div>
       </div>
 
+      {/* 内訳バー */}
+      <div className="flex gap-2 text-[10px] flex-wrap">
+        <span className="px-2 py-1 bg-green-50 text-green-700 rounded-full border border-green-200">月額 {paidMonthlyAccounts.length}</span>
+        <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded-full border border-orange-200">管理費 {maintenanceAccounts.length}</span>
+        <span className="px-2 py-1 bg-cyan-50 text-cyan-700 rounded-full border border-cyan-200">モニター {monitorAccounts.length}</span>
+        <span className="px-2 py-1 bg-gray-50 text-gray-500 rounded-full border border-gray-200">買い切り {onetimeAccounts.length}</span>
+        <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-200">決済待ち {pendingAccounts.length}</span>
+      </div>
+
       {/* Stripe実績 */}
-      {stripeData && (
+      {stripeData && stripeData.stripe_mrr > 0 && (
         <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
           <h4 className="text-xs font-bold text-purple-700 mb-2">Stripe実績</h4>
           <div className="flex gap-4 text-[11px]">
             <span className="text-purple-600">MRR: <strong>¥{stripeData.stripe_mrr.toLocaleString()}</strong></span>
             <span className="text-purple-600">サブスク: <strong>{stripeData.subscription_count}件</strong></span>
+            {currentMonthCharges && <span className="text-purple-600">今月入金: <strong>¥{currentMonthCharges.total.toLocaleString()}</strong></span>}
           </div>
         </div>
       )}
 
       {/* アプリ別収益 */}
       <div>
-        <h4 className="text-xs font-bold text-gray-700 mb-2">アプリ別月次収益</h4>
+        <h4 className="text-xs font-bold text-gray-700 mb-2">月額収益内訳</h4>
         <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-100">
-                <th className="text-left px-3 py-2 text-gray-500 font-medium">アプリ</th>
-                <th className="text-right px-3 py-2 text-gray-500 font-medium">契約数</th>
-                <th className="text-right px-3 py-2 text-gray-500 font-medium">月額合計</th>
+                <th className="text-left px-3 py-2 text-gray-500 font-medium">区分</th>
+                <th className="text-right px-3 py-2 text-gray-500 font-medium">社数</th>
+                <th className="text-right px-3 py-2 text-gray-500 font-medium">月額</th>
               </tr>
             </thead>
             <tbody>
-              {APP_LIST.map(app => (
+              {APP_LIST.map(app => appRevenue[app]?.count > 0 && (
                 <tr key={app} className="border-b border-gray-100">
-                  <td className="px-3 py-2 font-medium">{APP_LABELS[app] || app}</td>
-                  <td className="px-3 py-2 text-right">{appRevenue[app]?.count || 0}</td>
-                  <td className="px-3 py-2 text-right font-bold">¥{(appRevenue[app]?.revenue || 0).toLocaleString()}</td>
+                  <td className="px-3 py-2 font-medium">{APP_LABELS[app]}</td>
+                  <td className="px-3 py-2 text-right">{appRevenue[app].count}</td>
+                  <td className="px-3 py-2 text-right font-bold">¥{appRevenue[app].revenue.toLocaleString()}</td>
                 </tr>
               ))}
-              {appRevenue['maintenance'].count > 0 && (
+              {maintenanceAccounts.length > 0 && (
                 <tr className="border-b border-gray-100 bg-orange-50">
                   <td className="px-3 py-2 font-medium text-orange-700">管理費用</td>
-                  <td className="px-3 py-2 text-right text-orange-700">{appRevenue['maintenance'].count}</td>
-                  <td className="px-3 py-2 text-right font-bold text-orange-700">¥{appRevenue['maintenance'].revenue.toLocaleString()}</td>
+                  <td className="px-3 py-2 text-right text-orange-700">{maintenanceAccounts.length}</td>
+                  <td className="px-3 py-2 text-right font-bold text-orange-700">¥{maintenanceMrr.toLocaleString()}</td>
                 </tr>
               )}
               <tr className="bg-gray-100 font-bold">
-                <td className="px-3 py-2">合計（月額）</td>
-                <td className="px-3 py-2 text-right">{monthlyAccounts.length}</td>
+                <td className="px-3 py-2">MRR合計</td>
+                <td className="px-3 py-2 text-right">{paidMonthlyAccounts.length + maintenanceAccounts.length}</td>
                 <td className="px-3 py-2 text-right">¥{estimatedMrr.toLocaleString()}</td>
               </tr>
             </tbody>
@@ -774,67 +784,92 @@ function SalesManagementView({ color }: { color: string }) {
         </div>
       </div>
 
-      {/* 管理費用 */}
-      {maintenanceAccounts.length > 0 && (
+      {/* 月額顧客 */}
+      {paidMonthlyAccounts.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-orange-700 mb-2">管理費用（受託アプリ）</h4>
+          <h4 className="text-xs font-bold text-green-700 mb-2">月額契約</h4>
           <div className="space-y-1.5">
-            {maintenanceAccounts.map(a => (
-              <div key={a.id} className="bg-orange-50 rounded-lg border border-orange-200 p-2.5 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-gray-800">{a.clinic_name}</p>
-                  <p className="text-[10px] text-gray-400">{a.selected_apps?.join(', ')}</p>
+            {paidMonthlyAccounts.map(a => (
+              <div key={a.id} className="bg-white rounded-lg border border-green-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                    <p className="text-xs font-bold text-gray-800 truncate">{a.clinic_name}</p>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
+                    {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ')}
+                  </p>
                 </div>
-                <p className="text-xs font-bold text-orange-700">¥{getMonthlyAmount(a).toLocaleString()}/月</p>
+                <p className="text-xs font-bold text-green-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* 月額顧客一覧 */}
-      <div>
-        <h4 className="text-xs font-bold text-gray-700 mb-2">月額顧客</h4>
-        <div className="space-y-1.5">
-          {monthlyAccounts.map(a => {
-            const isMaintenance = !a.selected_apps?.some(app => APP_LIST.includes(app))
-            return (
-              <div key={a.id} className="bg-white rounded-lg border border-gray-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
+      {/* 管理費用 */}
+      {maintenanceAccounts.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-orange-700 mb-2">管理費用</h4>
+          <div className="space-y-1.5">
+            {maintenanceAccounts.map(a => (
+              <div key={a.id} className="bg-white rounded-lg border border-orange-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
                     <p className="text-xs font-bold text-gray-800 truncate">{a.clinic_name}</p>
-                    {a.is_monitor && <span className="text-[9px] px-1 py-0.5 bg-blue-50 text-blue-500 rounded">モニター</span>}
-                    {isMaintenance && <span className="text-[9px] px-1 py-0.5 bg-orange-50 text-orange-500 rounded">管理費</span>}
                   </div>
                   <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
                     {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ')}
                   </p>
                 </div>
-                <p className="text-xs font-bold text-gray-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
+                <p className="text-xs font-bold text-orange-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
               </div>
-            )
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 買い切り顧客 */}
-      {onetimeAccounts.length > 0 && (
+      {/* モニター */}
+      {monitorAccounts.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-gray-400 mb-2">買い切り</h4>
+          <h4 className="text-xs font-bold text-cyan-700 mb-2">モニター</h4>
           <div className="space-y-1.5">
-            {onetimeAccounts.map(a => (
-              <div key={a.id} className="bg-gray-50 rounded-lg border border-gray-100 p-2.5 flex items-center justify-between">
+            {monitorAccounts.map(a => (
+              <div key={a.id} className="bg-white rounded-lg border border-cyan-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
-                    <p className="text-xs font-medium text-gray-600 truncate">{a.clinic_name}</p>
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                    <p className="text-xs font-bold text-gray-800 truncate">{a.clinic_name}</p>
                   </div>
                   <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
                     {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ') || '—'}
                   </p>
                 </div>
-                <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">買い切り</span>
+                <span className="text-[10px] px-2 py-0.5 bg-cyan-50 text-cyan-600 rounded-full font-medium">モニター</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 買い切り */}
+      {onetimeAccounts.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-gray-500 mb-2">買い切り</h4>
+          <div className="space-y-1.5">
+            {onetimeAccounts.map(a => (
+              <div key={a.id} className="bg-white rounded-lg border border-gray-200 p-2.5 flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                    <p className="text-xs font-medium text-gray-700 truncate">{a.clinic_name}</p>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
+                    {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ') || '—'}
+                  </p>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-medium">買い切り</span>
               </div>
             ))}
           </div>
