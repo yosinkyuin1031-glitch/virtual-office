@@ -1209,6 +1209,7 @@ function HomeView() {
     { name: '検査シート', icon: '🔬', url: 'https://kensa-sheet-app.vercel.app', color: '#10B981' },
     { name: 'MEO勝ち上げくん', icon: '🏆', url: 'https://meo-kachiagekun.vercel.app', color: '#EF4444' },
     { name: 'プロジェクト管理', icon: '📋', url: 'https://project-hub-three-chi.vercel.app', color: '#6366F1' },
+    { name: 'アプリ管理', icon: '📊', url: 'https://clinic-saas-lp.vercel.app/admin', color: '#8B5CF6' },
   ]
 
   const totalEmployees = allEmployeesList.length
