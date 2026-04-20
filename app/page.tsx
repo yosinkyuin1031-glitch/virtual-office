@@ -616,11 +616,13 @@ interface SalesAccount {
 const APP_LABELS: Record<string, string> = {
   kensa: 'カラダマップ',
   customer: '顧客管理',
+  meo: 'MEO勝ち上げくん',
 }
 
 const APP_PRICES: Record<string, number> = {
   kensa: 3980,
   customer: 5500,
+  meo: 4980,
 }
 
 function getMonthlyAmount(a: SalesAccount): number {
@@ -668,7 +670,7 @@ function SalesManagementView({ color }: { color: string }) {
   const activeAccounts = accounts.filter(a => a.status === 'active')
   const pendingAccounts = accounts.filter(a => a.status === 'pending_payment')
   const cancelledAccounts = accounts.filter(a => a.status === 'cancelled')
-  const APP_LIST = ['kensa', 'customer']
+  const APP_LIST = ['kensa', 'customer', 'meo']
 
   // カテゴリ分類（is_monitorはclinicsテーブルまたはmetadataから取得）
   const isMonitor = (a: SalesAccount) => a.is_monitor || a.metadata?.is_monitor === true
@@ -830,26 +832,52 @@ function SalesManagementView({ color }: { color: string }) {
         </div>
       )}
 
-      {/* モニター */}
+      {/* モニター（アプリ別） */}
       {monitorAccounts.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-cyan-700 mb-2">モニター</h4>
-          <div className="space-y-1.5">
-            {monitorAccounts.map(a => (
-              <div key={a.id} className="bg-white rounded-lg border border-cyan-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
-                    <p className="text-xs font-bold text-gray-800 truncate">{a.clinic_name}</p>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
-                    {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ') || '—'}
-                  </p>
+          <h4 className="text-xs font-bold text-cyan-700 mb-2">モニター（{monitorAccounts.length}名）</h4>
+          {APP_LIST.map(app => {
+            const appMonitors = monitorAccounts.filter(a => (a.selected_apps || []).includes(app))
+            if (appMonitors.length === 0) return null
+            return (
+              <div key={app} className="mb-3">
+                <p className="text-[10px] font-bold text-cyan-600 mb-1 flex items-center gap-1">
+                  {APP_LABELS[app]} <span className="text-[9px] font-normal text-cyan-400">({appMonitors.length}名)</span>
+                </p>
+                <div className="space-y-1">
+                  {appMonitors.map(a => (
+                    <div key={a.id} className="bg-white rounded-lg border border-cyan-100 p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                        <p className="text-[11px] text-gray-700 truncate">{a.clinic_name}</p>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-cyan-50 text-cyan-500 rounded-full flex-shrink-0">モニター</span>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-cyan-50 text-cyan-600 rounded-full font-medium">モニター</span>
               </div>
-            ))}
-          </div>
+            )
+          })}
+          {(() => {
+            const otherMonitors = monitorAccounts.filter(a => !(a.selected_apps || []).some(app => APP_LIST.includes(app)))
+            if (otherMonitors.length === 0) return null
+            return (
+              <div className="mb-3">
+                <p className="text-[10px] font-bold text-cyan-600 mb-1">その他 ({otherMonitors.length}名)</p>
+                <div className="space-y-1">
+                  {otherMonitors.map(a => (
+                    <div key={a.id} className="bg-white rounded-lg border border-cyan-100 p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                        <p className="text-[11px] text-gray-700 truncate">{a.clinic_name}</p>
+                      </div>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-cyan-50 text-cyan-500 rounded-full flex-shrink-0">モニター</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
 
