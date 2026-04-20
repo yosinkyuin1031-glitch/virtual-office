@@ -198,7 +198,7 @@ export const departmentThemes: DepartmentTheme[] = [
       { name: 'ジン', role: 'BtoB営業・提案書', avatar: '🤝' },
     ],
     apps: [
-      { name: 'アプリ購入サイト', url: 'https://clinic-saas-lp.vercel.app', status: 'active' },
+      { name: 'アプリ管理ダッシュボード', url: 'https://clinic-saas-lp.vercel.app/admin', status: 'active' },
     ],
     currentTasks: [
       '4月FB投稿20本カレンダー実行・Zoom商談3件',

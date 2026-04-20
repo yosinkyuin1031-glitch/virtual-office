@@ -1362,7 +1362,7 @@ export const products: Product[] = [
   // ━━━ LP ━━━
   { id: 'lp-builder', name: 'LP作成ツール', url: 'https://lp-builder-weld.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [17, 14], description: '10テンプレ・3訴求軸・道のりセクション・ヒーロー7カスタム', icon: '🏗️', appType: 'generic' },
   { id: 'premium-lp', name: '高額メニューLP', url: 'https://premium-lp.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [19, 17], description: '睡眠/頭髪/ダイエット3コース', icon: '💎', appType: 'original' },
-  { id: 'clinic-saas-lp', name: 'BtoB販売LP（ClinicApps）', url: 'https://clinic-saas-lp.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [20, 17], description: '治療院DXツール販売・Stripe決済', icon: '🤝', appType: 'original' },
+  { id: 'clinic-saas-lp', name: 'アプリ管理ダッシュボード', url: 'https://clinic-saas-lp.vercel.app/admin', category: 'btob-saas', status: 'active', rank: 'A', assignedTo: [20, 6], description: '顧客管理・月次収益・Stripe連携・管理費用・決済待ち管理。/adminで管理画面', icon: '📊', appType: 'original' },
   { id: 'jiritsu-lp', name: '自律神経失調症LP', category: 'lp', status: 'active', rank: 'C', assignedTo: [17, 19], description: '自律神経失調症LP（URL未設定）', icon: '🧠', appType: 'original' },
   { id: 'symptom-lps', name: '症状別LP', url: 'https://symptom-lps.vercel.app', category: 'lp', status: 'active', rank: 'A', assignedTo: [17, 19], description: '脊柱管狭窄症・坐骨神経痛・腰痛・膝痛・睡眠改善', icon: '🩻', appType: 'original' },
   { id: 'kensa-lp', name: '検査アプリLP', category: 'lp', status: 'active', rank: 'C', assignedTo: [17, 19], description: '検査シートアプリ専用LP（URL未設定）', icon: '🔬', appType: 'original' },

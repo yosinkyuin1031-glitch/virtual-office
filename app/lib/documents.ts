@@ -514,28 +514,29 @@ https://hare-sinkyuin.com`
   {
     id: 'operations-app-sales-business-overview',
     title: 'アプリ販売事業 事業概要（大口アプリラボ・仮／自社プロダクト＋受託の整理）',
-    summary: 'BtoB SaaS販売事業の現状。個人事業・屋号未定（候補:大口アプリラボ）。有料1名＋モニター15名・月商82,500円。主力はカラダマップ＋Clinic Core＋ポイント管理（制作中）。年内50社・月商50万目標。',
+    summary: 'BtoB SaaS販売事業の現状。屋号:大口アプリラボ。有料3名（水田先生・中越先生・松本先生）＋モニター15名。主力はカラダマップ＋Clinic Core＋ポイント管理。年内50社・月商50万目標。',
     category: 'operations',
     business: 'app-biz' as const,
     status: 'final',
-    updatedAt: '2026-04-11',
+    updatedAt: '2026-04-20',
     contentHtml: `<h1>アプリ販売事業 事業概要</h1>
 
 <h2>事業形態・屋号</h2>
 <ul>
-<li><strong>正式屋号：未定</strong></li>
+<li><strong>正式屋号：大口アプリラボ</strong></li>
 <li><strong>現状：個人事業主（大口陽平 氏名義）で運営</strong></li>
-<li><strong>請求書：</strong>現状は屋号記載なし（個人名義）</li>
-<li><strong>候補屋号：「大口アプリラボ」</strong>（大口さんから提案）</li>
-<li><strong>法人化：</strong>アプリ事業単独ではなく、5事業全体を含めた法人化を令和8年度に向けて準備中</strong></li>
+<li><strong>法人化：</strong>5事業全体を含めた法人化を令和8年度に向けて準備中</li>
 </ul>
 
-<h2>現状の契約状況（2026-04-11時点）</h2>
+<h2>現状の契約状況（2026-04-20時点）</h2>
 
-<h3>有料契約</h3>
-<ul>
-<li><strong>1名</strong></li>
-</ul>
+<h3>有料契約（3名）</h3>
+<table>
+<tr><th>先生名</th><th>院名</th><th>アプリ</th><th>プラン</th><th>開始日</th></tr>
+<tr><td>水田順司先生</td><td>整体院 海沙</td><td>カラダマップ</td><td>月額3,980円</td><td>2026-04-02</td></tr>
+<tr><td>松本紗也加先生</td><td>えん鍼灸マッサージ治療院</td><td>カラダマップ Lite</td><td>買い切り</td><td>2026-04-18</td></tr>
+<tr><td>中越俊兵先生</td><td>OnlyOne整骨院</td><td>カラダマップ Lite</td><td>月額3,980円</td><td>2026-04-19</td></tr>
+</table>
 
 <h3>モニター（15名）</h3>
 <table>
@@ -547,8 +548,7 @@ https://hare-sinkyuin.com`
 
 <h2>現在の月商</h2>
 <ul>
-<li><strong>約82,500円/月</strong></li>
-<li>有料顧客：中松屋先生（Clinic Core モニター料金 3,980円/月）ほか</li>
+<li><strong>約90,000円/月</strong>（カラダマップ月額2名 + Clinic Core等）</li>
 </ul>
 
 <h2>主力プロダクト（優先順位）</h2>
@@ -569,7 +569,7 @@ https://hare-sinkyuin.com`
 <p>差分：約42万円／月</p>
 <p>主力3商品の想定月額で計算：</p>
 <ul>
-<li>カラダマップ想定 5,500円/月</li>
+<li>カラダマップ Lite 3,980円/月 | Pro 9,800円/月</li>
 <li>Clinic Core 想定 4,980円/月</li>
 <li>ポイント管理 想定（確定次第）</li>
 </ul>

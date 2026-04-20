@@ -594,6 +594,282 @@ function TasksView({ businessId, color }: { businessId: string; color: string })
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 販売管理ビュー
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+interface SalesAccount {
+  id: string
+  clinic_id: string
+  clinic_name: string
+  email: string
+  status: string
+  plan_type: string
+  selected_apps: string[]
+  created_at: string
+  cancelled_at?: string
+  owner_name?: string
+  custom_price?: number | null
+  is_monitor?: boolean
+  metadata?: Record<string, unknown>
+}
+
+const APP_LABELS: Record<string, string> = {
+  kensa: 'カラダマップ',
+  customer: '顧客管理',
+}
+
+const APP_PRICES: Record<string, number> = {
+  kensa: 3980,
+  customer: 5500,
+}
+
+function getMonthlyAmount(a: SalesAccount): number {
+  if (a.plan_type === 'onetime') return 0
+  if (a.custom_price != null) return a.custom_price
+  const metaOverride = a.metadata?.monthly_override as number | undefined
+  if (metaOverride != null) return metaOverride
+  return (a.selected_apps || []).reduce((sum, app) => sum + (APP_PRICES[app] || 0), 0)
+}
+
+function SalesManagementView({ color }: { color: string }) {
+  const [accounts, setAccounts] = useState<SalesAccount[]>([])
+  const [stripeData, setStripeData] = useState<{ stripe_mrr: number; subscription_count: number; monthly_charges: Record<string, { total: number; count: number }> } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch('/api/sales-admin')
+      .then(r => r.json())
+      .then(data => {
+        setAccounts(data.accounts || [])
+        setStripeData(data.stripe || null)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError('データ取得に失敗しました')
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full" />
+        <span className="ml-2 text-xs text-gray-400">販売データ読み込み中...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="text-center py-12 text-sm text-red-400">{error}</div>
+  }
+
+  const activeAccounts = accounts.filter(a => a.status === 'active')
+  const pendingAccounts = accounts.filter(a => a.status === 'pending_payment')
+  const cancelledAccounts = accounts.filter(a => a.status === 'cancelled')
+  const APP_LIST = ['kensa', 'customer']
+
+  // MRR計算
+  const estimatedMrr = activeAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
+
+  // アプリ別集計
+  const appRevenue: Record<string, { count: number; revenue: number }> = {}
+  APP_LIST.forEach(app => { appRevenue[app] = { count: 0, revenue: 0 } })
+  appRevenue['maintenance'] = { count: 0, revenue: 0 }
+
+  activeAccounts.forEach(a => {
+    const isMaintenanceAccount = !a.selected_apps?.some(app => APP_LIST.includes(app))
+    if (isMaintenanceAccount) {
+      appRevenue['maintenance'].count += 1
+      appRevenue['maintenance'].revenue += getMonthlyAmount(a)
+    } else {
+      (a.selected_apps || []).forEach(app => {
+        if (APP_LIST.includes(app) && appRevenue[app]) {
+          appRevenue[app].count += 1
+          appRevenue[app].revenue += APP_PRICES[app] || 0
+        }
+      })
+    }
+  })
+
+  // 管理費アカウント
+  const maintenanceAccounts = activeAccounts.filter(a => !a.selected_apps?.some(app => APP_LIST.includes(app)))
+
+  // 今月のStripe入金
+  const now = new Date()
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const currentMonthCharges = stripeData?.monthly_charges?.[currentMonthKey]
+
+  return (
+    <div className="space-y-4">
+      {/* KPIサマリー */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-3 text-center">
+          <p className="text-[10px] text-green-600 font-medium">契約中</p>
+          <p className="text-xl font-bold text-green-700">{activeAccounts.length}<span className="text-xs font-normal">件</span></p>
+        </div>
+        <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-3 text-center">
+          <p className="text-[10px] text-purple-600 font-medium">推定MRR</p>
+          <p className="text-xl font-bold text-purple-700">¥{estimatedMrr.toLocaleString()}</p>
+        </div>
+        <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-200 p-3 text-center">
+          <p className="text-[10px] text-amber-600 font-medium">決済待ち</p>
+          <p className="text-xl font-bold text-amber-700">{pendingAccounts.length}<span className="text-xs font-normal">件</span></p>
+        </div>
+        <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-xl border border-blue-200 p-3 text-center">
+          <p className="text-[10px] text-blue-600 font-medium">今月入金</p>
+          <p className="text-xl font-bold text-blue-700">¥{(currentMonthCharges?.total || 0).toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Stripe実績 */}
+      {stripeData && (
+        <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
+          <h4 className="text-xs font-bold text-purple-700 mb-2">Stripe実績</h4>
+          <div className="flex gap-4 text-[11px]">
+            <span className="text-purple-600">MRR: <strong>¥{stripeData.stripe_mrr.toLocaleString()}</strong></span>
+            <span className="text-purple-600">サブスク: <strong>{stripeData.subscription_count}件</strong></span>
+          </div>
+        </div>
+      )}
+
+      {/* アプリ別収益 */}
+      <div>
+        <h4 className="text-xs font-bold text-gray-700 mb-2">アプリ別月次収益</h4>
+        <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-100">
+                <th className="text-left px-3 py-2 text-gray-500 font-medium">アプリ</th>
+                <th className="text-right px-3 py-2 text-gray-500 font-medium">契約数</th>
+                <th className="text-right px-3 py-2 text-gray-500 font-medium">月額合計</th>
+              </tr>
+            </thead>
+            <tbody>
+              {APP_LIST.map(app => (
+                <tr key={app} className="border-b border-gray-100">
+                  <td className="px-3 py-2 font-medium">{APP_LABELS[app] || app}</td>
+                  <td className="px-3 py-2 text-right">{appRevenue[app]?.count || 0}</td>
+                  <td className="px-3 py-2 text-right font-bold">¥{(appRevenue[app]?.revenue || 0).toLocaleString()}</td>
+                </tr>
+              ))}
+              {appRevenue['maintenance'].count > 0 && (
+                <tr className="border-b border-gray-100 bg-orange-50">
+                  <td className="px-3 py-2 font-medium text-orange-700">管理費用</td>
+                  <td className="px-3 py-2 text-right text-orange-700">{appRevenue['maintenance'].count}</td>
+                  <td className="px-3 py-2 text-right font-bold text-orange-700">¥{appRevenue['maintenance'].revenue.toLocaleString()}</td>
+                </tr>
+              )}
+              <tr className="bg-gray-100 font-bold">
+                <td className="px-3 py-2">合計</td>
+                <td className="px-3 py-2 text-right">{activeAccounts.length}</td>
+                <td className="px-3 py-2 text-right">¥{estimatedMrr.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 管理費用 */}
+      {maintenanceAccounts.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-orange-700 mb-2">管理費用（受託アプリ）</h4>
+          <div className="space-y-1.5">
+            {maintenanceAccounts.map(a => (
+              <div key={a.id} className="bg-orange-50 rounded-lg border border-orange-200 p-2.5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-gray-800">{a.clinic_name}</p>
+                  <p className="text-[10px] text-gray-400">{a.selected_apps?.join(', ')}</p>
+                </div>
+                <p className="text-xs font-bold text-orange-700">¥{getMonthlyAmount(a).toLocaleString()}/月</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 顧客一覧 */}
+      <div>
+        <h4 className="text-xs font-bold text-gray-700 mb-2">顧客一覧</h4>
+        <div className="space-y-1.5">
+          {activeAccounts.map(a => {
+            const isOnetimeOrMaintenance = a.plan_type === 'onetime' || !a.selected_apps?.some(app => APP_LIST.includes(app))
+            return (
+              <div key={a.id} className="bg-white rounded-lg border border-gray-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                    <p className="text-xs font-bold text-gray-800 truncate">{a.clinic_name}</p>
+                    {a.is_monitor && <span className="text-[9px] px-1 py-0.5 bg-blue-50 text-blue-500 rounded">モニター</span>}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
+                    {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ')}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0 ml-2">
+                  {isOnetimeOrMaintenance ? (
+                    <p className="text-[10px] text-gray-400">{a.plan_type === 'onetime' ? '買い切り' : '管理費'}</p>
+                  ) : (
+                    <p className="text-xs font-bold text-gray-700">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 決済待ち */}
+      {pendingAccounts.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-amber-700 mb-2">決済待ち</h4>
+          <div className="space-y-1.5">
+            {pendingAccounts.map(a => (
+              <div key={a.id} className="bg-amber-50 rounded-lg border border-amber-200 p-2.5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-gray-800">{a.clinic_name}</p>
+                  <p className="text-[10px] text-gray-400">{a.email}</p>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">決済待ち</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 解約済み */}
+      {cancelledAccounts.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-gray-400 mb-2">解約済み（{cancelledAccounts.length}件）</h4>
+          <div className="space-y-1 opacity-50">
+            {cancelledAccounts.map(a => (
+              <div key={a.id} className="bg-gray-50 rounded-lg border border-gray-100 p-2 flex items-center justify-between">
+                <p className="text-[10px] text-gray-500 line-through">{a.clinic_name}</p>
+                <p className="text-[9px] text-gray-400">{a.cancelled_at ? new Date(a.cancelled_at).toLocaleDateString('ja-JP') : ''}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 管理画面リンク */}
+      <div className="text-center pt-2">
+        <a
+          href="https://clinic-saas-lp.vercel.app/admin"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white transition hover:opacity-90"
+          style={{ backgroundColor: color }}
+        >
+          管理画面で詳細を見る →
+        </a>
+      </div>
+    </div>
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 事業別ビュー
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -671,6 +947,7 @@ const businessConfig: Record<BusinessId, {
       { id: 'facebook', label: 'Facebook', icon: '📘', keywords: ['facebook', 'fb'] },
       { id: 'threads', label: 'Threads', icon: '🧵', keywords: ['threads'] },
       { id: 'oc', label: 'オープンチャット', icon: '💬', keywords: ['oc', 'オープンチャット'] },
+      { id: 'sales', label: '販売管理', icon: '📊', keywords: [] },
       { id: 'apps', label: 'アプリ', icon: '📱', keywords: [] },
     ],
   },
@@ -786,21 +1063,23 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
   const isAppsChannel = currentChannel.id === 'apps'
   const isContextChannel = currentChannel.id === 'context'
   const isTasksChannel = currentChannel.id === 'tasks'
-  const isSpecialChannel = isAppsChannel || isContextChannel || isTasksChannel
+  const isSalesChannel = currentChannel.id === 'sales'
+  const isSpecialChannel = isAppsChannel || isContextChannel || isTasksChannel || isSalesChannel
 
   // Filter docs for current channel
   const channelDocs = isSpecialChannel ? [] : bizDocuments.filter(d => matchChannel(d, currentChannel))
 
   // Docs that don't match any channel (show in first content channel as fallback)
-  const unmatchedDocs = bizDocuments.filter(d => !config.channels.some(c => c.id !== 'apps' && c.id !== 'context' && c.id !== 'tasks' && matchChannel(d, c)))
+  const specialChannelIds = ['apps', 'context', 'tasks', 'sales']
+  const unmatchedDocs = bizDocuments.filter(d => !config.channels.some(c => !specialChannelIds.includes(c.id) && matchChannel(d, c)))
 
   // Count per channel
   const channelCounts: Record<string, number> = {}
-  const firstContentChannel = config.channels.find(c => c.id !== 'apps' && c.id !== 'context' && c.id !== 'tasks')
+  const firstContentChannel = config.channels.find(c => !specialChannelIds.includes(c.id))
   config.channels.forEach(ch => {
     if (ch.id === 'apps') {
       channelCounts[ch.id] = bizProducts.length
-    } else if (ch.id === 'context' || ch.id === 'tasks') {
+    } else if (ch.id === 'context' || ch.id === 'tasks' || ch.id === 'sales') {
       // No count badge for these special tabs
       channelCounts[ch.id] = 0
     } else {
@@ -876,6 +1155,8 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
           <ContextKpiView businessId={businessId} color={config.color} />
         ) : isTasksChannel ? (
           <TasksView businessId={businessId} color={config.color} />
+        ) : isSalesChannel ? (
+          <SalesManagementView color={config.color} />
         ) : isAppsChannel ? (
           /* アプリ一覧 */
           bizProducts.length === 0 ? (
