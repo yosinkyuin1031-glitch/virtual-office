@@ -666,19 +666,21 @@ function SalesManagementView({ color }: { color: string }) {
   }
 
   const activeAccounts = accounts.filter(a => a.status === 'active')
+  const monthlyAccounts = activeAccounts.filter(a => a.plan_type !== 'onetime')
+  const onetimeAccounts = activeAccounts.filter(a => a.plan_type === 'onetime')
   const pendingAccounts = accounts.filter(a => a.status === 'pending_payment')
   const cancelledAccounts = accounts.filter(a => a.status === 'cancelled')
   const APP_LIST = ['kensa', 'customer']
 
-  // MRR計算
-  const estimatedMrr = activeAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
+  // MRR計算（月額のみ）
+  const estimatedMrr = monthlyAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
 
-  // アプリ別集計
+  // アプリ別集計（月額のみ）
   const appRevenue: Record<string, { count: number; revenue: number }> = {}
   APP_LIST.forEach(app => { appRevenue[app] = { count: 0, revenue: 0 } })
   appRevenue['maintenance'] = { count: 0, revenue: 0 }
 
-  activeAccounts.forEach(a => {
+  monthlyAccounts.forEach(a => {
     const isMaintenanceAccount = !a.selected_apps?.some(app => APP_LIST.includes(app))
     if (isMaintenanceAccount) {
       appRevenue['maintenance'].count += 1
@@ -687,14 +689,14 @@ function SalesManagementView({ color }: { color: string }) {
       (a.selected_apps || []).forEach(app => {
         if (APP_LIST.includes(app) && appRevenue[app]) {
           appRevenue[app].count += 1
-          appRevenue[app].revenue += APP_PRICES[app] || 0
+          appRevenue[app].revenue += getMonthlyAmount(a)
         }
       })
     }
   })
 
-  // 管理費アカウント
-  const maintenanceAccounts = activeAccounts.filter(a => !a.selected_apps?.some(app => APP_LIST.includes(app)))
+  // 管理費アカウント（月額のみ）
+  const maintenanceAccounts = monthlyAccounts.filter(a => !a.selected_apps?.some(app => APP_LIST.includes(app)))
 
   // 今月のStripe入金
   const now = new Date()
@@ -706,11 +708,12 @@ function SalesManagementView({ color }: { color: string }) {
       {/* KPIサマリー */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-3 text-center">
-          <p className="text-[10px] text-green-600 font-medium">契約中</p>
-          <p className="text-xl font-bold text-green-700">{activeAccounts.length}<span className="text-xs font-normal">件</span></p>
+          <p className="text-[10px] text-green-600 font-medium">月額契約</p>
+          <p className="text-xl font-bold text-green-700">{monthlyAccounts.length}<span className="text-xs font-normal">件</span></p>
+          {onetimeAccounts.length > 0 && <p className="text-[9px] text-gray-400 mt-0.5">+買い切り{onetimeAccounts.length}件</p>}
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-3 text-center">
-          <p className="text-[10px] text-purple-600 font-medium">推定MRR</p>
+          <p className="text-[10px] text-purple-600 font-medium">月額MRR</p>
           <p className="text-xl font-bold text-purple-700">¥{estimatedMrr.toLocaleString()}</p>
         </div>
         <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-200 p-3 text-center">
@@ -718,7 +721,7 @@ function SalesManagementView({ color }: { color: string }) {
           <p className="text-xl font-bold text-amber-700">{pendingAccounts.length}<span className="text-xs font-normal">件</span></p>
         </div>
         <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-xl border border-blue-200 p-3 text-center">
-          <p className="text-[10px] text-blue-600 font-medium">今月入金</p>
+          <p className="text-[10px] text-blue-600 font-medium">今月Stripe入金</p>
           <p className="text-xl font-bold text-blue-700">¥{(currentMonthCharges?.total || 0).toLocaleString()}</p>
         </div>
       </div>
@@ -762,8 +765,8 @@ function SalesManagementView({ color }: { color: string }) {
                 </tr>
               )}
               <tr className="bg-gray-100 font-bold">
-                <td className="px-3 py-2">合計</td>
-                <td className="px-3 py-2 text-right">{activeAccounts.length}</td>
+                <td className="px-3 py-2">合計（月額）</td>
+                <td className="px-3 py-2 text-right">{monthlyAccounts.length}</td>
                 <td className="px-3 py-2 text-right">¥{estimatedMrr.toLocaleString()}</td>
               </tr>
             </tbody>
@@ -789,12 +792,12 @@ function SalesManagementView({ color }: { color: string }) {
         </div>
       )}
 
-      {/* 顧客一覧 */}
+      {/* 月額顧客一覧 */}
       <div>
-        <h4 className="text-xs font-bold text-gray-700 mb-2">顧客一覧</h4>
+        <h4 className="text-xs font-bold text-gray-700 mb-2">月額顧客</h4>
         <div className="space-y-1.5">
-          {activeAccounts.map(a => {
-            const isOnetimeOrMaintenance = a.plan_type === 'onetime' || !a.selected_apps?.some(app => APP_LIST.includes(app))
+          {monthlyAccounts.map(a => {
+            const isMaintenance = !a.selected_apps?.some(app => APP_LIST.includes(app))
             return (
               <div key={a.id} className="bg-white rounded-lg border border-gray-200 p-2.5 flex items-center justify-between hover:shadow-sm transition">
                 <div className="min-w-0 flex-1">
@@ -802,23 +805,41 @@ function SalesManagementView({ color }: { color: string }) {
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
                     <p className="text-xs font-bold text-gray-800 truncate">{a.clinic_name}</p>
                     {a.is_monitor && <span className="text-[9px] px-1 py-0.5 bg-blue-50 text-blue-500 rounded">モニター</span>}
+                    {isMaintenance && <span className="text-[9px] px-1 py-0.5 bg-orange-50 text-orange-500 rounded">管理費</span>}
                   </div>
                   <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
                     {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ')}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  {isOnetimeOrMaintenance ? (
-                    <p className="text-[10px] text-gray-400">{a.plan_type === 'onetime' ? '買い切り' : '管理費'}</p>
-                  ) : (
-                    <p className="text-xs font-bold text-gray-700">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
-                  )}
-                </div>
+                <p className="text-xs font-bold text-gray-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
               </div>
             )
           })}
         </div>
       </div>
+
+      {/* 買い切り顧客 */}
+      {onetimeAccounts.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold text-gray-400 mb-2">買い切り</h4>
+          <div className="space-y-1.5">
+            {onetimeAccounts.map(a => (
+              <div key={a.id} className="bg-gray-50 rounded-lg border border-gray-100 p-2.5 flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                    <p className="text-xs font-medium text-gray-600 truncate">{a.clinic_name}</p>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5 pl-3">
+                    {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ') || '—'}
+                  </p>
+                </div>
+                <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">買い切り</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 決済待ち */}
       {pendingAccounts.length > 0 && (
