@@ -12516,4 +12516,66 @@ https://clinic-core-demo.vercel.app</p>
 `
   },
 
+  // ==========================================
+  // カラダマップ料金改定（2026-04-22・月額のみ・Lite/Pro統合）
+  // ==========================================
+  {
+    id: 'karadamap-pricing-2026-04-22',
+    title: 'カラダマップ料金改定（2026-04-22・月額のみ・Lite/Pro統合）',
+    summary: 'Lite/Pro 2プラン → 統合版1本に一本化。初期費用は全廃。通常プラン月額5,500円、モニター枠月額3,980円（Pro機能実装まで据え置き）。Pro機能実装後、モニターも5,500円へ自動移行。',
+    category: 'product' as const,
+    business: 'app-biz' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-22',
+    contentHtml: `<h2>カラダマップ料金改定（2026-04-22確定）</h2>
+
+<h3>プラン構成</h3>
+<table>
+<tr><th>枠</th><th>月額</th><th>初期費用</th><th>据え置き期間</th><th>契約期間</th></tr>
+<tr><td>通常プラン</td><td>5,500円</td><td>0円</td><td>—</td><td>最低6ヶ月</td></tr>
+<tr><td>モニター枠</td><td>3,980円</td><td>0円</td><td>Pro機能実装まで</td><td>最低6ヶ月</td></tr>
+</table>
+
+<h3>主な変更点</h3>
+<ul>
+<li><strong>Lite/Pro 2プラン構成を廃止</strong>、統合版1本に一本化</li>
+<li><strong>初期費用を全プラン廃止</strong>（通常プランの11,000円も撤廃）</li>
+<li>機能は両プラン同一。追加機能は完成次第、全員に自動開放</li>
+<li>Pro機能（重心検査・動作時痛チェック・施術プロトコル提案・経過グラフ・AI姿勢分析など）が1つ以上実装された時点で、モニター枠も月額5,500円（通常プラン統合）へ自動移行</li>
+</ul>
+
+<h3>既存モニターの扱い</h3>
+<ul>
+<li><strong>水田先生（整体院 海沙）</strong>：モニター月額3,980円据え置き、Pro実装時に5,500円へ移行予定</li>
+<li><strong>中越先生（OnlyOne整骨院）</strong>：モニター月額3,980円据え置き、Pro実装時に5,500円へ移行予定</li>
+<li><strong>松本先生（えん鍼灸マッサージ治療院）</strong>：買い切り契約のため、本料金改定の対象外</li>
+</ul>
+<p>Pro機能実装前に、既存モニター2名には事前アナウンスする。</p>
+
+<h3>Stripe決済（2026-04-22新規作成）</h3>
+<ul>
+<li>通常プラン Payment Link: https://buy.stripe.com/00w28qgZ60GIeIc0ut08g0k（月額5,500円）</li>
+<li>通常プラン Price ID: price_1TOrRiCORfdwaD8CcnvNFSgA</li>
+<li>モニター枠 Payment Link: https://buy.stripe.com/14AfZg6ks3SU9nS0ut08g02（月額3,980円・旧リンク継続）</li>
+</ul>
+
+<h3>販売導線URL</h3>
+<ul>
+<li>メインLP: https://karadamap-lp.vercel.app/</li>
+<li>ClinicApps内ページ: https://clinic-saas-lp.vercel.app/systems/kensa</li>
+<li>デモ（ログイン不要）: https://kensa-sheet-app.vercel.app/demo/</li>
+<li>本番アプリ: https://kensa-sheet-app.vercel.app</li>
+</ul>
+
+<h3>開発側の残タスク</h3>
+<ul>
+<li>Pro機能の実装（重心検査・動作時痛チェック・施術プロトコル提案・経過グラフ・AI姿勢分析）</li>
+<li>Pro機能実装完了時、既存モニターへのアナウンスと月額変更</li>
+<li>Stripe Webhook経由のアカウント自動発行フローの動作確認</li>
+<li>動画素材の短尺編集（LP埋め込み用）</li>
+<li>YouTube IDのLP差し込み（現状空）</li>
+</ul>
+`
+  },
+
 ]
