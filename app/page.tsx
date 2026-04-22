@@ -643,11 +643,8 @@ interface CatalogData {
 // カタログから動的にラベル/料金を引く（フォールバック付き）
 const FALLBACK_LABELS: Record<string, string> = {
   kensa: 'カラダマップ',
-  customer: '顧客管理',
+  customer: 'Clinic Core',
   meo: 'MEO勝ち上げくん',
-  reservation: '予約管理',
-  monshin: 'WEB問診',
-  sleep: '睡眠チェック',
   point: 'サブスク管理',
 }
 
@@ -657,7 +654,7 @@ function buildAppLabels(catalog?: CatalogData | null): Record<string, string> {
 }
 
 function buildAppPrices(catalog?: CatalogData | null): Record<string, number> {
-  if (!catalog) return { kensa: 5500, customer: 5500, meo: 3980, reservation: 3980, monshin: 2980, sleep: 2200, point: 4980 }
+  if (!catalog) return { kensa: 5500, customer: 5500, meo: 3980, point: 4980 }
   return Object.fromEntries(catalog.catalog.map(c => [c.id, c.configMonthly]))
 }
 
