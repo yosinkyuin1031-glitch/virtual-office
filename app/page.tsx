@@ -613,31 +613,69 @@ interface SalesAccount {
   metadata?: Record<string, unknown>
 }
 
-const APP_LABELS: Record<string, string> = {
+interface CatalogItem {
+  id: string
+  label: string
+  forSale: boolean
+  clinicFlag: string | null
+  configMonthly: number
+  configInitial: number
+  stripeMonthly: number | null
+  stripeInitial: number | null
+  stripeMaintenance: number | null
+  productId: string
+  monthlyPriceId: string
+  onetimePriceId: string | null
+  maintenancePriceId: string
+  priceMismatch: { monthly: boolean; initial: boolean }
+  loginUrl: string
+  emailConfigured: boolean
+}
+
+interface CatalogData {
+  catalog: CatalogItem[]
+  totalApps: number
+  forSaleCount: number
+  mismatchCount: number
+  generatedAt: string
+}
+
+// カタログから動的にラベル/料金を引く（フォールバック付き）
+const FALLBACK_LABELS: Record<string, string> = {
   kensa: 'カラダマップ',
   customer: '顧客管理',
   meo: 'MEO勝ち上げくん',
+  reservation: '予約管理',
+  monshin: 'WEB問診',
+  sleep: '睡眠チェック',
+  point: 'サブスク管理',
 }
 
-const APP_PRICES: Record<string, number> = {
-  kensa: 3980,
-  customer: 5500,
-  meo: 4980,
+function buildAppLabels(catalog?: CatalogData | null): Record<string, string> {
+  if (!catalog) return FALLBACK_LABELS
+  return Object.fromEntries(catalog.catalog.map(c => [c.id, c.label]))
 }
 
-function getMonthlyAmount(a: SalesAccount): number {
+function buildAppPrices(catalog?: CatalogData | null): Record<string, number> {
+  if (!catalog) return { kensa: 5500, customer: 5500, meo: 3980, reservation: 3980, monshin: 2980, sleep: 2200, point: 4980 }
+  return Object.fromEntries(catalog.catalog.map(c => [c.id, c.configMonthly]))
+}
+
+function getMonthlyAmount(a: SalesAccount, prices: Record<string, number>): number {
   if (a.plan_type === 'onetime') return 0
   if (a.custom_price != null) return a.custom_price
   const metaOverride = a.metadata?.monthly_override as number | undefined
   if (metaOverride != null) return metaOverride
-  return (a.selected_apps || []).reduce((sum, app) => sum + (APP_PRICES[app] || 0), 0)
+  return (a.selected_apps || []).reduce((sum, app) => sum + (prices[app] || 0), 0)
 }
 
 function SalesManagementView({ color }: { color: string }) {
   const [accounts, setAccounts] = useState<SalesAccount[]>([])
   const [stripeData, setStripeData] = useState<{ stripe_mrr: number; subscription_count: number; monthly_charges: Record<string, { total: number; count: number }> } | null>(null)
+  const [catalogData, setCatalogData] = useState<CatalogData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [tab, setTab] = useState<'catalog' | 'sales' | 'monthly'>('sales')
 
   useEffect(() => {
     setLoading(true)
@@ -646,6 +684,7 @@ function SalesManagementView({ color }: { color: string }) {
       .then(data => {
         setAccounts(data.accounts || [])
         setStripeData(data.stripe || null)
+        setCatalogData(data.catalog || null)
         setLoading(false)
       })
       .catch(() => {
@@ -667,10 +706,13 @@ function SalesManagementView({ color }: { color: string }) {
     return <div className="text-center py-12 text-sm text-red-400">{error}</div>
   }
 
+  const APP_LABELS = buildAppLabels(catalogData)
+  const APP_PRICES = buildAppPrices(catalogData)
+  const APP_LIST = catalogData?.catalog.map(c => c.id) || ['kensa', 'customer', 'meo', 'reservation', 'monshin', 'sleep', 'point']
+
   const activeAccounts = accounts.filter(a => a.status === 'active')
   const pendingAccounts = accounts.filter(a => a.status === 'pending_payment')
   const cancelledAccounts = accounts.filter(a => a.status === 'cancelled')
-  const APP_LIST = ['kensa', 'customer', 'meo']
 
   // カテゴリ分類（is_monitorはclinicsテーブルまたはmetadataから取得）
   const isMonitor = (a: SalesAccount) => a.is_monitor || a.metadata?.is_monitor === true
@@ -684,8 +726,8 @@ function SalesManagementView({ color }: { color: string }) {
   const onetimeAccounts = activeAccounts.filter(isOnetime)
 
   // MRR計算（有料月額 + 管理費のみ）
-  const paidMrr = paidMonthlyAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
-  const maintenanceMrr = maintenanceAccounts.reduce((sum, a) => sum + getMonthlyAmount(a), 0)
+  const paidMrr = paidMonthlyAccounts.reduce((sum, a) => sum + getMonthlyAmount(a, APP_PRICES), 0)
+  const maintenanceMrr = maintenanceAccounts.reduce((sum, a) => sum + getMonthlyAmount(a, APP_PRICES), 0)
   const estimatedMrr = paidMrr + maintenanceMrr
 
   // アプリ別集計（有料月額のみ）
@@ -701,6 +743,8 @@ function SalesManagementView({ color }: { color: string }) {
     })
   })
 
+  const mismatchCount = catalogData?.mismatchCount ?? 0
+
   // 今月のStripe入金
   const now = new Date()
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -708,6 +752,128 @@ function SalesManagementView({ color }: { color: string }) {
 
   return (
     <div className="space-y-4">
+      {/* 料金不整合アラート（どのタブでも表示） */}
+      {mismatchCount > 0 && (
+        <div className="bg-red-50 border border-red-300 rounded-lg p-3 flex items-start gap-2">
+          <span className="text-red-600 font-bold text-sm">⚠</span>
+          <div className="text-xs text-red-800">
+            <p className="font-bold">料金不整合が {mismatchCount} 件あります</p>
+            <p className="mt-0.5 text-red-600">app-config.tsとStripeの価格が一致していないアプリがあります。カタログタブで詳細を確認してください。</p>
+          </div>
+        </div>
+      )}
+
+      {/* タブ切替 */}
+      <div className="flex gap-1 border-b border-gray-200">
+        {[
+          { id: 'sales', label: '販売実績', icon: '💳' },
+          { id: 'catalog', label: 'アプリ管理', icon: '📱' },
+          { id: 'monthly', label: '月次集計', icon: '📈' },
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id as 'catalog' | 'sales' | 'monthly')}
+            className={`px-3 py-2 text-xs font-medium border-b-2 transition ${
+              tab === t.id
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* カタログタブ */}
+      {tab === 'catalog' && catalogData && (
+        <div className="space-y-3">
+          <div className="text-xs text-gray-500">
+            全{catalogData.totalApps}アプリ・販売中{catalogData.forSaleCount}・価格不整合{catalogData.mismatchCount}
+          </div>
+          <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-100">
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">アプリ</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium">Config月額</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium">Stripe月額</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium">Config初期</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium">Stripe初期</th>
+                  <th className="text-center px-3 py-2 text-gray-500 font-medium">販売</th>
+                  <th className="text-center px-3 py-2 text-gray-500 font-medium">整合</th>
+                </tr>
+              </thead>
+              <tbody>
+                {catalogData.catalog.map(c => {
+                  const hasMismatch = c.priceMismatch.monthly || c.priceMismatch.initial
+                  return (
+                    <tr key={c.id} className={`border-b border-gray-100 ${hasMismatch ? 'bg-red-50' : ''}`}>
+                      <td className="px-3 py-2 font-medium">{c.label}</td>
+                      <td className="px-3 py-2 text-right">¥{c.configMonthly.toLocaleString()}</td>
+                      <td className={`px-3 py-2 text-right ${c.priceMismatch.monthly ? 'text-red-600 font-bold' : ''}`}>
+                        {c.stripeMonthly !== null ? `¥${c.stripeMonthly.toLocaleString()}` : '-'}
+                      </td>
+                      <td className="px-3 py-2 text-right">¥{c.configInitial.toLocaleString()}</td>
+                      <td className={`px-3 py-2 text-right ${c.priceMismatch.initial ? 'text-red-600 font-bold' : ''}`}>
+                        {c.stripeInitial !== null ? `¥${c.stripeInitial.toLocaleString()}` : '-'}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] ${c.forSale ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {c.forSale ? '販売中' : '準備中'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        {hasMismatch ? (
+                          <span className="text-red-600 font-bold">✗</span>
+                        ) : (
+                          <span className="text-green-600 font-bold">✓</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-gray-400">
+            最終更新: {new Date(catalogData.generatedAt).toLocaleString('ja-JP')}
+          </p>
+        </div>
+      )}
+
+      {/* 月次集計タブ */}
+      {tab === 'monthly' && stripeData?.monthly_charges && (
+        <div className="space-y-3">
+          <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-100">
+                  <th className="text-left px-3 py-2 text-gray-500 font-medium">月</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium">入金合計</th>
+                  <th className="text-right px-3 py-2 text-gray-500 font-medium">件数</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(stripeData.monthly_charges)
+                  .sort(([a], [b]) => b.localeCompare(a))
+                  .slice(0, 12)
+                  .map(([month, info]) => (
+                    <tr key={month} className="border-b border-gray-100">
+                      <td className="px-3 py-2 font-medium">{month}</td>
+                      <td className="px-3 py-2 text-right font-bold">¥{info.total.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right">{info.count}件</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-gray-400">直近12ヶ月の実入金ベース（Stripe連携）</p>
+        </div>
+      )}
+
+      {/* 販売実績タブ（既存UIを全てここに閉じ込める） */}
+      {tab === 'sales' && (
+      <>
       {/* KPIサマリー */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-3 text-center">
@@ -802,7 +968,7 @@ function SalesManagementView({ color }: { color: string }) {
                     {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ')}
                   </p>
                 </div>
-                <p className="text-xs font-bold text-green-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
+                <p className="text-xs font-bold text-green-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a, APP_PRICES).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
               </div>
             ))}
           </div>
@@ -825,7 +991,7 @@ function SalesManagementView({ color }: { color: string }) {
                     {(a.selected_apps || []).map(app => APP_LABELS[app] || app).join(' / ')}
                   </p>
                 </div>
-                <p className="text-xs font-bold text-orange-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
+                <p className="text-xs font-bold text-orange-700 flex-shrink-0 ml-2">¥{getMonthlyAmount(a, APP_PRICES).toLocaleString()}<span className="text-[9px] font-normal text-gray-400">/月</span></p>
               </div>
             ))}
           </div>
@@ -949,6 +1115,8 @@ function SalesManagementView({ color }: { color: string }) {
           管理画面で詳細を見る →
         </a>
       </div>
+      </>
+      )}
     </div>
   )
 }
