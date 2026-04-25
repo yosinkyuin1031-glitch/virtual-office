@@ -69,22 +69,34 @@ export default function ThreadsPage() {
   const [editText, setEditText] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
 
-  // アカウント変更時: 直近の投稿がある日付を自動検出
+  // アカウント変更時: 「今日以降の未公開（pending/approved）の最古日」を初期値にする
+  // → ストックの先頭日が選ばれるので、7日モードで期間内が自然に揃う
   useEffect(() => {
-    async function findLatestDate() {
+    async function findInitialDate() {
+      const today = new Date().toISOString().split('T')[0]
       const { data } = await supabase
+        .from('threads_scheduled_posts')
+        .select('date')
+        .eq('account', account)
+        .in('status', ['pending', 'approved'])
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .limit(1)
+      if (data && data.length > 0) {
+        setDate(data[0].date)
+        return
+      }
+      // フォールバック: 投稿データの最新日
+      const { data: latest } = await supabase
         .from('threads_scheduled_posts')
         .select('date')
         .eq('account', account)
         .order('date', { ascending: false })
         .limit(1)
-      if (data && data.length > 0) {
-        setDate(data[0].date)
-      } else {
-        setDate(new Date().toISOString().split('T')[0])
-      }
+      if (latest && latest.length > 0) setDate(latest[0].date)
+      else setDate(today)
     }
-    findLatestDate()
+    findInitialDate()
   }, [account])
 
   const fetchPosts = useCallback(async () => {
