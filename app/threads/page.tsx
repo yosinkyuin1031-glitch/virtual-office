@@ -49,11 +49,20 @@ const STATUS_CONFIG: Record<Status, { label: string; bg: string; text: string }>
 }
 
 type FilterStatus = 'all' | Status
+type RangeMode = 'day' | 'week'
+
+function addDaysISO(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  dt.setUTCDate(dt.getUTCDate() + n)
+  return dt.toISOString().slice(0, 10)
+}
 
 export default function ThreadsPage() {
   const [posts, setPosts] = useState<ThreadPost[]>([])
   const [loading, setLoading] = useState(true)
   const [date, setDate] = useState('')
+  const [rangeMode, setRangeMode] = useState<RangeMode>('day')
   const [account, setAccount] = useState<Account>('seitai')
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -81,22 +90,30 @@ export default function ThreadsPage() {
   const fetchPosts = useCallback(async () => {
     if (!date) return
     setLoading(true)
-    const { data, error } = await supabase
+    let query = supabase
       .from('threads_scheduled_posts')
       .select('*')
-      .eq('date', date)
       .eq('account', account)
+
+    if (rangeMode === 'week') {
+      const endDate = addDaysISO(date, 6)
+      query = query.gte('date', date).lte('date', endDate)
+    } else {
+      query = query.eq('date', date)
+    }
+    const { data, error } = await query
+      .order('date', { ascending: true })
       .order('hour', { ascending: true })
 
     if (!error && data) {
       setPosts(data as ThreadPost[])
     }
     setLoading(false)
-  }, [date, account])
+  }, [date, account, rangeMode])
 
   useEffect(() => {
     if (date) fetchPosts()
-  }, [date, account, fetchPosts])
+  }, [date, account, rangeMode, fetchPosts])
 
   const filteredPosts = filter === 'all' ? posts : posts.filter(p => p.status === filter)
 
@@ -190,7 +207,7 @@ export default function ThreadsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center flex-wrap">
             {/* 日付ピッカー */}
             <input
               type="date"
@@ -198,6 +215,26 @@ export default function ThreadsPage() {
               onChange={e => setDate(e.target.value)}
               className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
             />
+
+            {/* 表示モード切替 */}
+            <div className="flex gap-1 rounded-lg bg-white/5 p-1">
+              {([
+                { key: 'day' as RangeMode, label: '1日' },
+                { key: 'week' as RangeMode, label: '7日' },
+              ]).map(item => (
+                <button
+                  key={item.key}
+                  onClick={() => setRangeMode(item.key)}
+                  className={`px-3 py-1 rounded text-xs transition-colors ${
+                    rangeMode === item.key
+                      ? 'bg-white/15 text-white'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
 
             {/* ステータスフィルター */}
             <div className="flex gap-2 flex-wrap">
@@ -228,11 +265,26 @@ export default function ThreadsPage() {
           <div className="text-center py-20 text-gray-500">読み込み中...</div>
         ) : filteredPosts.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            {posts.length === 0 ? 'この日の投稿データがありません' : 'フィルターに一致する投稿がありません'}
+            {posts.length === 0 ? 'この期間の投稿データがありません' : 'フィルターに一致する投稿がありません'}
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredPosts.map(post => {
+          <div className="space-y-6">
+            {Object.entries(
+              filteredPosts.reduce<Record<string, ThreadPost[]>>((acc, p) => {
+                (acc[p.date] = acc[p.date] || []).push(p)
+                return acc
+              }, {})
+            ).map(([groupDate, groupPosts]) => (
+              <div key={groupDate}>
+                {rangeMode === 'week' && (
+                  <div className="mb-2 flex items-center gap-2 text-sm text-gray-400 sticky top-0 bg-[#0a0a0a]/80 backdrop-blur py-1 z-10">
+                    <span className="text-white font-medium">{groupDate}</span>
+                    <span className="text-gray-500">·</span>
+                    <span>{groupPosts.length}件</span>
+                  </div>
+                )}
+                <div className="space-y-3">
+            {groupPosts.map(post => {
               const statusConf = STATUS_CONFIG[post.status]
               const isEditing = editingId === post.id
               const isPosted = post.status === 'posted'
@@ -336,6 +388,9 @@ export default function ThreadsPage() {
                 </div>
               )
             })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
