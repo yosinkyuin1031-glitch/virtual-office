@@ -2,12 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 type Status = 'pending' | 'approved' | 'posted' | 'skipped'
 
@@ -73,28 +67,13 @@ export default function ThreadsPage() {
   // → ストックの先頭日が選ばれるので、7日モードで期間内が自然に揃う
   useEffect(() => {
     async function findInitialDate() {
-      const today = new Date().toISOString().split('T')[0]
-      const { data } = await supabase
-        .from('threads_scheduled_posts')
-        .select('date')
-        .eq('account', account)
-        .in('status', ['pending', 'approved'])
-        .gte('date', today)
-        .order('date', { ascending: true })
-        .limit(1)
-      if (data && data.length > 0) {
-        setDate(data[0].date)
-        return
+      try {
+        const res = await fetch(`/api/threads-posts?account=${account}&type=initial-date`)
+        const data = await res.json()
+        if (data?.date) setDate(data.date)
+      } catch {
+        setDate(new Date().toISOString().split('T')[0])
       }
-      // フォールバック: 投稿データの最新日
-      const { data: latest } = await supabase
-        .from('threads_scheduled_posts')
-        .select('date')
-        .eq('account', account)
-        .order('date', { ascending: false })
-        .limit(1)
-      if (latest && latest.length > 0) setDate(latest[0].date)
-      else setDate(today)
     }
     findInitialDate()
   }, [account])
@@ -102,23 +81,12 @@ export default function ThreadsPage() {
   const fetchPosts = useCallback(async () => {
     if (!date) return
     setLoading(true)
-    let query = supabase
-      .from('threads_scheduled_posts')
-      .select('*')
-      .eq('account', account)
-
-    if (rangeMode === 'week') {
-      const endDate = addDaysISO(date, 6)
-      query = query.gte('date', date).lte('date', endDate)
-    } else {
-      query = query.eq('date', date)
-    }
-    const { data, error } = await query
-      .order('date', { ascending: true })
-      .order('hour', { ascending: true })
-
-    if (!error && data) {
-      setPosts(data as ThreadPost[])
+    try {
+      const res = await fetch(`/api/threads-posts?account=${account}&date=${date}&range=${rangeMode}`)
+      const json = await res.json()
+      if (json?.posts) setPosts(json.posts as ThreadPost[])
+    } catch {
+      // noop
     }
     setLoading(false)
   }, [date, account, rangeMode])
@@ -138,12 +106,12 @@ export default function ThreadsPage() {
 
   const handleSave = async (id: string) => {
     setSaving(id)
-    const { error } = await supabase
-      .from('threads_scheduled_posts')
-      .update({ text: editText, updated_at: new Date().toISOString() })
-      .eq('id', id)
-
-    if (!error) {
+    const res = await fetch('/api/threads-posts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, text: editText }),
+    })
+    if (res.ok) {
       setPosts(prev => prev.map(p => p.id === id ? { ...p, text: editText, updated_at: new Date().toISOString() } : p))
       setEditingId(null)
     }
@@ -152,12 +120,12 @@ export default function ThreadsPage() {
 
   const handleStatusUpdate = async (id: string, status: Status) => {
     setSaving(id)
-    const { error } = await supabase
-      .from('threads_scheduled_posts')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id)
-
-    if (!error) {
+    const res = await fetch('/api/threads-posts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    })
+    if (res.ok) {
       setPosts(prev => prev.map(p => p.id === id ? { ...p, status, updated_at: new Date().toISOString() } : p))
     }
     setSaving(null)
@@ -168,12 +136,12 @@ export default function ThreadsPage() {
     if (pendingIds.length === 0) return
 
     setSaving('all')
-    const { error } = await supabase
-      .from('threads_scheduled_posts')
-      .update({ status: 'approved', updated_at: new Date().toISOString() })
-      .in('id', pendingIds)
-
-    if (!error) {
+    const res = await fetch('/api/threads-posts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: pendingIds, status: 'approved' }),
+    })
+    if (res.ok) {
       setPosts(prev => prev.map(p => pendingIds.includes(p.id) ? { ...p, status: 'approved' as Status, updated_at: new Date().toISOString() } : p))
     }
     setSaving(null)
