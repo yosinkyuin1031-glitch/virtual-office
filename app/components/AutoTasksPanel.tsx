@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { BUSINESS_UNITS, classifyTaskByUnit } from '../lib/business-units'
 
 interface Task {
   id: string
@@ -49,26 +48,11 @@ const departmentColors: Record<string, string> = {
   'カスタマーサクセス部': '#26C6DA',
 }
 
-const businessColors: Record<string, string> = {
-  '経営本社': '#FFD700',
-  '大口神経整体院': '#1565C0',
-  '晴陽鍼灸院': '#2E7D32',
-  '治療機器販売': '#FF6F00',
-  'アプリ事業': '#263238',
-  '治療家コミュニティ・コンサル': '#9C27B0',
-}
-
-const businessOrder = BUSINESS_UNITS.map(u => u.name)
-const businessEmoji: Record<string, string> = Object.fromEntries(
-  BUSINESS_UNITS.map(u => [u.name, u.emoji])
-)
-
 export default function AutoTasksPanel() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [filter, setFilter] = useState<string>('active')
-  const [groupBy, setGroupBy] = useState<'business' | 'department'>('business')
   const [toast, setToast] = useState('')
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
@@ -226,23 +210,16 @@ export default function AutoTasksPanel() {
     })
   }
 
-  // 部署または事業ごとにグループ化
+  // 部署ごとにグループ化
   const grouped = tasks.reduce<Record<string, Task[]>>((acc, task) => {
-    const key = groupBy === 'business'
-      ? classifyTaskByUnit(task.department, task.title)
-      : task.department
-    if (!acc[key]) acc[key] = []
-    acc[key].push(task)
+    const dept = task.department
+    if (!acc[dept]) acc[dept] = []
+    acc[dept].push(task)
     return acc
   }, {})
 
-  // 事業別はBUSINESS_UNITS定義順、部署別はhigh件数順
+  // highが多い部署を先に
   const sortedDepts = Object.keys(grouped).sort((a, b) => {
-    if (groupBy === 'business') {
-      const ai = businessOrder.indexOf(a)
-      const bi = businessOrder.indexOf(b)
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
-    }
     const aHigh = grouped[a].filter(t => t.priority === 'high').length
     const bHigh = grouped[b].filter(t => t.priority === 'high').length
     return bHigh - aHigh
@@ -359,29 +336,6 @@ export default function AutoTasksPanel() {
           </div>
         )}
 
-        {/* グループ切替 */}
-        <div className="flex gap-2 mb-2">
-          {[
-            { key: 'business', label: '5事業別' },
-            { key: 'department', label: '部署別' },
-          ].map(g => (
-            <button
-              key={g.key}
-              onClick={() => {
-                setGroupBy(g.key as 'business' | 'department')
-                setExpandedDepts(new Set())
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs transition ${
-                groupBy === g.key
-                  ? 'bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold'
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {g.label}
-            </button>
-          ))}
-        </div>
-
         {/* フィルター */}
         <div className="flex gap-2 mb-4">
           {[
@@ -418,15 +372,10 @@ export default function AutoTasksPanel() {
           <div className="space-y-3">
             {sortedDepts.map(dept => {
               const deptTasks = grouped[dept]
-              const deptColor = groupBy === 'business'
-                ? (businessColors[dept] || '#666')
-                : (departmentColors[dept] || '#666')
+              const deptColor = departmentColors[dept] || '#666'
               const isExpanded = expandedDepts.has(dept)
               const deptHigh = deptTasks.filter(t => t.priority === 'high').length
               const deptCompleted = deptTasks.filter(t => t.status === 'completed').length
-              const deptLabel = groupBy === 'business' && businessEmoji[dept]
-                ? `${businessEmoji[dept]} ${dept}`
-                : dept
 
               return (
                 <div key={dept} className="border border-gray-100 rounded-xl overflow-hidden">
@@ -439,7 +388,7 @@ export default function AutoTasksPanel() {
                       className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: deptColor }}
                     />
-                    <span className="text-sm font-bold text-gray-700 flex-1">{deptLabel}</span>
+                    <span className="text-sm font-bold text-gray-700 flex-1">{dept}</span>
                     <span className="text-[11px] text-gray-400">
                       {deptTasks.length}件
                       {deptHigh > 0 && <span className="text-red-500 ml-1">({deptHigh} 優先)</span>}
@@ -497,14 +446,6 @@ export default function AutoTasksPanel() {
                                   >
                                     {pri.label}
                                   </button>
-                                  {groupBy === 'business' && task.department && (
-                                    <span
-                                      className="text-[10px] px-1.5 py-0.5 rounded text-white"
-                                      style={{ backgroundColor: departmentColors[task.department] || '#9CA3AF' }}
-                                    >
-                                      {task.department}
-                                    </span>
-                                  )}
                                   {task.employee_name && (
                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
                                       {task.employee_name}

@@ -6,6 +6,7 @@ import { departments, allEmployeesList, products, productCategories } from './li
 import type { Employee, Product } from './lib/data'
 import { documents } from './lib/documents'
 import type { Document } from './lib/documents'
+import { classifyTaskByUnit } from './lib/business-units'
 import PixelCharacter from './components/PixelCharacter'
 import ChatModal from './components/ChatModal'
 
@@ -214,12 +215,14 @@ const contextFilterMap: Record<string, { categories: string[]; contentKeywords: 
   device: { categories: [], contentKeywords: ['機器', 'BR', '顕微鏡'] },
 }
 
-const taskDeptMap: Record<string, string[]> = {
-  seitai: ['整体'],
-  houmon: ['訪問'],
-  'app-biz': ['AI', 'BtoB', 'プロダクト', 'カスタマー'],
-  consulting: ['コンサル'],
-  device: ['機器'],
+// businessId（5事業タブ） → BUSINESS_UNITSのname のマッピング
+// 「経営本社」分類のタスクはアプリ事業タブに含めて見えなくならないようにする
+const businessIdToUnitNames: Record<string, string[]> = {
+  seitai: ['大口神経整体院'],
+  houmon: ['晴陽鍼灸院'],
+  'app-biz': ['アプリ事業', '経営本社'],
+  consulting: ['治療家コミュニティ・コンサル'],
+  device: ['治療機器販売'],
 }
 
 function filterGoals(goals: Goal[], businessId: string): Goal[] {
@@ -245,11 +248,12 @@ function filterContexts(contexts: ContextItem[], businessId: string): ContextIte
 }
 
 function filterTasks(tasks: Task[], businessId: string): Task[] {
-  const deptKeywords = taskDeptMap[businessId]
-  if (!deptKeywords) return []
-  return tasks.filter(t =>
-    deptKeywords.some(kw => (t.department || '').includes(kw))
-  )
+  const unitNames = businessIdToUnitNames[businessId]
+  if (!unitNames) return []
+  return tasks.filter(t => {
+    const unit = classifyTaskByUnit(t.department || '', t.title || '')
+    return unitNames.includes(unit)
+  })
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
