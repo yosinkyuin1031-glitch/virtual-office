@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 type Status = 'pending' | 'approved' | 'posted' | 'skipped'
 
-type Account = 'seitai' | 'houmon'
+type Account = 'seitai' | 'houmon' | 'btob'
 
 interface ThreadPost {
   id: string
@@ -25,6 +25,7 @@ interface ThreadPost {
 const ACCOUNT_CONFIG: Record<Account, { label: string; color: string }> = {
   seitai: { label: '整体院', color: 'bg-blue-600' },
   houmon: { label: '訪問鍼灸', color: 'bg-orange-600' },
+  btob:   { label: 'アプリ事業', color: 'bg-emerald-600' },
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -33,6 +34,11 @@ const CATEGORY_MAP: Record<string, string> = {
   mechanism: '原因・メカニズム',
   episode: '患者エピソード',
   thought: '院の想い',
+  app: 'アプリの話',
+  clinic_management: '院経営',
+  story: 'ストーリー',
+  tips: '現場Tips',
+  dev: '開発の裏側',
 }
 
 const STATUS_CONFIG: Record<Status, { label: string; bg: string; text: string }> = {
