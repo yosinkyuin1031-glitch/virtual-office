@@ -14,6 +14,55 @@ export interface Document {
 // contentHtmlはMarkdownから手動変換。新しいドキュメントが作成されたらここに追加する。
 export const documents: Document[] = [
   // ==========================================
+  // 大口アプリラボ 公式Instagramプロフィール（2026-04-29）
+  // ==========================================
+  {
+    id: 'instagram-app-lab-profile',
+    title: 'Instagramプロフィール：大口アプリラボ 公式',
+    summary: 'アプリ事業（大口アプリラボ）公式Instagramアカウント開設用のプロフィール文。名前30字／自己紹介150字以内／リンク1本の制約に合わせて作成',
+    category: 'sns' as const,
+    business: 'app-biz' as const,
+    channel: 'instagram' as const,
+    status: 'draft' as const,
+    updatedAt: '2026-04-29',
+    contentHtml: `<strong>用途</strong><br/>
+アプリ事業（大口アプリラボ）公式Instagramアカウント開設時のプロフィール設定文。<br/>
+インスタの仕様：名前30字／ユーザーネーム30字／自己紹介150字／外部リンク1本（または複数リンク機能）。<br/><br/>
+
+<strong>ユーザーネーム候補</strong><br/>
+oguchi_app_lab<br/>
+oguchi.app.lab<br/>
+app_lab_oguchi<br/><br/>
+
+<strong>名前（表示名・30字以内）</strong><br/>
+大口アプリラボ｜治療家がつくるアプリ<br/>
+※20字。検索ヒット用に「治療家」「アプリ」を残す。<br/><br/>
+
+<strong>自己紹介・BIO（150字以内）</strong><br/>
+治療家がつくる、治療院向けアプリ。<br/>
+カラダマップ／Clinic Core／ポイント管理ほか。<br/>
+現場で使えるかだけを基準に開発しています。<br/>
+大阪・大口神経整体院／晴陽鍼灸院 運営。<br/>
+お問い合わせ・デモは公式LINEから↓<br/>
+※約110字。改行込みで読みやすさを優先。<br/><br/>
+
+<strong>外部リンク（1本／優先順）</strong><br/>
+1. 公式LINE（受注・デモ予約の集約先）<br/>
+2. アプリ販売サイト（カラダマップ／Clinic Core／ポイント管理を一覧で見せる場合）<br/>
+3. リンク集ページ（複数アプリLP・LINE・YouTubeをまとめる場合）<br/><br/>
+
+<strong>運用ルール</strong><br/>
+ハッシュタグ・絵文字・装飾記号は使わない。<br/>
+「治療家のアプリ作りと言えば大口」のポジションを自然に積む。営業色は出さない。<br/>
+発信内容は「治療家がアプリを作っている日常」を中心に。<br/><br/>
+
+<strong>差し替えバリエーション（短め版・90字）</strong><br/>
+治療家がつくる、治療院向けアプリ。<br/>
+現場で使えるかを基準に開発しています。<br/>
+カラダマップ・Clinic Core・ポイント管理ほか。<br/>
+お問い合わせは公式LINEへ↓`,
+  },
+  // ==========================================
   // Threads 固定投稿（2026-04-15）
   // ==========================================
   {
