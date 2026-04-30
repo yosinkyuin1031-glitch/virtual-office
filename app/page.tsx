@@ -2118,6 +2118,16 @@ export default function VirtualOffice() {
               <span>5年ビジョン</span>
             </Link>
 
+            {/* 患者の声リンク */}
+            <Link
+              href="/voices"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">🎙️</span>
+              <span>患者の声DB</span>
+            </Link>
+
             {/* 資料リンク */}
             <Link
               href="/documents"
