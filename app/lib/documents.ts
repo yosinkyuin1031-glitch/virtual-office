@@ -14,6 +14,81 @@ export interface Document {
 // contentHtmlはMarkdownから手動変換。新しいドキュメントが作成されたらここに追加する。
 export const documents: Document[] = [
   // ==========================================
+  // 2026-04-30 深夜：5事業ナレッジ大量整備（45ファイル）
+  // ==========================================
+  {
+    id: 'knowledge-seitai-yougo-200',
+    title: '整体院 専門用語200個（保存版）',
+    summary: '症状95＋施術技法30＋解剖学30＋神経学25＋機器検査経営20で200用語。投稿生成・施術記録・コンサル添削の基盤として活用',
+    category: 'product' as const,
+    business: 'seitai' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>SNS投稿・GBP投稿・SEO記事・施術記録・コンサル添削・スタッフ教育のすべての基盤。AIに「この用語リストを参照して」と渡すだけで出力精度が一気に上がる。<br/><br/><strong>保管場所</strong><br/><code>~/事業/ナレッジ/01_整体院/専門用語/</code> 配下に8ファイル<br/><br/><strong>カテゴリ別件数</strong><br/>症状（首肩）11／症状（肘手首背中腰）21／症状（股膝足スポーツ）35／症状（自律神経内科姿勢）28／施術技法30／解剖学30／神経学25／機器・検査・経営20<br/><br/><strong>使い方</strong><br/>1. 投稿を作る時、AIに「この症状の専門用語ファイルを参照して」と指示<br/>2. 新人スタッフ教育のテキストとして<br/>3. 患者さんへの説明資料の語彙統一`
+  },
+  {
+    id: 'knowledge-seitai-toukou-30',
+    title: '整体院 投稿の型30個（A〜G）',
+    summary: '症状解説5/ビフォーアフター4/院紹介5/セルフケア5/告知4/教育4/共感気づき3の合計30型。AIにこの型を渡せば瞬時に投稿が出る',
+    category: 'sns' as const,
+    business: 'seitai' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>Threads・Instagram・FB・GBP・ブログのすべての投稿で再利用できる「型」のテンプレ集。AIに「この型で書いて」と渡せば瞬時に投稿クオリティが揃う。<br/><br/><strong>保管場所</strong><br/><code>~/事業/ナレッジ/01_整体院/投稿の型/</code> に7カテゴリファイル<br/><br/><strong>カテゴリ一覧</strong><br/>A. 症状解説型（5型）／B. ビフォーアフター型（4型）／C. 院紹介型（5型）／D. セルフケア型（5型）／E. 告知型（4型）／F. 教育型（4型）／G. 共感気づき型（3型）<br/><br/><strong>各型の構成要素</strong><br/>冒頭フック → 展開 → 締め＋CTA。プレースホルダ {症状名} {改善期間} 等で汎用化済み。<br/><br/><strong>運用のコツ</strong><br/>A〜Dを週1回ずつローテすれば月4投稿が永遠に続く。EFGはイベント投稿用。`
+  },
+  {
+    id: 'knowledge-seitai-gbp-50',
+    title: '整体院 GBP例文50本（10ネタ×5パターン）',
+    summary: '人気メニュー/お客様の声/新メニュー/施術の流れ/FAQ/スタッフ紹介/季節健康/セルフケア/アクセス/院の理念。週2投稿×5週ローテで永遠に枯れない',
+    category: 'meo' as const,
+    business: 'seitai' as const,
+    channel: 'gbp' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>Googleビジネスプロフィール（GBP）週2投稿の完全ストック。10ネタ × 各5パターン = 50本。これ1巡すれば25週（約半年）枯渇しない。<br/><br/><strong>保管場所</strong><br/><code>~/事業/ナレッジ/01_整体院/GBP例文集/</code> に10ファイル<br/><br/><strong>10ネタ</strong><br/>①人気メニュー紹介／②お客様の声（BA）／③新メニュー告知／④施術の流れ説明／⑤FAQ回答／⑥スタッフ紹介／⑦季節健康アドバイス／⑧セルフケア紹介／⑨アクセス情報／⑩院の理念<br/><br/><strong>5週ローテ表（週2投稿）</strong><br/>第1週：①＋⑦／第2週：②＋⑧／第3週：③or⑤＋⑨／第4週：④＋⑩／第5週：⑥＋⑦別テーマ<br/><br/><strong>仕様</strong><br/>150〜300文字／薬機法・景表法準拠／地域KW（住吉区・長居・帝塚山）自然挿入／CTA必須`
+  },
+  {
+    id: 'knowledge-seitai-faq-30',
+    title: '整体院 FAQ完全版30問',
+    summary: '料金/予約/施術/効果/通院/安全/アクセスの7カテゴリ計30問。HP・GBP・LINE・チラシ・コンサル添削で流用可',
+    category: 'product' as const,
+    business: 'seitai' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>ホームページ・GBPコメント返信・LINE自動応答・チラシQ&A・コンサル添削の答えとして即流用可能。薬機法・景表法対応済み。<br/><br/><strong>保管場所</strong><br/><code>~/事業/ナレッジ/01_整体院/FAQ/FAQ_30問完全版.md</code><br/><br/><strong>7カテゴリ × 各5問</strong><br/>料金・予約系（Q1〜5：料金／保険／予約／キャンセル／支払い）<br/>施術内容系（Q6〜10：ボキボキ／痛み／対応症状／神経整体／鍼）<br/>効果・期間系（Q11〜15：何回／速度／頻度／完治／再発）<br/>通院・継続系（Q16〜20：服装／食事／子連れ／妊娠／高齢者）<br/>副作用・安全系（Q21〜25：好転反応／病院併用／服薬／持病／医師判断）<br/>アクセス系（Q26〜30：営業時間／駐車場／駅／当日／オンライン）<br/><br/><strong>運用のコツ</strong><br/>1. HPに掲載（SEO効果）／2. GBPのQ&Aに移植（MEO）／3. LINE自動応答化／4. 新人教育資料`
+  },
+  {
+    id: 'knowledge-app-fb-30',
+    title: 'アプリ販売 FB投稿例文集30本（6アプリ×5本）',
+    summary: 'ClinicCore/カラダマップ/MEO/トレクリ/予約管理/WEB問診の6アプリ各5本。発信ルール準拠で30週分のストック',
+    category: 'btob' as const,
+    business: 'app-biz' as const,
+    channel: 'facebook' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>アプリ販売BtoBの大口陽平本人発信FB投稿の完全ストック。週1ペースで投稿していけば30週（約7ヶ月）分。<br/><br/><strong>保管場所</strong><br/><code>~/事業/ナレッジ/03_アプリ販売/FB投稿例文集/</code> に6ファイル<br/><br/><strong>準拠している発信ルール</strong><br/>「AI」NG／売り込まない／大口陽平のストーリー軸／機能ではなく「なぜ作ったか」／数字非公開／治療家目線<br/><br/><strong>各アプリ5本の型構成</strong><br/>P1：「なぜ作ったか」型／P2：「自院で使ってみた」型／P3：「業界の課題を切る」型／P4：「使ってる先生の声」型／P5：「ストーリー型」<br/><br/><strong>対象6アプリ</strong><br/>Clinic Core／カラダマップ／MEO勝ち上げくん／トレクリ／予約管理／WEB問診<br/><br/><strong>運用のコツ</strong><br/>週1投稿×6週で1巡。30本ストックで投稿ネタに困らない。`
+  },
+  {
+    id: 'knowledge-prompt-10principles',
+    title: '【配布特典】治療家のためのプロンプト10原則',
+    summary: '秘密基地コンサル受講生向けA4 1枚PDF。憑依/ターゲット/冒頭フック/数値/空気感/コメント誘導/スマホ最適化/ドラフト比較/AI臭カット/品質基準',
+    category: 'btob' as const,
+    business: 'consulting' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>治療家の秘密基地コンサル受講生（11,000円/月）への配布特典。「AIをすぐ使いこなせる」即効性のあるプロンプト早見表。<br/><br/><strong>保管場所</strong><br/><code>~/事業/BtoB戦略/秘密基地_配布特典/プロンプト10原則.html</code>（⌘+P→PDF保存）<br/><br/><strong>10原則</strong><br/>①憑依：「あなたは◯◯な発信者」役割固定／②ターゲット固定：読者像1人／③冒頭フック量産：逆張り・驚き・否定3パターン／④数値指定：エピソード1＋数字2＋体験ベース一言／⑤空気感指定：トーン文字化／⑥コメント誘導：本文で完結させない／⑦スマホ最適化：1行20文字／⑧ドラフト比較：3パターン／⑨AI臭カット：AI特有の言い回し指摘／⑩品質基準宣言：基準明示<br/><br/><strong>使う順番のコツ</strong><br/>①②⑤でトーンと読者像固定 → ③で冒頭量産 → ④で具体性追加 → ⑦⑧で仕上げ → ⑨⑩でクオリティチェック<br/><br/><strong>関連配布特典</strong><br/>5ステップ導線図とセット運用`
+  },
+  {
+    id: 'knowledge-5step-funnel',
+    title: '【配布特典】売れる導線5ステップ図',
+    summary: '投稿→無料配布→LINE→教育→販売の図解PDF。フォロワー少なくても仕組みで回す思想を1枚で',
+    category: 'btob' as const,
+    business: 'consulting' as const,
+    status: 'final' as const,
+    updatedAt: '2026-04-30',
+    contentHtml: `<strong>用途</strong><br/>秘密基地コンサル受講生への配布特典。「投稿頑張ってるのに売れない」治療家に、導線設計の全体像を1枚で示す。<br/><br/><strong>保管場所</strong><br/><code>~/事業/BtoB戦略/秘密基地_配布特典/5ステップ導線図.html</code>（⌘+P→PDF保存）<br/><br/><strong>5ステップ</strong><br/>STEP1：投稿（興味を集める）<br/>STEP2：無料配布（特典で接点）<br/>STEP3：LINE/オプチャ（濃い客集約）<br/>STEP4：教育（信頼化）<br/>STEP5：販売（着地）<br/><br/><strong>各ステップの実装具体例</strong><br/>①Threads・FB・GBP（毎日3〜5投稿）<br/>②腰痛セルフケアPDF・自律神経チェック<br/>③公式LINE・オープンチャット<br/>④3〜7日ステップ配信<br/>⑤初回限定オファー・Stripe決済<br/><br/><strong>ClaudeCodeの役割</strong><br/>各ステップのコンテンツ作成は ClaudeCode に任せる。判断・最終チェックだけ自分でやる。`
+  },
+  // ==========================================
   // 大口アプリラボ 公式Instagramプロフィール（2026-04-29）
   // ==========================================
   {
