@@ -200,7 +200,7 @@ async function executeAction(
   switch (auto.action_type) {
     case 'line_message': {
       const message = (config.message as string) || auto.name
-      const sent = await sendLINEBroadcast(message)
+      const sent = await sendLINEBroadcast(message, 'automation')
       return sent ? 'LINE送信成功' : 'LINE送信失敗'
     }
 
@@ -208,7 +208,7 @@ async function executeAction(
       const message = (config.message as string) || `🔔 ${auto.name}`
       const customerId = config.customer_id as string | undefined
       const prefix = customerId ? `[顧客ID: ${customerId}] ` : ''
-      const sent = await sendLINEBroadcast(`${prefix}${message}`)
+      const sent = await sendLINEBroadcast(`${prefix}${message}`, 'urgent')
       return sent ? '通知送信成功' : '通知送信失敗'
     }
 

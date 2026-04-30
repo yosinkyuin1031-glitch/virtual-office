@@ -344,7 +344,7 @@ ${assignmentText}
     lineMessage += `\n━━━━━━━━━━━━━\n`
     lineMessage += `新規生成: ${insertedTasks.length}件`
 
-    const lineSent = await sendLINEBroadcast(lineMessage)
+    const lineSent = await sendLINEBroadcast(lineMessage, 'morning')
 
     return NextResponse.json({
       success: true,

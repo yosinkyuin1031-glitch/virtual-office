@@ -260,7 +260,8 @@ export async function PUT(req: NextRequest) {
     if (status === 'completed' && data) {
       const completedTask = data as Record<string, unknown>
       await sendLINEBroadcast(
-        `タスク完了\n━━━━━━━━━━━━━\n${completedTask.department}: ${completedTask.title}\n${(completedTask.description as string || '').substring(0, 100)}\n━━━━━━━━━━━━━`
+        `タスク完了\n━━━━━━━━━━━━━\n${completedTask.department}: ${completedTask.title}\n${(completedTask.description as string || '').substring(0, 100)}\n━━━━━━━━━━━━━`,
+        'auto-tasks',
       ).catch(() => {})
     }
 

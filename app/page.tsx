@@ -21,6 +21,14 @@ interface Goal {
   value: string
   category: string
   sort_order: number
+  updated_at?: string
+}
+
+// 7日以上更新されていないKPIは「未取得」として扱う
+function isStaleGoal(goal: Goal): boolean {
+  if (!goal.updated_at) return true
+  const days = (Date.now() - new Date(goal.updated_at).getTime()) / (1000 * 60 * 60 * 24)
+  return days > 7
 }
 
 interface ContextItem {
@@ -49,15 +57,10 @@ interface Task {
 // 共通コンポーネント
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function StatusBadge({ status }: { status: Employee['status'] }) {
-  const config = {
-    busy: { label: '激忙中', color: 'text-red-500', icon: '🔥' },
-    working: { label: '作業中', color: 'text-green-600', icon: '💻' },
-    idle: { label: '待機中', color: 'text-gray-400', icon: '💤' },
-    meeting: { label: '会議中', color: 'text-yellow-600', icon: '📞' },
-  }
-  const c = config[status]
-  return <span className={`text-xs ${c.color}`}>{c.icon} {c.label}</span>
+// 「動いてる風」の社員ステータスバッジは陽平さんの認知負荷になるため非表示
+// 実態のないステータスを表示するより、何も出さない方が信頼できる
+function StatusBadge(_props: { status: Employee['status'] }) {
+  return null
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -301,14 +304,26 @@ function ContextKpiView({ businessId, color }: { businessId: string; color: stri
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {bizGoals.map((goal, i) => {
               const cardColor = kpiColors[i % kpiColors.length]
+              const stale = isStaleGoal(goal)
               return (
                 <div
                   key={goal.id}
                   className="rounded-xl border p-3"
-                  style={{ backgroundColor: cardColor + '08', borderColor: cardColor + '25' }}
+                  style={{
+                    backgroundColor: stale ? '#F9FAFB' : cardColor + '08',
+                    borderColor: stale ? '#E5E7EB' : cardColor + '25',
+                  }}
                 >
                   <p className="text-[10px] text-gray-500 leading-tight mb-1">{goal.label}</p>
-                  <p className="text-sm font-bold" style={{ color: cardColor }}>{goal.value}</p>
+                  <p
+                    className="text-sm font-bold"
+                    style={{ color: stale ? '#9CA3AF' : cardColor }}
+                  >
+                    {stale ? '未取得' : goal.value}
+                  </p>
+                  {stale && (
+                    <p className="text-[9px] text-gray-400 mt-1">自動同期停止中</p>
+                  )}
                 </div>
               )
             })}
@@ -1978,10 +1993,8 @@ function HomeView() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] font-bold" style={{ color: emp.color }}>{emp.name}</span>
-                        <StatusBadge status={emp.status} />
                       </div>
                       <p className="text-[9px] text-gray-500 truncate">{emp.role}</p>
-                      <p className="text-[8px] text-gray-400 truncate">{emp.currentTask}</p>
                     </div>
                   </div>
                 ))}
@@ -2126,6 +2139,16 @@ export default function VirtualOffice() {
             >
               <span className="text-base">🎙️</span>
               <span>患者の声DB</span>
+            </Link>
+
+            {/* 事業ルールリンク */}
+            <Link
+              href="/rules"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📐</span>
+              <span>事業ルール</span>
             </Link>
 
             {/* 資料リンク */}

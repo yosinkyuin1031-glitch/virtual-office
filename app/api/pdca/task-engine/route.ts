@@ -10,6 +10,7 @@ import {
 import { classifyTaskByUnit } from '../../../lib/business-units'
 import { sendLINEBroadcast } from '../../../lib/line-notify'
 import { employeePrompts, getEmployeePromptsByDepartment } from '../../../lib/employee-prompts'
+import { shouldAutoExecute } from '../../../lib/business-rules'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -51,6 +52,19 @@ export async function GET(request: NextRequest) {
     }> = []
 
     for (const task of tasks) {
+      // 事業ルールで自動実行を許可されているか確認
+      // 許可されていない事業のタスクはスキップ（陽平さんの作業負荷を守るため）
+      if (!shouldAutoExecute(task.department || '', task.title || '')) {
+        results.push({
+          id: task.id,
+          title: task.title,
+          department: task.department || '',
+          status: 'skipped',
+          summary: '事業ルールで自動実行が無効。陽平さんの判断待ち',
+        })
+        continue
+      }
+
       // 2. タスクをin_progressに更新
       await supabase
         .from('vo_tasks')
@@ -200,7 +214,7 @@ export async function GET(request: NextRequest) {
         lineReport = lineReport.substring(0, 4900) + '\n...(省略)'
       }
 
-      await sendLINEBroadcast(lineReport)
+      await sendLINEBroadcast(lineReport, 'task-engine')
     }
 
     return NextResponse.json({

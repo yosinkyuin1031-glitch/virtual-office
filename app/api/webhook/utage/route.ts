@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
     // マッチする自動化がなくても、大口さんに通知
     if (matched.length === 0 && event) {
       await sendLINEBroadcast(
-        `🔔 UTAGE通知\n\nイベント: ${event}\n名前: ${name || '不明'}\nメール: ${email || '不明'}\n商品: ${product || '-'}`
+        `🔔 UTAGE通知\n\nイベント: ${event}\n名前: ${name || '不明'}\nメール: ${email || '不明'}\n商品: ${product || '-'}`,
+        'urgent',
       )
     }
 

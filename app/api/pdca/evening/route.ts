@@ -273,7 +273,7 @@ ${morningPriorities}
       lineReport = lineReport.substring(0, 4900) + '\n...(省略)'
     }
 
-    await sendLINEBroadcast(lineReport)
+    await sendLINEBroadcast(lineReport, 'evening')
 
     return NextResponse.json({
       success: true,

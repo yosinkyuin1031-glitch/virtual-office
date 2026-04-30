@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('vo_goals')
-      .select('*')
+      .select('id,key,label,value,category,sort_order,updated_at')
       .order('sort_order', { ascending: true })
 
     if (error) throw error

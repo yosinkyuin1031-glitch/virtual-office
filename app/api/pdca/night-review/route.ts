@@ -246,7 +246,7 @@ ${activityText || 'なし'}
     lineMessage += `「OK」で全て承認\n`
     lineMessage += `━━━━━━━━━━━━━`
 
-    const lineSent = await sendLINEBroadcast(lineMessage)
+    const lineSent = await sendLINEBroadcast(lineMessage, 'night-review')
 
     // 活動ログ記録
     await logActivity('ミコ', '経営層', '翌日タスク振り分け送信',
