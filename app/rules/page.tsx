@@ -8,25 +8,43 @@ const CHANNEL_LABEL: Record<Channel, { label: string; emoji: string }> = {
   threads: { label: 'Threads', emoji: '🧵' },
   instagram: { label: 'Instagram', emoji: '📷' },
   facebook: { label: 'Facebook', emoji: '📘' },
-  line: { label: 'LINE一斉', emoji: '💬' },
+  line_step: { label: 'LINEステップ', emoji: '💬' },
+  line_blast: { label: 'LINE一斉配信', emoji: '📢' },
   youtube: { label: 'YouTube', emoji: '📺' },
+  youtube_short: { label: 'YouTubeショート', emoji: '🎬' },
   blog_seo: { label: 'SEOブログ', emoji: '✍️' },
   lp: { label: 'LP', emoji: '📄' },
+  hp: { label: 'ホームページ', emoji: '🌐' },
   meo: { label: 'MEO', emoji: '🗺️' },
   mail: { label: 'メール', emoji: '✉️' },
+  research: { label: 'リサーチ', emoji: '🔬' },
   task_internal: { label: '社内タスク', emoji: '📋' },
+}
+
+const MODE_LABEL: Record<string, { label: string; color: string; bg: string }> = {
+  build: { label: '構築モード', color: '#059669', bg: '#D1FAE5' },
+  maintain: { label: '維持モード', color: '#3B82F6', bg: '#DBEAFE' },
+  research: { label: 'リサーチモード', color: '#7C3AED', bg: '#EDE9FE' },
+  paused: { label: '停止中', color: '#6B7280', bg: '#F3F4F6' },
 }
 
 function RuleCard({ rule }: { rule: BusinessRule }) {
   const channels = Object.entries(rule.channels) as [Channel, { weekly?: number; monthly?: number; note?: string }][]
   const totalChannels = channels.length
   const activeChannels = channels.filter(([, v]) => (v.weekly ?? 0) > 0 || (v.monthly ?? 0) > 0).length
+  const mode = MODE_LABEL[rule.mode] ?? MODE_LABEL.maintain
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2 flex-wrap">
         <span className="text-xl">{rule.emoji}</span>
         <h3 className="text-sm font-bold text-gray-800">{rule.label}</h3>
+        <span
+          className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+          style={{ color: mode.color, backgroundColor: mode.bg }}
+        >
+          {mode.label}
+        </span>
         <span className="ml-auto text-[10px] text-gray-500">
           稼働 {activeChannels}/{totalChannels}
         </span>
@@ -40,6 +58,11 @@ function RuleCard({ rule }: { rule: BusinessRule }) {
           </span>
         )}
       </div>
+      {rule.strategicNote && (
+        <div className="px-4 py-2 bg-amber-50/50 border-b border-amber-100">
+          <p className="text-[11px] text-amber-900 leading-relaxed">{rule.strategicNote}</p>
+        </div>
+      )}
       <div className="divide-y divide-gray-100">
         {channels.map(([key, val]) => {
           const cl = CHANNEL_LABEL[key]
