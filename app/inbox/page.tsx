@@ -46,6 +46,12 @@ const ACTION_TABS: { key: 'pending' | 'posted' | 'archived'; label: string }[] =
   { key: 'archived', label: '破棄' },
 ]
 
+const SOURCE_TABS: { key: 'manuscript' | 'threads' | 'all'; label: string; emoji: string }[] = [
+  { key: 'manuscript', label: '原稿', emoji: '📝' },
+  { key: 'threads', label: 'Threads', emoji: '🧵' },
+  { key: 'all', label: 'すべて', emoji: '📊' },
+]
+
 function relativeTime(iso: string): string {
   const d = new Date(iso)
   const now = Date.now()
@@ -211,6 +217,7 @@ export default function InboxPage() {
   const [error, setError] = useState<string | null>(null)
   const [unitFilter, setUnitFilter] = useState<string>('all')
   const [actionFilter, setActionFilter] = useState<'pending' | 'posted' | 'archived'>('pending')
+  const [sourceFilter, setSourceFilter] = useState<'manuscript' | 'threads' | 'all'>('manuscript')
   const [days, setDays] = useState(14)
 
   const fetchData = useCallback(async () => {
@@ -273,9 +280,22 @@ export default function InboxPage() {
     return data.items.filter((i) => {
       if (i.action !== actionFilter) return false
       if (unitFilter !== 'all' && i.businessUnit !== unitFilter) return false
+      if (sourceFilter === 'manuscript' && i.source === 'threads') return false
+      if (sourceFilter === 'threads' && i.source !== 'threads') return false
       return true
     })
-  }, [data, actionFilter, unitFilter])
+  }, [data, actionFilter, unitFilter, sourceFilter])
+
+  // 種別ごとの件数（未対応のみカウント）
+  const sourceCounts = useMemo(() => {
+    if (!data) return { manuscript: 0, threads: 0, all: 0 }
+    const pending = data.items.filter((i) => i.action === 'pending')
+    return {
+      manuscript: pending.filter((i) => i.source !== 'threads').length,
+      threads: pending.filter((i) => i.source === 'threads').length,
+      all: pending.length,
+    }
+  }, [data])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -328,6 +348,38 @@ export default function InboxPage() {
             </div>
           </div>
         )}
+
+        {/* 種別タブ（原稿/Threads/すべて） */}
+        <div className="flex gap-1.5 mb-2 overflow-x-auto">
+          {SOURCE_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setSourceFilter(t.key)}
+              className={`text-xs px-3 py-1.5 rounded-lg border whitespace-nowrap ${
+                sourceFilter === t.key
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {t.emoji} {t.label}
+              {data && sourceCounts[t.key] > 0 && (
+                <span className={`ml-1 text-[10px] px-1.5 rounded-full ${
+                  sourceFilter === t.key ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700'
+                }`}>
+                  {sourceCounts[t.key]}
+                </span>
+              )}
+            </button>
+          ))}
+          {sourceFilter === 'threads' && (
+            <Link
+              href="/threads"
+              className="text-xs px-3 py-1.5 rounded-lg border bg-white text-gray-500 border-gray-200 hover:bg-gray-50 whitespace-nowrap ml-auto"
+            >
+              🧵 Threads管理画面 →
+            </Link>
+          )}
+        </div>
 
         {/* アクションタブ */}
         <div className="flex gap-1.5 mb-3 overflow-x-auto">
