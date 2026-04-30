@@ -2098,6 +2098,26 @@ export default function VirtualOffice() {
             {/* 区切り線 */}
             <div className="border-t border-gray-100 my-2" />
 
+            {/* 受信箱リンク */}
+            <Link
+              href="/inbox"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📥</span>
+              <span>受信箱</span>
+            </Link>
+
+            {/* ビジョンリンク */}
+            <Link
+              href="/vision"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">🎯</span>
+              <span>5年ビジョン</span>
+            </Link>
+
             {/* 資料リンク */}
             <Link
               href="/documents"
