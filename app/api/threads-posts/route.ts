@@ -15,12 +15,47 @@ function addDaysISO(dateStr: string, n: number): string {
   return dt.toISOString().slice(0, 10)
 }
 
-// GET: posts一覧、または初期日付（type=initial-date）
+// GET: posts一覧、または初期日付（type=initial-date）、または全アカウントサマリー（type=summary）
 export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams
-    const account = sp.get('account')
     const type = sp.get('type')
+
+    // type=summary: 全アカウントの状況サマリーを返す（accountパラメータ不要）
+    if (type === 'summary') {
+      const today = new Date().toISOString().split('T')[0]
+      const accounts = ['seitai', 'houmon', 'btob']
+      const result: Record<string, { pending: number; approved: number; postedToday: number; lastDate: string | null; daysAhead: number }> = {}
+
+      for (const acc of accounts) {
+        // 今日以降の pending/approved
+        const { data: future } = await supabase
+          .from('threads_scheduled_posts')
+          .select('date,status')
+          .eq('account', acc)
+          .gte('date', today)
+          .in('status', ['pending', 'approved'])
+        const pending = (future || []).filter(p => p.status === 'pending').length
+        const approved = (future || []).filter(p => p.status === 'approved').length
+        const dates = Array.from(new Set((future || []).map(p => p.date))).sort()
+        const lastDate = dates.length > 0 ? dates[dates.length - 1] : null
+        const daysAhead = dates.length
+
+        // 今日のposted件数
+        const { data: posted } = await supabase
+          .from('threads_scheduled_posts')
+          .select('id')
+          .eq('account', acc)
+          .eq('date', today)
+          .eq('status', 'posted')
+        const postedToday = (posted || []).length
+
+        result[acc] = { pending, approved, postedToday, lastDate, daysAhead }
+      }
+      return NextResponse.json({ summary: result, today })
+    }
+
+    const account = sp.get('account')
     if (!account) return NextResponse.json({ error: 'account required' }, { status: 400 })
 
     if (type === 'initial-date') {

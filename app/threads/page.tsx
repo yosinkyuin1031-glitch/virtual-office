@@ -58,6 +58,8 @@ function addDaysISO(dateStr: string, n: number): string {
   return dt.toISOString().slice(0, 10)
 }
 
+type SummaryRow = { pending: number; approved: number; postedToday: number; lastDate: string | null; daysAhead: number }
+
 export default function ThreadsPage() {
   const [posts, setPosts] = useState<ThreadPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +70,15 @@ export default function ThreadsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
+  const [summary, setSummary] = useState<Record<string, SummaryRow> | null>(null)
+
+  // 全アカウントのサマリーを取得
+  useEffect(() => {
+    fetch('/api/threads-posts?type=summary')
+      .then(r => r.json())
+      .then(d => setSummary(d?.summary || null))
+      .catch(() => {})
+  }, [posts])
 
   // アカウント変更時: 「今日以降の未公開（pending/approved）の最古日」を初期値にする
   // → ストックの先頭日が選ばれるので、7日モードで期間内が自然に揃う
@@ -171,6 +182,42 @@ export default function ThreadsPage() {
         <Link href="/" className="inline-flex items-center gap-1 text-gray-400 hover:text-gray-200 text-sm mb-4 transition-colors">
           <span>&larr;</span> ダッシュボードに戻る
         </Link>
+
+        {/* 全アカウントサマリー */}
+        {summary && (
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {(Object.entries(ACCOUNT_CONFIG) as [Account, { label: string; color: string }][]).map(([key, conf]) => {
+              const s = summary[key]
+              if (!s) return null
+              const stockWarn = s.daysAhead <= 3
+              const approvalWarn = s.pending > 0 && s.approved === 0
+              const publishWarn = s.postedToday === 0 && (s.approved > 0 || s.pending > 0)
+              const hasAlert = stockWarn || approvalWarn || publishWarn
+              return (
+                <button
+                  key={key}
+                  onClick={() => setAccount(key)}
+                  className={`text-left rounded-lg border px-3 py-2 transition-all ${
+                    hasAlert
+                      ? 'border-red-500/40 bg-red-500/10 hover:bg-red-500/15'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10'
+                  } ${account === key ? 'ring-2 ring-blue-500' : ''}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-300 font-medium">{conf.label}</span>
+                    {hasAlert && <span className="text-xs text-red-400">⚠</span>}
+                  </div>
+                  <div className="flex items-baseline gap-2 text-xs text-gray-400">
+                    <span>残<span className="text-white font-bold">{s.daysAhead}</span>日</span>
+                    <span>未承認<span className="text-yellow-400 font-bold">{s.pending}</span></span>
+                    <span>承認<span className="text-blue-400 font-bold">{s.approved}</span></span>
+                    <span>本日<span className="text-green-400 font-bold">{s.postedToday}</span></span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* ヘッダー */}
         <div className="mb-6">
