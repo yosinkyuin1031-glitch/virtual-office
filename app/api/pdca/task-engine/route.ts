@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       .order('priority', { ascending: true }) // high=先
       .order('due_date', { ascending: true, nullsFirst: false }) // 期限近い順
       .order('created_at', { ascending: true }) // 古い順
-      .limit(2) // 1回あたり最大2件（API負荷対策）
+      .limit(1) // 1回あたり1件（Vercel関数のタイムアウト対策）
 
     if (!tasks || tasks.length === 0) {
       return NextResponse.json({ message: 'No pending tasks to execute' })
