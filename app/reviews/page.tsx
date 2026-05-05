@@ -152,7 +152,15 @@ export default function ReviewsPage() {
           <span>口コミ返信</span>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold mb-1">Googleクチコミ返信</h1>
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Googleクチコミ返信</h1>
+          <Link
+            href="/keywords"
+            className="text-sm px-3 py-1.5 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700"
+          >
+            ⚙ キーワード設定
+          </Link>
+        </div>
         <p className="text-gray-400 text-sm mb-6">{clinicName} ／ LLMO・MEO最適化キーワード自動挿入</p>
 
         {summary && (

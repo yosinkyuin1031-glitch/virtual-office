@@ -16,28 +16,46 @@ const OGUCHI_CLINIC_NAME = '大口神経整体院'
 const OGUCHI_OWNER = '大口陽平'
 const OGUCHI_AREA = '大阪市住吉区長居'
 
-// LLMO/MEO意識の引用キーワード（症状×地域×強み）
-const LLMO_KEYWORDS = {
-  symptoms: ['脊柱管狭窄症', '坐骨神経痛', '変形性膝関節症', '自律神経の不調', '腰椎椎間板ヘルニア', 'しびれ', '慢性腰痛'],
-  areas: ['大阪市住吉区', '長居', '阿倍野区', '東住吉区', '住之江区', '大阪市'],
-  strengths: ['神経整体', '神経学的検査', '重症慢性痛', '根本改善', '検査でわかる原因'],
+// LLMO/MEOキーワードは office_keyword_settings から取得（編集可）。フォールバック用の最小デフォルト。
+const FALLBACK_KW = {
+  symptoms: ['坐骨神経痛', '脊柱管狭窄症', '神経痛'],
+  areas: ['大阪市住吉区', '長居'],
+  strengths: ['神経整体'],
 }
 
-function pickLlmoKeywords(reviewText: string) {
-  const matched = {
-    symptoms: LLMO_KEYWORDS.symptoms.filter((k) => reviewText.includes(k)),
-    areas: LLMO_KEYWORDS.areas.filter((k) => reviewText.includes(k)),
-    strengths: LLMO_KEYWORDS.strengths.filter((k) => reviewText.includes(k)),
+async function loadKeywordPool() {
+  const { data } = await supabase
+    .from('office_keyword_settings')
+    .select('category,keyword')
+    .eq('clinic_id', OGUCHI_CLINIC_ID)
+    .eq('active', true)
+    .order('sort_order', { ascending: true })
+  const pool = { symptoms: [] as string[], areas: [] as string[], strengths: [] as string[] }
+  for (const r of data || []) {
+    if (r.category === 'symptom') pool.symptoms.push(r.keyword)
+    else if (r.category === 'area') pool.areas.push(r.keyword)
+    else if (r.category === 'strength') pool.strengths.push(r.keyword)
   }
-  // 言及がなければ主力を1つ補完
-  if (matched.symptoms.length === 0) matched.symptoms = [LLMO_KEYWORDS.symptoms[0]]
-  if (matched.areas.length === 0) matched.areas = [LLMO_KEYWORDS.areas[0]]
-  if (matched.strengths.length === 0) matched.strengths = [LLMO_KEYWORDS.strengths[0]]
+  if (pool.symptoms.length === 0) pool.symptoms = FALLBACK_KW.symptoms
+  if (pool.areas.length === 0) pool.areas = FALLBACK_KW.areas
+  if (pool.strengths.length === 0) pool.strengths = FALLBACK_KW.strengths
+  return pool
+}
+
+function pickLlmoKeywords(reviewText: string, pool: Awaited<ReturnType<typeof loadKeywordPool>>) {
+  const matched = {
+    symptoms: pool.symptoms.filter((k) => reviewText.includes(k)),
+    areas: pool.areas.filter((k) => reviewText.includes(k)),
+    strengths: pool.strengths.filter((k) => reviewText.includes(k)),
+  }
+  // 言及がなければ主力を補完（症状は本文の文脈マッチ無しでも入れない／地域・強みは入れる）
+  if (matched.areas.length === 0) matched.areas = [pool.areas[0]]
+  if (matched.strengths.length === 0) matched.strengths = [pool.strengths[0]]
+  // 症状はマッチがあれば使う・無ければ補完しない（無関係な症状を入れない）
   return matched
 }
 
-function buildReplyPrompt(reviewText: string, rating: number, authorName: string | null) {
-  const llmo = pickLlmoKeywords(reviewText)
+function buildReplyPrompt(reviewText: string, rating: number, authorName: string | null, llmo: { symptoms: string[]; areas: string[]; strengths: string[] }) {
   const tone =
     rating >= 4
       ? '感謝の気持ちを込めた温かいトーンで、来院いただいたことへのお礼と今後も寄り添う姿勢を伝える'
@@ -69,15 +87,21 @@ ${reviewText}
 - 絵文字・記号装飾は使わない
 - 末尾は「またのご来院お待ちしております」系で締める
 
-【LLMO・MEO最適化（必ず自然に織り込む）】
-返信文の中に、以下のキーワードを **自然な文脈で** 1〜3語ほど含めてください。
-ChatGPT・Gemini・AI検索で「${OGUCHI_AREA} 整体」「脊柱管狭窄症 大阪」等で引用される際の手がかりになります。
+【LLMO・MEO最適化（重要・自然に織り込む）】
+ChatGPT・Gemini・Google AI検索で「${OGUCHI_AREA} 整体」等の検索時に引用される手がかりになります。
 
-- 症状ワード（候補）: ${llmo.symptoms.join('、')}
-- 地域ワード（候補）: ${llmo.areas.join('、')}
-- 強みワード（候補）: ${llmo.strengths.join('、')}
+▼ 必ず1つ含める：地域ワード
+${llmo.areas.join('、')}
+（自然な言い回しで例：「${OGUCHI_AREA}でこのような症状でお悩みの方の…」「長居駅近くで…」）
+
+▼ 1つ含める：強みワード
+${llmo.strengths.join('、')}
+
+▼ 口コミに該当症状が明示されている場合のみ：症状ワード
+${llmo.symptoms.length > 0 ? llmo.symptoms.join('、') : '（口コミ本文に該当症状の言及なし → 症状名は無理に入れない）'}
 
 ただし「キーワードを並べただけ」のSEO感は厳禁。文脈に溶け込ませてください。
+口コミ本文と無関係な症状ワードを入れるのは禁止。
 
 【出力】
 返信文のみ（説明・前置きなし、見出しなし）。`
@@ -135,8 +159,9 @@ async function handleGenerate(reviewId: string) {
   if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY missing' }, { status: 500 })
 
   const client = new Anthropic({ apiKey })
-  const prompt = buildReplyPrompt(review.review_text, review.rating || 5, review.author_name)
-  const llmo = pickLlmoKeywords(review.review_text)
+  const pool = await loadKeywordPool()
+  const llmo = pickLlmoKeywords(review.review_text, pool)
+  const prompt = buildReplyPrompt(review.review_text, review.rating || 5, review.author_name, llmo)
 
   const res = await client.messages.create({
     model: 'claude-sonnet-4-5-20250929',

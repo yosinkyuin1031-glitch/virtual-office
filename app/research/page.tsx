@@ -80,7 +80,12 @@ export default function ResearchPage() {
           <span>広告リサーチ</span>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold mb-1">広告・キーワードリサーチ</h1>
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold">広告・キーワードリサーチ</h1>
+          <Link href="/competitors" className="text-sm px-3 py-1.5 rounded bg-purple-700 hover:bg-purple-600">
+            🏥 競合MEO TOP5 →
+          </Link>
+        </div>
         <p className="text-gray-400 text-sm mb-6">SerpAPI で「症状×地域」の広告出稿状況・オーガニック上位・関連質問を取得</p>
 
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
