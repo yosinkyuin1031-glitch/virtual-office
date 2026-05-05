@@ -1,0 +1,368 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+
+type ReplyStatus = 'unreplied' | 'draft' | 'approved' | 'posted' | 'skipped'
+
+interface Review {
+  id: string
+  author_name: string | null
+  rating: number
+  review_text: string
+  review_date: string | null
+  fetched_at: string
+  ai_reply_draft: string | null
+  reply_text: string | null
+  reply_status: ReplyStatus | null
+  reply_generated_at: string | null
+  llmo_keywords: { symptoms?: string[]; areas?: string[]; strengths?: string[] } | null
+  owner_note: string | null
+}
+
+interface Summary {
+  total: number
+  avgRating: number
+  unreplied: number
+  draft: number
+  approved: number
+  posted: number
+  low: number
+}
+
+const STATUS_LABEL: Record<ReplyStatus, { label: string; color: string }> = {
+  unreplied: { label: '未生成', color: 'bg-gray-500/20 text-gray-300' },
+  draft: { label: 'AI下書き', color: 'bg-yellow-500/20 text-yellow-300' },
+  approved: { label: '承認済', color: 'bg-blue-500/20 text-blue-300' },
+  posted: { label: '投稿済', color: 'bg-green-500/20 text-green-300' },
+  skipped: { label: 'スキップ', color: 'bg-gray-500/20 text-gray-400' },
+}
+
+type Filter = 'all' | 'unreplied' | 'replied' | 'low'
+
+export default function ReviewsPage() {
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [summary, setSummary] = useState<Summary | null>(null)
+  const [clinicName, setClinicName] = useState('')
+  const [filter, setFilter] = useState<Filter>('unreplied')
+  const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState<string | null>(null)
+  const [bulkGen, setBulkGen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [savingId, setSavingId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const r = await fetch(`/api/reviews?filter=${filter}&limit=100`)
+    const d = await r.json()
+    setReviews(d.reviews || [])
+    setSummary(d.summary || null)
+    setClinicName(d.clinic?.name || '')
+    setLoading(false)
+  }, [filter])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const generate = async (id: string) => {
+    setGenerating(id)
+    try {
+      const r = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate', review_id: id }),
+      })
+      const d = await r.json()
+      if (!r.ok) alert('生成失敗: ' + (d.error || ''))
+      await load()
+    } finally {
+      setGenerating(null)
+    }
+  }
+
+  const bulkGenerate = async () => {
+    if (!confirm('未生成の口コミに一括でAI返信を作成します（最大20件）。よろしいですか？')) return
+    setBulkGen(true)
+    try {
+      const r = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'bulk-generate' }),
+      })
+      const d = await r.json()
+      alert(`${d.generated || 0}件 生成しました`)
+      await load()
+    } finally {
+      setBulkGen(false)
+    }
+  }
+
+  const startEdit = (rev: Review) => {
+    setEditingId(rev.id)
+    setEditText(rev.reply_text || '')
+  }
+
+  const saveEdit = async (id: string, status?: ReplyStatus) => {
+    setSavingId(id)
+    try {
+      const body: Record<string, unknown> = { reply_text: editText }
+      if (status) body.reply_status = status
+      await fetch(`/api/reviews?id=${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      setEditingId(null)
+      setEditText('')
+      await load()
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const updateStatus = async (id: string, status: ReplyStatus) => {
+    setSavingId(id)
+    try {
+      await fetch(`/api/reviews?id=${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reply_status: status }),
+      })
+      await load()
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const copy = async (id: string, text: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
+          <Link href="/" className="hover:text-white">← ホーム</Link>
+          <span>/</span>
+          <span>口コミ返信</span>
+        </div>
+
+        <h1 className="text-2xl md:text-3xl font-bold mb-1">Googleクチコミ返信</h1>
+        <p className="text-gray-400 text-sm mb-6">{clinicName} ／ LLMO・MEO最適化キーワード自動挿入</p>
+
+        {summary && (
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+            <Stat label="総件数" value={summary.total} />
+            <Stat label="平均★" value={summary.avgRating.toFixed(2)} />
+            <Stat label="未生成" value={summary.unreplied} highlight={summary.unreplied > 0 ? 'amber' : undefined} />
+            <Stat label="AI下書き" value={summary.draft} highlight={summary.draft > 0 ? 'yellow' : undefined} />
+            <Stat label="承認済" value={summary.approved} highlight="blue" />
+            <Stat label="低評価(≤3)" value={summary.low} highlight={summary.low > 0 ? 'red' : undefined} />
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {(['unreplied', 'low', 'replied', 'all'] as Filter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded text-sm border ${
+                filter === f ? 'bg-blue-600 border-blue-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+              }`}
+            >
+              {f === 'all' && '全件'}
+              {f === 'unreplied' && '未対応'}
+              {f === 'replied' && '対応済'}
+              {f === 'low' && '低評価'}
+            </button>
+          ))}
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={bulkGenerate}
+              disabled={bulkGen}
+              className="px-4 py-1.5 rounded text-sm bg-purple-600 hover:bg-purple-500 disabled:opacity-50"
+            >
+              {bulkGen ? '一括生成中…' : '未生成を一括AI生成（最大20）'}
+            </button>
+            <button onClick={load} className="px-3 py-1.5 rounded text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700">
+              更新
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <p className="text-gray-400">読み込み中…</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-gray-400">該当する口コミがありません</p>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((rev) => {
+              const status = (rev.reply_status as ReplyStatus) || 'unreplied'
+              const stCfg = STATUS_LABEL[status]
+              return (
+                <div key={rev.id} className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-yellow-400 text-sm">{'★'.repeat(rev.rating || 0)}{'☆'.repeat(5 - (rev.rating || 0))}</span>
+                        <span className="text-sm font-medium">{rev.author_name || '匿名'}</span>
+                        <span className="text-xs text-gray-500">{rev.review_date || ''}</span>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${stCfg.color}`}>{stCfg.label}</span>
+                  </div>
+
+                  <p className="text-sm text-gray-300 whitespace-pre-wrap mb-3 leading-relaxed">{rev.review_text}</p>
+
+                  <div className="bg-gray-950 border border-gray-800 rounded p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-400">院長返信（AI生成）</span>
+                      {rev.llmo_keywords && (
+                        <div className="flex flex-wrap gap-1 text-xs">
+                          {[
+                            ...(rev.llmo_keywords.symptoms || []),
+                            ...(rev.llmo_keywords.areas || []),
+                            ...(rev.llmo_keywords.strengths || []),
+                          ]
+                            .slice(0, 5)
+                            .map((k, i) => (
+                              <span key={i} className="px-1.5 py-0.5 bg-blue-900/40 text-blue-300 rounded">
+                                {k}
+                              </span>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {editingId === rev.id ? (
+                      <>
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="w-full h-32 bg-gray-900 border border-gray-700 rounded p-2 text-sm"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => saveEdit(rev.id, 'approved')}
+                            disabled={savingId === rev.id}
+                            className="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
+                          >
+                            保存して承認
+                          </button>
+                          <button
+                            onClick={() => saveEdit(rev.id)}
+                            disabled={savingId === rev.id}
+                            className="px-3 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50"
+                          >
+                            下書き保存
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingId(null)
+                              setEditText('')
+                            }}
+                            className="px-3 py-1 rounded text-sm bg-gray-800 hover:bg-gray-700"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {rev.reply_text ? (
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{rev.reply_text}</p>
+                        ) : (
+                          <p className="text-xs text-gray-500 italic">未生成。「AI生成」で作成してください。</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {!rev.reply_text && (
+                            <button
+                              onClick={() => generate(rev.id)}
+                              disabled={generating === rev.id}
+                              className="px-3 py-1 rounded text-sm bg-purple-600 hover:bg-purple-500 disabled:opacity-50"
+                            >
+                              {generating === rev.id ? '生成中…' : 'AI生成'}
+                            </button>
+                          )}
+                          {rev.reply_text && (
+                            <>
+                              <button
+                                onClick={() => generate(rev.id)}
+                                disabled={generating === rev.id}
+                                className="px-3 py-1 rounded text-sm bg-purple-700 hover:bg-purple-600 disabled:opacity-50"
+                              >
+                                {generating === rev.id ? '再生成中…' : '再生成'}
+                              </button>
+                              <button
+                                onClick={() => copy(rev.id, rev.reply_text || '')}
+                                className="px-3 py-1 rounded text-sm bg-green-700 hover:bg-green-600"
+                              >
+                                {copiedId === rev.id ? 'コピー完了' : 'コピー'}
+                              </button>
+                              <button
+                                onClick={() => startEdit(rev)}
+                                className="px-3 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600"
+                              >
+                                編集
+                              </button>
+                              {status !== 'approved' && status !== 'posted' && (
+                                <button
+                                  onClick={() => updateStatus(rev.id, 'approved')}
+                                  disabled={savingId === rev.id}
+                                  className="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
+                                >
+                                  承認
+                                </button>
+                              )}
+                              {status !== 'posted' && (
+                                <button
+                                  onClick={() => updateStatus(rev.id, 'posted')}
+                                  disabled={savingId === rev.id}
+                                  className="px-3 py-1 rounded text-sm bg-green-700 hover:bg-green-600 disabled:opacity-50"
+                                >
+                                  投稿済にする
+                                </button>
+                              )}
+                            </>
+                          )}
+                          <a
+                            href="https://business.google.com/reviews"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1 rounded text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700 ml-auto"
+                          >
+                            GBPで返信→
+                          </a>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Stat({ label, value, highlight }: { label: string; value: number | string; highlight?: 'amber' | 'yellow' | 'blue' | 'red' }) {
+  const color =
+    highlight === 'amber' ? 'text-amber-300'
+      : highlight === 'yellow' ? 'text-yellow-300'
+        : highlight === 'blue' ? 'text-blue-300'
+          : highlight === 'red' ? 'text-red-300'
+            : 'text-white'
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded p-2 text-center">
+      <div className="text-[10px] text-gray-400">{label}</div>
+      <div className={`text-lg font-bold ${color}`}>{value}</div>
+    </div>
+  )
+}
