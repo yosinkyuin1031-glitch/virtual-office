@@ -2180,6 +2180,36 @@ export default function VirtualOffice() {
               <span className="text-base">⭐</span>
               <span>口コミ返信</span>
             </Link>
+
+            {/* MEO順位 */}
+            <Link
+              href="/meo"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📍</span>
+              <span>MEO順位</span>
+            </Link>
+
+            {/* 広告リサーチ */}
+            <Link
+              href="/research"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">🔍</span>
+              <span>広告リサーチ</span>
+            </Link>
+
+            {/* 広告分析 */}
+            <Link
+              href="/ads"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📊</span>
+              <span>広告分析</span>
+            </Link>
           </nav>
 
           <div className="mt-6 mx-3 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
