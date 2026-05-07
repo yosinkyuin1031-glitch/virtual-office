@@ -2191,6 +2191,16 @@ export default function VirtualOffice() {
               <span>MEO順位</span>
             </Link>
 
+            {/* GBP毎日投稿 */}
+            <Link
+              href="/gbp"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📝</span>
+              <span>GBP毎日投稿</span>
+            </Link>
+
             {/* 広告リサーチ */}
             <Link
               href="/research"
