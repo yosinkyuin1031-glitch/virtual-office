@@ -1161,6 +1161,8 @@ const businessConfig: Record<BusinessId, {
   productCategories: string[]
   documentCategories: string[]
   channels: ChannelDef[]
+  primaryAppIds?: string[]
+  appGroups?: Array<{ label: string; ids: string[] }>
 }> = {
   seitai: {
     name: '大口神経整体院',
@@ -1174,12 +1176,19 @@ const businessConfig: Record<BusinessId, {
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
       { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
+      { id: 'reviews', label: '口コミ返信', icon: '⭐', keywords: [] },
+      { id: 'meo-suite', label: '集客MEO', icon: '📍', keywords: [] },
+      { id: 'ads-suite', label: '広告', icon: '📊', keywords: [] },
       { id: 'instagram', label: 'Instagram', icon: '📸', keywords: ['instagram', 'insta'] },
-      { id: 'gbp', label: 'GBP(MEO)', icon: '📍', keywords: ['gbp', 'google', 'gmb', 'meo'] },
-      { id: 'blog', label: 'ブログ(SEO)', icon: '📝', keywords: ['blog', 'seo', 'ブログ', '記事'] },
-      { id: 'line', label: 'LINE', icon: '💬', keywords: ['line'] },
+      { id: 'threads', label: 'Threads', icon: '🧵', keywords: ['threads'] },
+      { id: 'blog', label: 'ブログSEO', icon: '📝', keywords: ['blog', 'seo', 'ブログ', '記事'] },
       { id: 'note', label: 'note', icon: '📓', keywords: ['note'] },
       { id: 'apps', label: 'アプリ', icon: '📱', keywords: [] },
+    ],
+    appGroups: [
+      { label: '自院運用（コア）', ids: ['customer-mgmt', 'reservation', 'web-monshin', 'kensa-sheet'] },
+      { label: '自院運用（補助）', ids: ['headache-diary', 'point-management', 'menu-manager', 'sleep-app', 'line-auto'] },
+      { label: '自院でも使える（販売用が中心）', ids: ['rental-salon'] },
     ],
   },
   houmon: {
@@ -1263,6 +1272,92 @@ function matchChannel(doc: Document, channel: ChannelDef): boolean {
   return channel.keywords.some(kw => haystack.includes(kw))
 }
 
+// アプリカード（再利用）
+function ProductCard({ product }: { product: { id: string; name: string; url?: string; description: string; icon: string; rank: 'A' | 'B' | 'C' } }) {
+  return (
+    <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 hover:shadow-md hover:scale-[1.02] transition-all">
+      <div className="flex items-start justify-between mb-1">
+        <span className="text-xl">{product.icon}</span>
+        <span
+          className="text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center"
+          style={{
+            backgroundColor: product.rank === 'A' ? '#22C55E18' : product.rank === 'B' ? '#F59E0B18' : '#EF444418',
+            color: product.rank === 'A' ? '#16A34A' : product.rank === 'B' ? '#D97706' : '#DC2626',
+            border: `2px solid ${product.rank === 'A' ? '#22C55E' : product.rank === 'B' ? '#F59E0B' : '#EF4444'}`,
+          }}
+        >
+          {product.rank}
+        </span>
+      </div>
+      <h4 className="text-xs font-bold text-gray-800 leading-tight">{product.name}</h4>
+      <p className="text-[9px] text-gray-400 mt-0.5 leading-snug line-clamp-2">{product.description}</p>
+      {product.url && (
+        <a href={product.url} target="_blank" rel="noopener noreferrer"
+          className="inline-block mt-1.5 text-[9px] text-amber-600 hover:text-amber-800 transition">
+          開く →
+        </a>
+      )}
+    </div>
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 既存ページをiframeで埋め込み + サブタブ切替
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function EmbeddedChannel({ color, title, description, tabs }: {
+  color: string
+  title: string
+  description: string
+  tabs: Array<{ id: string; label: string; url: string }>
+}) {
+  const [activeTab, setActiveTab] = useState(tabs[0].id)
+  const active = tabs.find(t => t.id === activeTab) || tabs[0]
+  return (
+    <div>
+      <div className="mb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold" style={{ color }}>{title}</h3>
+            <p className="text-[10px] text-gray-400">{description}</p>
+          </div>
+          <a
+            href={active.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
+          >
+            新タブで開く →
+          </a>
+        </div>
+        {tabs.length > 1 && (
+          <div className="flex gap-1 mt-2 border-b border-gray-200">
+            {tabs.map(t => {
+              const isActive = activeTab === t.id
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className="text-xs px-3 py-1.5 transition-all -mb-px border-b-2"
+                  style={{
+                    borderColor: isActive ? color : 'transparent',
+                    color: isActive ? color : '#6b7280',
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                >
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+      <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: 'calc(100vh - 280px)', minHeight: '600px' }}>
+        <iframe src={active.url} className="w-full h-full" title={active.label} />
+      </div>
+    </div>
+  )
+}
+
 function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; setChatTarget: (emp: Employee) => void }) {
   const config = businessConfig[businessId]
   const [activeChannel, setActiveChannel] = useState(config.channels[0].id)
@@ -1332,7 +1427,11 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
   const isContextChannel = currentChannel.id === 'context'
   const isTasksChannel = currentChannel.id === 'tasks'
   const isSalesChannel = currentChannel.id === 'sales'
-  const isSpecialChannel = isAppsChannel || isContextChannel || isTasksChannel || isSalesChannel
+  const isReviewsChannel = currentChannel.id === 'reviews'
+  const isMeoSuiteChannel = currentChannel.id === 'meo-suite'
+  const isAdsSuiteChannel = currentChannel.id === 'ads-suite'
+  const isEmbeddedChannel = isReviewsChannel || isMeoSuiteChannel || isAdsSuiteChannel
+  const isSpecialChannel = isAppsChannel || isContextChannel || isTasksChannel || isSalesChannel || isEmbeddedChannel
 
   // Filter docs for current channel
   const channelDocs = isSpecialChannel ? [] : bizDocuments.filter(d => matchChannel(d, currentChannel))
@@ -1425,42 +1524,76 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
           <TasksView businessId={businessId} color={config.color} />
         ) : isSalesChannel ? (
           <SalesManagementView color={config.color} />
+        ) : isReviewsChannel ? (
+          <EmbeddedChannel
+            color={config.color}
+            title="口コミ返信"
+            description="Googleクチコミに対するAI返信を生成・編集・承認"
+            tabs={[{ id: 'reviews', label: '口コミ一覧', url: '/reviews' }, { id: 'keywords', label: 'LLMOキーワード設定', url: '/keywords' }]}
+          />
+        ) : isMeoSuiteChannel ? (
+          <EmbeddedChannel
+            color={config.color}
+            title="集客MEO"
+            description="MEO順位、GBP投稿、競合TOP5を一元管理"
+            tabs={[
+              { id: 'rank', label: 'MEO順位', url: '/meo' },
+              { id: 'gbp', label: 'GBP毎日投稿', url: '/gbp' },
+              { id: 'competitors', label: '競合TOP5', url: '/competitors' },
+            ]}
+          />
+        ) : isAdsSuiteChannel ? (
+          <EmbeddedChannel
+            color={config.color}
+            title="広告（リサーチ・分析）"
+            description="競合広告のリサーチと自院広告の分析"
+            tabs={[
+              { id: 'research', label: '広告リサーチ', url: '/research' },
+              { id: 'analytics', label: '広告分析', url: '/ads' },
+            ]}
+          />
         ) : isAppsChannel ? (
-          /* アプリ一覧 */
+          /* アプリ一覧（appGroupsがあればグルーピング、なければフラット） */
           bizProducts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-sm text-gray-400">この事業に紐づくアプリはまだありません</p>
             </div>
+          ) : config.appGroups ? (
+            <div className="space-y-4">
+              {config.appGroups.map(group => {
+                const groupProducts = group.ids
+                  .map(id => bizProducts.find(p => p.id === id))
+                  .filter((p): p is NonNullable<typeof p> => p !== undefined)
+                if (groupProducts.length === 0) return null
+                return (
+                  <div key={group.label}>
+                    <h4 className="text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">{group.label}</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {groupProducts.map(product => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+              {(() => {
+                // appGroups で言及されていないアプリも「その他」として表示
+                const groupedIds = new Set(config.appGroups!.flatMap(g => g.ids))
+                const others = bizProducts.filter(p => !groupedIds.has(p.id))
+                if (others.length === 0) return null
+                return (
+                  <div>
+                    <h4 className="text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">その他</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {others.map(p => <ProductCard key={p.id} product={p} />)}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {bizProducts.map(product => (
-                <div
-                  key={product.id}
-                  className="bg-gray-50 rounded-xl border border-gray-200 p-3 hover:shadow-md hover:scale-[1.02] transition-all"
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <span className="text-xl">{product.icon}</span>
-                    <span
-                      className="text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{
-                        backgroundColor: product.rank === 'A' ? '#22C55E18' : product.rank === 'B' ? '#F59E0B18' : '#EF444418',
-                        color: product.rank === 'A' ? '#16A34A' : product.rank === 'B' ? '#D97706' : '#DC2626',
-                        border: `2px solid ${product.rank === 'A' ? '#22C55E' : product.rank === 'B' ? '#F59E0B' : '#EF4444'}`,
-                      }}
-                    >
-                      {product.rank}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-gray-800 leading-tight">{product.name}</h4>
-                  <p className="text-[9px] text-gray-400 mt-0.5 leading-snug line-clamp-2">{product.description}</p>
-                  {product.url && (
-                    <a href={product.url} target="_blank" rel="noopener noreferrer"
-                      className="inline-block mt-1.5 text-[9px] text-amber-600 hover:text-amber-800 transition">
-                      開く →
-                    </a>
-                  )}
-                </div>
-              ))}
+              {bizProducts.map(product => <ProductCard key={product.id} product={product} />)}
             </div>
           )
         ) : (
@@ -2171,55 +2304,6 @@ export default function VirtualOffice() {
               <span>Threads</span>
             </Link>
 
-            {/* Googleクチコミ返信 */}
-            <Link
-              href="/reviews"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="text-base">⭐</span>
-              <span>口コミ返信</span>
-            </Link>
-
-            {/* MEO順位 */}
-            <Link
-              href="/meo"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="text-base">📍</span>
-              <span>MEO順位</span>
-            </Link>
-
-            {/* GBP毎日投稿 */}
-            <Link
-              href="/gbp"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="text-base">📝</span>
-              <span>GBP毎日投稿</span>
-            </Link>
-
-            {/* 広告リサーチ */}
-            <Link
-              href="/research"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="text-base">🔍</span>
-              <span>広告リサーチ</span>
-            </Link>
-
-            {/* 広告分析 */}
-            <Link
-              href="/ads"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-500 hover:bg-amber-50 hover:text-amber-700"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="text-base">📊</span>
-              <span>広告分析</span>
-            </Link>
           </nav>
 
           <div className="mt-6 mx-3 p-3 rounded-xl bg-amber-50/50 border border-amber-100">
