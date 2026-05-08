@@ -2324,6 +2324,16 @@ export default function VirtualOffice() {
               <span>受信箱</span>
             </Link>
 
+            {/* 承認待ち（Plaud等）リンク */}
+            <Link
+              href="/imports"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">🤖</span>
+              <span>承認待ち</span>
+            </Link>
+
             {/* タスク統合リンク */}
             <Link
               href="/tasks"
@@ -2332,6 +2342,26 @@ export default function VirtualOffice() {
             >
               <span className="text-base">✅</span>
               <span>タスク（5事業）</span>
+            </Link>
+
+            {/* ナレッジリンク */}
+            <Link
+              href="/knowledge"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📚</span>
+              <span>ナレッジ</span>
+            </Link>
+
+            {/* コンテキストリンク */}
+            <Link
+              href="/context"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-green-800 bg-green-50 hover:bg-green-100 border border-green-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">🎯</span>
+              <span>コンテキスト</span>
             </Link>
 
             {/* ビジョンリンク */}

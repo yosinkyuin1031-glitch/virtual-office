@@ -8,6 +8,7 @@ import {
   splitByTopics,
 } from '../../lib/memo-utils'
 import type { TopicBlock } from '../../lib/memo-utils'
+import Anthropic from '@anthropic-ai/sdk'
 
 // Webhook認証（PLAUD_WEBHOOK_SECRET）
 function verifyWebhookAuth(request: NextRequest): boolean {
@@ -21,6 +22,61 @@ function verifyWebhookAuth(request: NextRequest): boolean {
   if (url.searchParams.get('secret') === secret) return true
 
   return false
+}
+
+// AIで分類して office_pending_imports に投入（承認待ち）
+async function classifyAndQueueForApproval(content: string, title: string, sourceRef: string) {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return
+
+  const client = new Anthropic({ apiKey })
+  const prompt = `Plaudで録音した会長の音声メモを、AIオフィスのどのカテゴリに保存すべきか分類してください。
+
+【メモ内容】
+${title ? `タイトル: ${title}\n\n` : ''}${content.slice(0, 4000)}
+
+【分類ルール】
+type は3種類のいずれか：
+- "knowledge"（ナレッジ）：永続的な知見・哲学・マニュアル・ペルソナ・症状解説など、1ヶ月後も変わらない情報
+- "context"（コンテキスト）：今週の状況・進行中キャンペーン・KPI更新・競合動向など、すぐ古くなる情報
+- "task"（タスク）：今すぐ動く必要があるアクション項目
+
+business_id は: 'all'（全社）/ 'seitai'（整体院）/ 'houmon'（訪問鍼灸）/ 'app-biz'（アプリ事業）/ 'consulting'（コンサル）/ 'device'（機器販売）
+
+category は type ごと：
+- knowledge: identity / persona / method / episode / symptom / product / talk / manual / reference / sns / misc
+- context: kpi / campaign / closing / competitor / priority / note
+- task: （department名を business_id に対応させる：seitai→整体院事業部、houmon→訪問鍼灸事業部、app-biz→AI開発部 等）
+
+【出力形式】JSONのみ（説明や前置きは不要）
+{
+  "type": "knowledge | context | task",
+  "business_id": "all | seitai | houmon | app-biz | consulting | device",
+  "category": "（typeに応じたカテゴリ）",
+  "title": "（30文字以内のタイトル）",
+  "content_proposal": "（整理した本文・原文を要約・整形）",
+  "tags": ["タグ1", "タグ2"],
+  "reasoning": "（なぜこの分類にしたか30字以内）"
+}`
+
+  const res = await client.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 2048,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  const text = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) return
+  let parsed: Record<string, unknown>
+  try { parsed = JSON.parse(jsonMatch[0]) } catch { return }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).from('office_pending_imports').insert({
+    source: 'plaud',
+    source_ref: sourceRef,
+    raw_content: content,
+    ai_classification: parsed,
+  })
 }
 
 // メモを保存し、必要なら company_context へ昇格
@@ -170,6 +226,13 @@ export async function POST(request: NextRequest) {
       memo_id: results[0]?.memoId,
       content_preview: fullContent.slice(0, 200),
     })
+
+    // AI分類して承認待ちキューへ追加（office_pending_imports）
+    try {
+      await classifyAndQueueForApproval(fullContent, title || '', fileId)
+    } catch (e) {
+      console.error('AI分類エラー（保存は成功）:', e)
+    }
 
     // 活動ログ
     const promotedCount = results.filter(r => r.promoted).length
