@@ -88,12 +88,12 @@ export default function CompetitorsPage() {
   const symptoms = Object.keys(bySymptom).sort()
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
+        <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
+          <Link href="/?biz=seitai" className="hover:text-gray-900">← 整体院タブへ戻る</Link>
           <span>/</span>
-          <Link href="/research" className="hover:text-white">広告リサーチ</Link>
+          <Link href="/research" className="hover:text-gray-900">広告リサーチ</Link>
           <span>/</span>
           <span>競合MEO TOP5</span>
         </div>
@@ -108,23 +108,23 @@ export default function CompetitorsPage() {
             {refreshing ? '取得中…' : '全症状を再取得'}
           </button>
         </div>
-        <p className="text-gray-400 text-sm mb-2">登録症状 × 整体／病院 で MEO地図結果TOP5 を取得</p>
-        {progress && <p className="text-xs text-amber-400 mb-4">{progress}</p>}
+        <p className="text-gray-500 text-sm mb-2">登録症状 × 整体／病院 で MEO地図結果TOP5 を取得</p>
+        {progress && <p className="text-xs text-amber-700 mb-4">{progress}</p>}
 
         {loading ? (
-          <p className="text-gray-400 mt-6">読み込み中…</p>
+          <p className="text-gray-500 mt-6">読み込み中…</p>
         ) : symptoms.length === 0 ? (
-          <p className="text-gray-400 mt-6">スナップショットがありません。「全症状を再取得」を押してください。</p>
+          <p className="text-gray-500 mt-6">スナップショットがありません。「全症状を再取得」を押してください。</p>
         ) : (
           <div className="space-y-6 mt-6">
             {symptoms.map((sym) => (
-              <div key={sym} className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+              <div key={sym} className="bg-white border border-gray-200 rounded-lg p-4">
                 <h2 className="text-lg font-semibold mb-3">{sym}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {(['整体', '病院'] as CategoryType[]).map((cat) => {
                     const snap = bySymptom[sym][cat]
                     return (
-                      <div key={cat} className="bg-gray-950 border border-gray-800 rounded p-3">
+                      <div key={cat} className="bg-white border border-gray-200 rounded p-3">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="text-sm font-semibold">
                             <span className={`inline-block w-2 h-2 rounded-full mr-2 ${cat === '整体' ? 'bg-blue-500' : 'bg-green-500'}`}></span>
@@ -133,7 +133,7 @@ export default function CompetitorsPage() {
                           <button
                             onClick={() => refreshOne(sym, cat)}
                             disabled={refreshing}
-                            className="text-xs px-2 py-0.5 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700 disabled:opacity-50"
+                            className="text-xs px-2 py-0.5 rounded bg-gray-50 border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
                           >
                             再取得
                           </button>
@@ -144,17 +144,17 @@ export default function CompetitorsPage() {
                               {(snap.top_results || []).map((r, i) => (
                                 <li key={i} className="text-sm">
                                   <div className="flex items-start gap-2">
-                                    <span className="text-gray-400 text-xs mt-0.5 w-4">{i + 1}.</span>
+                                    <span className="text-gray-500 text-xs mt-0.5 w-4">{i + 1}.</span>
                                     <div className="flex-1 min-w-0">
                                       <div className="font-medium truncate">{r.title}</div>
-                                      <div className="text-xs text-gray-400 flex items-center gap-2">
-                                        {r.rating != null && <span className="text-yellow-400">★ {r.rating}</span>}
+                                      <div className="text-xs text-gray-500 flex items-center gap-2">
+                                        {r.rating != null && <span className="text-yellow-700">★ {r.rating}</span>}
                                         {r.reviews != null && <span>{r.reviews}件</span>}
                                         {r.type && <span className="truncate">{r.type}</span>}
                                       </div>
                                       {r.address && <div className="text-xs text-gray-500 truncate">{r.address}</div>}
                                       {r.website && (
-                                        <a href={r.website} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline truncate inline-block max-w-full">
+                                        <a href={r.website} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline truncate inline-block max-w-full">
                                           {r.website.replace(/^https?:\/\//, '').slice(0, 40)}
                                         </a>
                                       )}

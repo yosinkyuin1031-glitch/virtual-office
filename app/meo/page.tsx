@@ -44,17 +44,17 @@ export default function MeoPage() {
 
   const rankColor = (rank: number | null) => {
     if (!rank) return 'text-gray-500'
-    if (rank <= 3) return 'text-green-400'
-    if (rank <= 10) return 'text-blue-400'
-    if (rank <= 30) return 'text-yellow-400'
-    return 'text-red-400'
+    if (rank <= 3) return 'text-green-600'
+    if (rank <= 10) return 'text-blue-600'
+    if (rank <= 30) return 'text-yellow-700'
+    return 'text-red-600'
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
+        <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
+          <Link href="/?biz=seitai" className="hover:text-gray-900">← 整体院タブへ戻る</Link>
           <span>/</span>
           <span>MEO順位</span>
         </div>
@@ -72,7 +72,7 @@ export default function MeoPage() {
             </a>
           )}
         </div>
-        <p className="text-gray-400 text-sm mb-6">{clinicName}</p>
+        <p className="text-gray-500 text-sm mb-6">{clinicName}</p>
 
         {summary && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
@@ -84,13 +84,13 @@ export default function MeoPage() {
         )}
 
         {loading ? (
-          <p className="text-gray-400">読み込み中…</p>
+          <p className="text-gray-500">読み込み中…</p>
         ) : keywords.length === 0 ? (
-          <p className="text-gray-400">順位データがありません。MEO勝ち上げくんで順位チェックを実行してください。</p>
+          <p className="text-gray-500">順位データがありません。MEO勝ち上げくんで順位チェックを実行してください。</p>
         ) : (
-          <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-800 text-xs text-gray-400">
+              <thead className="bg-gray-50 text-xs text-gray-500">
                 <tr>
                   <th className="text-left p-3">キーワード</th>
                   <th className="text-center p-3 w-20">最新順位</th>
@@ -100,12 +100,12 @@ export default function MeoPage() {
               </thead>
               <tbody>
                 {keywords.map((k) => (
-                  <tr key={k.keyword} className="border-t border-gray-800 hover:bg-gray-850">
+                  <tr key={k.keyword} className="border-t border-gray-200 hover:bg-gray-50">
                     <td className="p-3 font-medium">{k.keyword}</td>
                     <td className={`p-3 text-center font-bold text-lg ${rankColor(k.latestRank)}`}>
                       {k.latestRank ?? '圏外'}
                     </td>
-                    <td className="p-3 text-center text-xs text-gray-400">{formatDate(k.latestAt)}</td>
+                    <td className="p-3 text-center text-xs text-gray-500">{formatDate(k.latestAt)}</td>
                     <td className="p-3">
                       <Sparkline data={k.history.map((h) => h.rank)} />
                     </td>
@@ -121,10 +121,10 @@ export default function MeoPage() {
 }
 
 function Stat({ label, value, highlight }: { label: string; value: number | string; highlight?: 'blue' | 'green' }) {
-  const color = highlight === 'green' ? 'text-green-300' : highlight === 'blue' ? 'text-blue-300' : 'text-white'
+  const color = highlight === 'green' ? 'text-green-700' : highlight === 'blue' ? 'text-blue-700' : 'text-gray-900'
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded p-3 text-center">
-      <div className="text-xs text-gray-400">{label}</div>
+    <div className="bg-white border border-gray-200 rounded p-3 text-center">
+      <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
     </div>
   )

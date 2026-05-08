@@ -31,11 +31,11 @@ interface Summary {
 }
 
 const STATUS_LABEL: Record<ReplyStatus, { label: string; color: string }> = {
-  unreplied: { label: '未生成', color: 'bg-gray-500/20 text-gray-300' },
-  draft: { label: 'AI下書き', color: 'bg-yellow-500/20 text-yellow-300' },
-  approved: { label: '承認済', color: 'bg-blue-500/20 text-blue-300' },
-  posted: { label: '投稿済', color: 'bg-green-500/20 text-green-300' },
-  skipped: { label: 'スキップ', color: 'bg-gray-500/20 text-gray-400' },
+  unreplied: { label: '未生成', color: 'bg-gray-200 text-gray-700' },
+  draft: { label: 'AI下書き', color: 'bg-yellow-100 text-yellow-700' },
+  approved: { label: '承認済', color: 'bg-blue-100 text-blue-700' },
+  posted: { label: '投稿済', color: 'bg-green-100 text-green-700' },
+  skipped: { label: 'スキップ', color: 'bg-gray-200 text-gray-500' },
 }
 
 type Filter = 'all' | 'unreplied' | 'replied' | 'low'
@@ -144,10 +144,10 @@ export default function ReviewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
+        <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
+          <Link href="/?biz=seitai" className="hover:text-gray-900">← 整体院タブへ戻る</Link>
           <span>/</span>
           <span>口コミ返信</span>
         </div>
@@ -156,12 +156,12 @@ export default function ReviewsPage() {
           <h1 className="text-2xl md:text-3xl font-bold">Googleクチコミ返信</h1>
           <Link
             href="/keywords"
-            className="text-sm px-3 py-1.5 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700"
+            className="text-sm px-3 py-1.5 rounded bg-gray-50 border border-gray-300 hover:bg-gray-100"
           >
             ⚙ キーワード設定
           </Link>
         </div>
-        <p className="text-gray-400 text-sm mb-6">{clinicName} ／ LLMO・MEO最適化キーワード自動挿入</p>
+        <p className="text-gray-500 text-sm mb-6">{clinicName} ／ LLMO・MEO最適化キーワード自動挿入</p>
 
         {summary && (
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
@@ -180,7 +180,7 @@ export default function ReviewsPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded text-sm border ${
-                filter === f ? 'bg-blue-600 border-blue-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+                filter === f ? 'bg-blue-600 border-blue-500' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
               }`}
             >
               {f === 'all' && '全件'}
@@ -197,27 +197,27 @@ export default function ReviewsPage() {
             >
               {bulkGen ? '一括生成中…' : '未生成を一括AI生成（最大20）'}
             </button>
-            <button onClick={load} className="px-3 py-1.5 rounded text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700">
+            <button onClick={load} className="px-3 py-1.5 rounded text-sm bg-gray-50 border border-gray-300 hover:bg-gray-100">
               更新
             </button>
           </div>
         </div>
 
         {loading ? (
-          <p className="text-gray-400">読み込み中…</p>
+          <p className="text-gray-500">読み込み中…</p>
         ) : reviews.length === 0 ? (
-          <p className="text-gray-400">該当する口コミがありません</p>
+          <p className="text-gray-500">該当する口コミがありません</p>
         ) : (
           <div className="space-y-4">
             {reviews.map((rev) => {
               const status = (rev.reply_status as ReplyStatus) || 'unreplied'
               const stCfg = STATUS_LABEL[status]
               return (
-                <div key={rev.id} className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                <div key={rev.id} className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-yellow-400 text-sm">{'★'.repeat(rev.rating || 0)}{'☆'.repeat(5 - (rev.rating || 0))}</span>
+                        <span className="text-yellow-700 text-sm">{'★'.repeat(rev.rating || 0)}{'☆'.repeat(5 - (rev.rating || 0))}</span>
                         <span className="text-sm font-medium">{rev.author_name || '匿名'}</span>
                         <span className="text-xs text-gray-500">{rev.review_date || ''}</span>
                       </div>
@@ -225,11 +225,11 @@ export default function ReviewsPage() {
                     <span className={`text-xs px-2 py-1 rounded ${stCfg.color}`}>{stCfg.label}</span>
                   </div>
 
-                  <p className="text-sm text-gray-300 whitespace-pre-wrap mb-3 leading-relaxed">{rev.review_text}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3 leading-relaxed">{rev.review_text}</p>
 
-                  <div className="bg-gray-950 border border-gray-800 rounded p-3">
+                  <div className="bg-white border border-gray-200 rounded p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-400">院長返信（AI生成）</span>
+                      <span className="text-xs text-gray-500">院長返信（AI生成）</span>
                       {rev.llmo_keywords && (
                         <div className="flex flex-wrap gap-1 text-xs">
                           {[
@@ -239,7 +239,7 @@ export default function ReviewsPage() {
                           ]
                             .slice(0, 5)
                             .map((k, i) => (
-                              <span key={i} className="px-1.5 py-0.5 bg-blue-900/40 text-blue-300 rounded">
+                              <span key={i} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
                                 {k}
                               </span>
                             ))}
@@ -252,7 +252,7 @@ export default function ReviewsPage() {
                         <textarea
                           value={editText}
                           onChange={(e) => setEditText(e.target.value)}
-                          className="w-full h-32 bg-gray-900 border border-gray-700 rounded p-2 text-sm"
+                          className="w-full h-32 bg-white border border-gray-300 rounded p-2 text-sm"
                         />
                         <div className="flex gap-2 mt-2">
                           <button
@@ -265,7 +265,7 @@ export default function ReviewsPage() {
                           <button
                             onClick={() => saveEdit(rev.id)}
                             disabled={savingId === rev.id}
-                            className="px-3 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50"
+                            className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50"
                           >
                             下書き保存
                           </button>
@@ -274,7 +274,7 @@ export default function ReviewsPage() {
                               setEditingId(null)
                               setEditText('')
                             }}
-                            className="px-3 py-1 rounded text-sm bg-gray-800 hover:bg-gray-700"
+                            className="px-3 py-1 rounded text-sm bg-gray-50 hover:bg-gray-100"
                           >
                             キャンセル
                           </button>
@@ -314,7 +314,7 @@ export default function ReviewsPage() {
                               </button>
                               <button
                                 onClick={() => startEdit(rev)}
-                                className="px-3 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600"
+                                className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700"
                               >
                                 編集
                               </button>
@@ -342,7 +342,7 @@ export default function ReviewsPage() {
                             href="https://business.google.com/reviews"
                             target="_blank"
                             rel="noreferrer"
-                            className="px-3 py-1 rounded text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700 ml-auto"
+                            className="px-3 py-1 rounded text-sm bg-gray-50 border border-gray-300 hover:bg-gray-100 ml-auto"
                           >
                             GBPで返信→
                           </a>
@@ -362,14 +362,14 @@ export default function ReviewsPage() {
 
 function Stat({ label, value, highlight }: { label: string; value: number | string; highlight?: 'amber' | 'yellow' | 'blue' | 'red' }) {
   const color =
-    highlight === 'amber' ? 'text-amber-300'
-      : highlight === 'yellow' ? 'text-yellow-300'
-        : highlight === 'blue' ? 'text-blue-300'
-          : highlight === 'red' ? 'text-red-300'
-            : 'text-white'
+    highlight === 'amber' ? 'text-amber-700'
+      : highlight === 'yellow' ? 'text-yellow-700'
+        : highlight === 'blue' ? 'text-blue-700'
+          : highlight === 'red' ? 'text-red-700'
+            : 'text-gray-900'
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded p-2 text-center">
-      <div className="text-[10px] text-gray-400">{label}</div>
+    <div className="bg-white border border-gray-200 rounded p-2 text-center">
+      <div className="text-[10px] text-gray-500">{label}</div>
       <div className={`text-lg font-bold ${color}`}>{value}</div>
     </div>
   )

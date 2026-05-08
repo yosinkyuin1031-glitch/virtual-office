@@ -23,10 +23,10 @@ interface Video {
 }
 
 const STATUS_LABEL: Record<Post['status'], { label: string; color: string }> = {
-  pending: { label: '下書き', color: 'bg-yellow-500/20 text-yellow-300' },
-  approved: { label: '承認済', color: 'bg-blue-500/20 text-blue-300' },
-  posted: { label: '投稿済', color: 'bg-green-500/20 text-green-300' },
-  skipped: { label: 'スキップ', color: 'bg-gray-500/20 text-gray-400' },
+  pending: { label: '下書き', color: 'bg-yellow-100 text-yellow-700' },
+  approved: { label: '承認済', color: 'bg-blue-100 text-blue-700' },
+  posted: { label: '投稿済', color: 'bg-green-100 text-green-700' },
+  skipped: { label: 'スキップ', color: 'bg-gray-200 text-gray-500' },
 }
 
 export default function GbpPage() {
@@ -149,14 +149,14 @@ export default function GbpPage() {
   const renderPostCard = (p: Post, isToday: boolean) => {
     const stCfg = STATUS_LABEL[p.status]
     return (
-      <div key={p.id} className={`bg-gray-900 border ${isToday ? 'border-amber-500/50' : 'border-gray-800'} rounded-lg p-4`}>
+      <div key={p.id} className={`bg-white border ${isToday ? 'border-amber-400' : 'border-gray-200'} rounded-lg p-4`}>
         <div className="flex items-start justify-between gap-3 mb-2">
           <div>
             <div className="text-sm font-medium">
-              {p.scheduled_date} {isToday && <span className="text-amber-400 text-xs ml-1">（今日）</span>}
+              {p.scheduled_date} {isToday && <span className="text-amber-700 text-xs ml-1">（今日）</span>}
             </div>
-            <div className="text-xs text-gray-400 mt-0.5">
-              {p.keyword && <span className="px-1.5 py-0.5 bg-blue-900/40 text-blue-300 rounded mr-2">{p.keyword}</span>}
+            <div className="text-xs text-gray-500 mt-0.5">
+              {p.keyword && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded mr-2">{p.keyword}</span>}
               {p.video_title && <span className="text-gray-500">🎬 {p.video_title}</span>}
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function GbpPage() {
             <textarea
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
-              className="w-full h-40 bg-gray-950 border border-gray-700 rounded p-2 text-sm"
+              className="w-full h-40 bg-white border border-gray-300 rounded p-2 text-sm"
             />
             <div className="flex gap-2 mt-2">
               <button
@@ -181,7 +181,7 @@ export default function GbpPage() {
               <button
                 onClick={() => saveEdit(p.id)}
                 disabled={busy === p.id}
-                className="px-3 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600 disabled:opacity-50"
+                className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50"
               >
                 下書き保存
               </button>
@@ -190,7 +190,7 @@ export default function GbpPage() {
                   setEditingId(null)
                   setEditText('')
                 }}
-                className="px-3 py-1 rounded text-sm bg-gray-800 hover:bg-gray-700"
+                className="px-3 py-1 rounded text-sm bg-gray-50 hover:bg-gray-100"
               >
                 キャンセル
               </button>
@@ -198,7 +198,7 @@ export default function GbpPage() {
           </>
         ) : (
           <>
-            <div className="bg-gray-950 border border-gray-800 rounded p-3">
+            <div className="bg-white border border-gray-200 rounded p-3">
               <p className="text-sm whitespace-pre-wrap leading-relaxed">{p.post_text}</p>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -210,7 +210,7 @@ export default function GbpPage() {
               </button>
               <button
                 onClick={() => startEdit(p)}
-                className="px-3 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600"
+                className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700"
               >
                 編集
               </button>
@@ -245,7 +245,7 @@ export default function GbpPage() {
                 href="https://business.google.com/posts"
                 target="_blank"
                 rel="noreferrer"
-                className="px-3 py-1 rounded text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700 ml-auto"
+                className="px-3 py-1 rounded text-sm bg-gray-50 border border-gray-300 hover:bg-gray-100 ml-auto"
               >
                 GBPで投稿→
               </a>
@@ -257,10 +257,10 @@ export default function GbpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
+        <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
+          <Link href="/?biz=seitai" className="hover:text-gray-900">← 整体院タブへ戻る</Link>
           <span>/</span>
           <span>GBP毎日投稿</span>
         </div>
@@ -270,43 +270,43 @@ export default function GbpPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowVideos(!showVideos)}
-              className="text-sm px-3 py-1.5 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700"
+              className="text-sm px-3 py-1.5 rounded bg-gray-50 border border-gray-300 hover:bg-gray-100"
             >
               🎬 動画プール（{videos.filter((v) => v.active).length}）
             </button>
-            <Link href="/keywords" className="text-sm px-3 py-1.5 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700">
+            <Link href="/keywords" className="text-sm px-3 py-1.5 rounded bg-gray-50 border border-gray-300 hover:bg-gray-100">
               ⚙ キーワード設定
             </Link>
           </div>
         </div>
-        <p className="text-gray-400 text-sm mb-6">大口神経整体院 ／ キーワード×動画リンクをAIが毎日自動生成</p>
+        <p className="text-gray-500 text-sm mb-6">大口神経整体院 ／ キーワード×動画リンクをAIが毎日自動生成</p>
 
         {showVideos && (
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
             <h2 className="font-semibold mb-3">🎬 動画プール</h2>
-            <p className="text-xs text-gray-400 mb-3">毎日の投稿に挿入される動画リンクを管理。日付で自動ローテーションされます。</p>
+            <p className="text-xs text-gray-500 mb-3">毎日の投稿に挿入される動画リンクを管理。日付で自動ローテーションされます。</p>
 
             {videos.length === 0 ? (
               <p className="text-sm text-gray-500 mb-3">動画がまだ登録されていません</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {videos.map((v) => (
-                  <div key={v.id} className={`flex items-center gap-2 p-2 rounded ${v.active ? 'bg-gray-950 border border-gray-800' : 'bg-gray-950 border border-gray-800 opacity-50'}`}>
+                  <div key={v.id} className={`flex items-center gap-2 p-2 rounded ${v.active ? 'bg-white border border-gray-200' : 'bg-white border border-gray-200 opacity-50'}`}>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{v.title}</div>
-                      <a href={v.url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline truncate inline-block max-w-full">
+                      <a href={v.url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline truncate inline-block max-w-full">
                         {v.url}
                       </a>
                     </div>
                     <button
                       onClick={() => toggleVideo(v.id, v.active)}
-                      className="text-xs px-2 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-gray-700"
+                      className="text-xs px-2 py-1 rounded bg-gray-50 border border-gray-300 hover:bg-gray-100"
                     >
                       {v.active ? '無効化' : '有効化'}
                     </button>
                     <button
                       onClick={() => deleteVideo(v.id)}
-                      className="text-xs px-2 py-1 rounded bg-gray-800 border border-gray-700 hover:bg-red-700"
+                      className="text-xs px-2 py-1 rounded bg-gray-50 border border-gray-300 hover:bg-red-700"
                     >
                       削除
                     </button>
@@ -320,13 +320,13 @@ export default function GbpPage() {
                 value={newVideoTitle}
                 onChange={(e) => setNewVideoTitle(e.target.value)}
                 placeholder="動画タイトル（例：脊柱管狭窄症の解説）"
-                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm"
+                className="px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm"
               />
               <input
                 value={newVideoUrl}
                 onChange={(e) => setNewVideoUrl(e.target.value)}
                 placeholder="https://youtube.com/watch?v=..."
-                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm"
+                className="px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm"
               />
             </div>
             <button
@@ -340,7 +340,7 @@ export default function GbpPage() {
         )}
 
         {loading ? (
-          <p className="text-gray-400">読み込み中…</p>
+          <p className="text-gray-500">読み込み中…</p>
         ) : (
           <div className="space-y-6">
             <section>
@@ -348,8 +348,8 @@ export default function GbpPage() {
               {todayPost ? (
                 renderPostCard(todayPost, true)
               ) : (
-                <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center">
-                  <p className="text-gray-400 mb-3">今日の投稿はまだ生成されていません</p>
+                <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                  <p className="text-gray-500 mb-3">今日の投稿はまだ生成されていません</p>
                   <button
                     onClick={() => generate(false)}
                     disabled={busy === 'gen'}

@@ -102,43 +102,43 @@ export default function KeywordsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
+        <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
+          <Link href="/?biz=seitai" className="hover:text-gray-900">← 整体院タブへ戻る</Link>
           <span>/</span>
-          <Link href="/reviews" className="hover:text-white">口コミ返信</Link>
+          <Link href="/reviews" className="hover:text-gray-900">口コミ返信</Link>
           <span>/</span>
           <span>キーワード設定</span>
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold mb-1">LLMO・MEOキーワード設定</h1>
-        <p className="text-gray-400 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-6">
           口コミ返信に自然挿入されるキーワード。AI検索（ChatGPT/Gemini）で引用される際の手がかりになります。
         </p>
 
         {loading ? (
-          <p className="text-gray-400">読み込み中…</p>
+          <p className="text-gray-500">読み込み中…</p>
         ) : (
           <div className="space-y-6">
             {(['symptom', 'area', 'strength'] as Category[]).map((cat) => {
               const cfg = CAT_LABEL[cat]
               const list = data[cat] || []
               return (
-                <div key={cat} className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                <div key={cat} className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`w-2 h-2 rounded-full ${cfg.color}`}></span>
                     <h2 className="font-semibold">{cfg.label}</h2>
                     <span className="text-xs text-gray-500">{list.filter((k) => k.active).length} / {list.length} 有効</span>
                   </div>
-                  <p className="text-xs text-gray-400 mb-3">{cfg.description}</p>
+                  <p className="text-xs text-gray-500 mb-3">{cfg.description}</p>
 
                   <div className="flex flex-wrap gap-2 mb-3">
                     {list.map((kw) => (
                       <div
                         key={kw.id}
                         className={`flex items-center gap-1 px-2 py-1 rounded text-sm border ${
-                          kw.active ? 'bg-gray-800 border-gray-700' : 'bg-gray-950 border-gray-800 opacity-50 line-through'
+                          kw.active ? 'bg-gray-50 border-gray-300' : 'bg-white border-gray-200 opacity-50 line-through'
                         }`}
                       >
                         {editingId === kw.id ? (
@@ -146,10 +146,10 @@ export default function KeywordsPage() {
                             <input
                               value={editText}
                               onChange={(e) => setEditText(e.target.value)}
-                              className="bg-gray-900 border border-gray-700 rounded px-1 text-sm w-32"
+                              className="bg-white border border-gray-300 rounded px-1 text-sm w-32"
                               autoFocus
                             />
-                            <button onClick={() => saveEdit(kw.id)} className="text-blue-400 text-xs ml-1">保存</button>
+                            <button onClick={() => saveEdit(kw.id)} className="text-blue-600 text-xs ml-1">保存</button>
                             <button onClick={() => { setEditingId(null); setEditText('') }} className="text-gray-500 text-xs ml-1">×</button>
                           </>
                         ) : (
@@ -157,14 +157,14 @@ export default function KeywordsPage() {
                             <span>{kw.keyword}</span>
                             <button
                               onClick={() => startEdit(kw)}
-                              className="text-gray-400 hover:text-white text-xs ml-1"
+                              className="text-gray-500 hover:text-gray-900 text-xs ml-1"
                               title="編集"
                             >
                               ✎
                             </button>
                             <button
                               onClick={() => toggle(kw.id, kw.active)}
-                              className="text-gray-400 hover:text-yellow-400 text-xs ml-1"
+                              className="text-gray-500 hover:text-yellow-700 text-xs ml-1"
                               title={kw.active ? '無効化' : '有効化'}
                             >
                               {kw.active ? '⏸' : '▶'}
@@ -172,7 +172,7 @@ export default function KeywordsPage() {
                             <button
                               onClick={() => remove(kw.id)}
                               disabled={busy === kw.id}
-                              className="text-gray-400 hover:text-red-400 text-xs ml-1 disabled:opacity-50"
+                              className="text-gray-500 hover:text-red-600 text-xs ml-1 disabled:opacity-50"
                               title="削除"
                             >
                               ✕
@@ -190,7 +190,7 @@ export default function KeywordsPage() {
                       onChange={(e) => setNewKw({ ...newKw, [cat]: e.target.value })}
                       onKeyDown={(e) => e.key === 'Enter' && add(cat)}
                       placeholder={`新しい${cfg.label}を追加`}
-                      className="flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm"
+                      className="flex-1 px-3 py-1.5 bg-gray-50 border border-gray-300 rounded text-sm"
                     />
                     <button
                       onClick={() => add(cat)}

@@ -178,7 +178,7 @@ export default function TasksPage() {
         </div>
 
         {loading ? (
-          <p className="text-gray-400">読み込み中…</p>
+          <p className="text-gray-500">読み込み中…</p>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <p className="text-3xl mb-2">✨</p>
@@ -210,7 +210,7 @@ export default function TasksPage() {
                         <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: biz.color + '20', color: biz.color }}>
                           {biz.emoji} {biz.label}
                         </span>
-                        <span className="text-[10px] text-gray-400">{task.department}</span>
+                        <span className="text-[10px] text-gray-500">{task.department}</span>
                         {task.priority === 'high' && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">高</span>
                         )}
@@ -221,7 +221,7 @@ export default function TasksPage() {
                       {task.description && (
                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{task.description}</p>
                       )}
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
+                      <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-500">
                         {task.due_date && <span>期日: {task.due_date}</span>}
                         {task.employee_name && <span>担当: {task.employee_name}</span>}
                       </div>
