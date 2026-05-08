@@ -1175,14 +1175,9 @@ const businessConfig: Record<BusinessId, {
     documentCategories: ['operations', 'sns', 'meo'],
     channels: [
       { id: 'context', label: '方針・KPI', icon: '🎯', keywords: [] },
-      { id: 'tasks', label: 'タスク', icon: '✅', keywords: [] },
-      { id: 'reviews', label: '口コミ返信', icon: '⭐', keywords: [] },
-      { id: 'meo-suite', label: '集客MEO', icon: '📍', keywords: [] },
-      { id: 'ads-suite', label: '広告', icon: '📊', keywords: [] },
-      { id: 'instagram', label: 'Instagram', icon: '📸', keywords: ['instagram', 'insta'] },
-      { id: 'threads', label: 'Threads', icon: '🧵', keywords: ['threads'] },
-      { id: 'blog', label: 'ブログSEO', icon: '📝', keywords: ['blog', 'seo', 'ブログ', '記事'] },
-      { id: 'note', label: 'note', icon: '📓', keywords: ['note'] },
+      { id: 'reviews', label: '口コミ集客', icon: '⭐', keywords: [] },
+      { id: 'meo-suite', label: 'MEO', icon: '📍', keywords: [] },
+      { id: 'ads-suite', label: '広告リサーチ', icon: '🔍', keywords: [] },
       { id: 'apps', label: 'アプリ', icon: '📱', keywords: [] },
     ],
     appGroups: [
@@ -1270,6 +1265,67 @@ function matchChannel(doc: Document, channel: ChannelDef): boolean {
   if (channel.keywords.length === 0) return false
   const haystack = (doc.title + ' ' + doc.id).toLowerCase()
   return channel.keywords.some(kw => haystack.includes(kw))
+}
+
+// セットアップ状況パネル（方針/API/データの抜けを表示）
+type SetupItemStatus = 'ok' | 'warning' | 'error' | 'pending'
+interface SetupItem { status: SetupItemStatus; label: string; link?: string; target?: string }
+
+function SetupStatusPanel({ businessId, color }: { businessId: BusinessId; color: string }) {
+  const [items, setItems] = useState<Record<string, SetupItem> | null>(null)
+  const [hidden, setHidden] = useState(false)
+
+  useEffect(() => {
+    if (businessId !== 'seitai') return
+    fetch('/api/setup-status').then(r => r.json()).then(d => {
+      if (d?.seitai) setItems(d.seitai as Record<string, SetupItem>)
+    }).catch(() => {})
+  }, [businessId])
+
+  if (businessId !== 'seitai' || !items || hidden) return null
+
+  const list = Object.values(items)
+  const issues = list.filter(i => i.status !== 'ok')
+  const okCount = list.filter(i => i.status === 'ok').length
+
+  if (issues.length === 0) return null
+
+  const colorOf = (s: SetupItemStatus) => {
+    if (s === 'error') return { bg: '#fee2e2', text: '#991b1b', dot: '#dc2626' }
+    if (s === 'warning') return { bg: '#fef3c7', text: '#92400e', dot: '#d97706' }
+    if (s === 'pending') return { bg: '#dbeafe', text: '#1e40af', dot: '#2563eb' }
+    return { bg: '#dcfce7', text: '#166534', dot: '#16a34a' }
+  }
+
+  return (
+    <div className="bg-white rounded-xl border-2 p-3 mt-2 shadow-sm" style={{ borderColor: color + '33' }}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold" style={{ color }}>⚠️ セットアップ未完了</span>
+          <span className="text-[10px] text-gray-500">{issues.length}項目要対応 / {okCount}項目稼働中</span>
+        </div>
+        <button onClick={() => setHidden(true)} className="text-[10px] text-gray-400 hover:text-gray-600">×</button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+        {issues.map((it, i) => {
+          const c = colorOf(it.status)
+          const Element: 'a' | 'div' = it.link ? 'a' : 'div'
+          return (
+            <Element
+              key={i}
+              {...(it.link ? { href: it.link } : {})}
+              className="flex items-center gap-2 p-2 rounded text-xs hover:opacity-80 transition-all"
+              style={{ backgroundColor: c.bg, color: c.text, cursor: it.link ? 'pointer' : 'default' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: c.dot }} />
+              <span className="flex-1">{it.label}</span>
+              {it.link && <span className="text-[9px]">→</span>}
+            </Element>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 // アプリカード（再利用）
@@ -1463,6 +1519,9 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
           <p className="text-[10px] text-gray-400 mt-1">Target: {config.target}</p>
         </div>
       </div>
+
+      {/* セットアップ状況（整体院のみ・要対応がある時だけ表示） */}
+      <SetupStatusPanel businessId={businessId} color={config.color} />
 
       {/* Channel tabs */}
       <div className="bg-white border-x-2 px-2 pb-2" style={{ borderColor: config.color + '33' }}>
@@ -2151,16 +2210,33 @@ export default function VirtualOffice() {
     return () => clearInterval(timer)
   }, [])
 
-  // URL param ?biz=seitai で初期表示の事業タブを切替
+  // URL param ?biz=seitai で表示する事業タブを切替＋ブラウザバックにも反応
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const biz = params.get('biz')
-    const validBiz: ViewType[] = ['seitai', 'houmon', 'app-biz', 'consulting', 'device']
-    if (biz && (validBiz as string[]).includes(biz)) {
-      setView(biz as ViewType)
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search)
+      const biz = params.get('biz')
+      const validBiz: ViewType[] = ['seitai', 'houmon', 'app-biz', 'consulting', 'device']
+      if (biz && (validBiz as string[]).includes(biz)) {
+        setView(biz as ViewType)
+      } else {
+        setView('home')
+      }
     }
+    handleUrlChange()
+    window.addEventListener('popstate', handleUrlChange)
+    return () => window.removeEventListener('popstate', handleUrlChange)
   }, [])
+
+  // 事業タブ切替時に URL を更新（戻るボタン対応・リロード時の状態維持）
+  const navigateView = (next: ViewType) => {
+    setView(next)
+    if (typeof window === 'undefined') return
+    const url = next === 'home' ? '/' : `/?biz=${next}`
+    if (window.location.pathname + window.location.search !== url) {
+      window.history.pushState({}, '', url)
+    }
+  }
 
   const totalEmployees = allEmployeesList.length
 
@@ -2222,7 +2298,7 @@ export default function VirtualOffice() {
               return (
                 <button
                   key={item.key}
-                  onClick={() => { setView(item.key); setSidebarOpen(false) }}
+                  onClick={() => { navigateView(item.key); setSidebarOpen(false) }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-left ${
                     isActive
                       ? 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-800 font-medium border border-amber-200'
@@ -2246,6 +2322,16 @@ export default function VirtualOffice() {
             >
               <span className="text-base">📥</span>
               <span>受信箱</span>
+            </Link>
+
+            {/* タスク統合リンク */}
+            <Link
+              href="/tasks"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 font-medium"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">✅</span>
+              <span>タスク（5事業）</span>
             </Link>
 
             {/* ビジョンリンク */}
