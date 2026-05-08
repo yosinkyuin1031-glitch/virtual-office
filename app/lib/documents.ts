@@ -4518,6 +4518,73 @@ https://clinic-saas-lp.vercel.app
 `
   },
   // ==========================================
+  // 配布キット
+  // ==========================================
+  {
+    id: 'kit-meo-kachiagekun-2026-05',
+    title: 'MEO勝ち上げくんキット（DIY配布版）',
+    summary: 'MEO対策の4機能（順位チェック・記事生成・競合分析・口コミ取得）を、各先生のClaude Code+APIキーで動かせるDIYキット。SerpAPI制限対策＋自走モニター切替用。',
+    category: 'sns',
+    business: 'app-biz' as const,
+    status: 'final',
+    updatedAt: '2026-05-08',
+    contentHtml: `
+<h2>MEO勝ち上げくんキット 配布版</h2>
+
+<h3>配布元・配布先</h3>
+<ul>
+<li>配布元: 大口陽平 / 大口アプリラボ</li>
+<li>配布先: 「自分でClaudeなどを使って似た仕組みを作ってみたい」と回答した治療家</li>
+<li>個人利用のみ。転売・再配布禁止</li>
+</ul>
+
+<h3>場所・配布方法</h3>
+<ul>
+<li>フォルダ: <code>/Users/ooguchiyouhei/事業/AI会社/MEO勝ち上げくんキット/</code></li>
+<li>配布用zip: <code>/Users/ooguchiyouhei/事業/AI会社/MEO勝ち上げくんキット.zip</code>（19KB）</li>
+<li>配布: LINE or Googleドライブ送付</li>
+</ul>
+
+<h3>提供4機能</h3>
+<table>
+<tr><th>スクリプト</th><th>機能</th></tr>
+<tr><td>scripts/check-ranking.mjs</td><td>キーワード別Googleマップ順位を一括取得</td></tr>
+<tr><td>scripts/generate-content.mjs</td><td>blog/note/gbp/faq の4種記事生成（Claude）</td></tr>
+<tr><td>scripts/analyze-competitors.mjs</td><td>上位3院抽出＋競合ランキング</td></tr>
+<tr><td>scripts/fetch-reviews.mjs</td><td>自院Googleマップ口コミ全件取得</td></tr>
+</table>
+
+<h3>受け取った先生がやること</h3>
+<ol>
+<li>zip解凍 → デスクトップに置く</li>
+<li>SerpAPI（無料）と Anthropic（従量）のキーを各自で取得</li>
+<li><code>cp .env.example .env</code> で .env 作成 → 院情報・キー記入</li>
+<li>Claude Codeで自然な日本語で頼む（例: 「順位チェックして」）</li>
+</ol>
+
+<h3>テスト結果（陽平さんの院で実機検証 2026-05-08）</h3>
+<ul>
+<li>順位チェック: 坐骨神経痛 1位 / 脊柱管狭窄症 6位 取得成功</li>
+<li>記事生成（GBP）: 198文字の自然な投稿文を生成</li>
+<li>競合分析: 上位3院ランキング＋院別レポート出力</li>
+<li>口コミ取得: 98件・平均★4.95 取得成功</li>
+</ul>
+
+<h3>背景・狙い</h3>
+<ul>
+<li>SerpAPI Free 250件/月で、モニター18院を全員フル活用させると破綻</li>
+<li>「自走できる人」には自分のAPIキーで自由に使ってもらう方が両者にメリット</li>
+<li>大口側は無料モニターサポート負担を減らせる、先生側は制限なく自由運用</li>
+</ul>
+
+<h3>関連メモリ</h3>
+<ul>
+<li>SerpApi使用状況: reference_serpapi_usage.md</li>
+<li>モニター16人活動状況: 直近30日アクティブ9名・未活動7名</li>
+</ul>
+`
+  },
+  // ==========================================
   // SNS投稿（Facebook）
   // ==========================================
   {
