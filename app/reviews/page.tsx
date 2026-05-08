@@ -147,7 +147,7 @@ export default function ReviewsPage() {
     <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white">← ホーム</Link>
+          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
           <span>/</span>
           <span>口コミ返信</span>
         </div>

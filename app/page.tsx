@@ -1302,57 +1302,37 @@ function ProductCard({ product }: { product: { id: string; name: string; url?: s
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 既存ページをiframeで埋め込み + サブタブ切替
+// 機能カード式チャネル（クリックで全画面表示）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function EmbeddedChannel({ color, title, description, tabs }: {
   color: string
   title: string
   description: string
-  tabs: Array<{ id: string; label: string; url: string }>
+  tabs: Array<{ id: string; label: string; url: string; icon?: string; desc?: string }>
 }) {
-  const [activeTab, setActiveTab] = useState(tabs[0].id)
-  const active = tabs.find(t => t.id === activeTab) || tabs[0]
   return (
     <div>
-      <div className="mb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-bold" style={{ color }}>{title}</h3>
-            <p className="text-[10px] text-gray-400">{description}</p>
-          </div>
-          <a
-            href={active.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
-          >
-            新タブで開く →
-          </a>
-        </div>
-        {tabs.length > 1 && (
-          <div className="flex gap-1 mt-2 border-b border-gray-200">
-            {tabs.map(t => {
-              const isActive = activeTab === t.id
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className="text-xs px-3 py-1.5 transition-all -mb-px border-b-2"
-                  style={{
-                    borderColor: isActive ? color : 'transparent',
-                    color: isActive ? color : '#6b7280',
-                    fontWeight: isActive ? 600 : 400,
-                  }}
-                >
-                  {t.label}
-                </button>
-              )
-            })}
-          </div>
-        )}
+      <div className="mb-4 pb-3 border-b border-gray-200">
+        <h3 className="text-lg font-bold" style={{ color }}>{title}</h3>
+        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       </div>
-      <div className="rounded-lg overflow-hidden border border-gray-200" style={{ height: 'calc(100vh - 280px)', minHeight: '600px' }}>
-        <iframe src={active.url} className="w-full h-full" title={active.label} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {tabs.map(t => (
+          <Link
+            key={t.id}
+            href={t.url}
+            className="group bg-white border-2 rounded-xl p-4 hover:shadow-lg transition-all hover:scale-[1.02]"
+            style={{ borderColor: color + '33' }}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <span className="text-3xl">{t.icon || '📂'}</span>
+              <span className="text-xs text-gray-400 group-hover:text-gray-600">開く →</span>
+            </div>
+            <h4 className="text-sm font-bold text-gray-800 mb-1">{t.label}</h4>
+            {t.desc && <p className="text-[11px] text-gray-500 leading-relaxed">{t.desc}</p>}
+          </Link>
+        ))}
       </div>
     </div>
   )
@@ -1527,29 +1507,32 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
         ) : isReviewsChannel ? (
           <EmbeddedChannel
             color={config.color}
-            title="口コミ返信"
-            description="Googleクチコミに対するAI返信を生成・編集・承認"
-            tabs={[{ id: 'reviews', label: '口コミ一覧', url: '/reviews' }, { id: 'keywords', label: 'LLMOキーワード設定', url: '/keywords' }]}
+            title="⭐ 口コミ返信"
+            description="Googleクチコミに対する返信をAI生成・LLMOキーワード自然挿入"
+            tabs={[
+              { id: 'reviews', label: '口コミ一覧', url: '/reviews', icon: '💬', desc: '取得済の口コミ100件にAI返信を生成。承認・コピー・GBPへ手動貼付' },
+              { id: 'keywords', label: 'LLMOキーワード設定', url: '/keywords', icon: '⚙️', desc: '症状/地域/強みのキーワードを編集。返信文に自然挿入される' },
+            ]}
           />
         ) : isMeoSuiteChannel ? (
           <EmbeddedChannel
             color={config.color}
-            title="集客MEO"
-            description="MEO順位、GBP投稿、競合TOP5を一元管理"
+            title="📍 集客MEO"
+            description="Googleマップ順位・GBP投稿・競合分析を一元管理"
             tabs={[
-              { id: 'rank', label: 'MEO順位', url: '/meo' },
-              { id: 'gbp', label: 'GBP毎日投稿', url: '/gbp' },
-              { id: 'competitors', label: '競合TOP5', url: '/competitors' },
+              { id: 'rank', label: 'MEO順位', url: '/meo', icon: '📊', desc: '登録KW9件の順位を毎朝4時に自動取得・推移グラフ表示' },
+              { id: 'gbp', label: 'GBP毎日投稿', url: '/gbp', icon: '📝', desc: '症状KW×動画リンクで毎朝6:30に投稿文をAI自動生成・コピペ運用' },
+              { id: 'competitors', label: '競合TOP5', url: '/competitors', icon: '🏪', desc: '症状×整体/病院でMEO地図TOP5の競合院をスナップショット' },
             ]}
           />
         ) : isAdsSuiteChannel ? (
           <EmbeddedChannel
             color={config.color}
-            title="広告（リサーチ・分析）"
-            description="競合広告のリサーチと自院広告の分析"
+            title="📊 広告（リサーチ・分析）"
+            description="競合広告のリサーチと自院広告のパフォーマンス分析"
             tabs={[
-              { id: 'research', label: '広告リサーチ', url: '/research' },
-              { id: 'analytics', label: '広告分析', url: '/ads' },
+              { id: 'research', label: '広告リサーチ', url: '/research', icon: '🔍', desc: '症状×地域でSerpAPIから広告出稿状況・関連質問を取得' },
+              { id: 'analytics', label: '広告分析', url: '/ads', icon: '📈', desc: 'Meta/Google広告のCPC/CTR/CPA推移（API連携設定後に有効）' },
             ]}
           />
         ) : isAppsChannel ? (
@@ -2166,6 +2149,17 @@ export default function VirtualOffice() {
     update()
     const timer = setInterval(update, 1000)
     return () => clearInterval(timer)
+  }, [])
+
+  // URL param ?biz=seitai で初期表示の事業タブを切替
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const biz = params.get('biz')
+    const validBiz: ViewType[] = ['seitai', 'houmon', 'app-biz', 'consulting', 'device']
+    if (biz && (validBiz as string[]).includes(biz)) {
+      setView(biz as ViewType)
+    }
   }, [])
 
   const totalEmployees = allEmployeesList.length

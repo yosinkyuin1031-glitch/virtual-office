@@ -105,7 +105,7 @@ export default function KeywordsPage() {
     <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-2 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white">← ホーム</Link>
+          <Link href="/?biz=seitai" className="hover:text-white">← 整体院タブへ戻る</Link>
           <span>/</span>
           <Link href="/reviews" className="hover:text-white">口コミ返信</Link>
           <span>/</span>
