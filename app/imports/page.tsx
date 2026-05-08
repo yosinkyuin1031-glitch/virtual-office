@@ -56,6 +56,10 @@ export default function ImportsPage() {
   const [busy, setBusy] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Classification>({})
+  const [showPaste, setShowPaste] = useState(false)
+  const [pasteTitle, setPasteTitle] = useState('')
+  const [pasteContent, setPasteContent] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -127,7 +131,15 @@ export default function ImportsPage() {
           <span>承認待ち</span>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold mb-1">📥 承認待ち（Plaud等）</h1>
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold">📥 承認待ち（Plaud等）</h1>
+          <button
+            onClick={() => setShowPaste(true)}
+            className="px-4 py-2 rounded text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium"
+          >
+            + 手動で貼付（Plaud等）
+          </button>
+        </div>
         <p className="text-gray-500 text-sm mb-4">録音や外部データのAI分類結果を承認・却下・編集</p>
 
         <div className="flex gap-2 mb-4">
@@ -238,6 +250,86 @@ export default function ImportsPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* 手動貼付モーダル */}
+        {showPaste && (
+          <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center p-0 md:p-4 z-50" onClick={() => !submitting && setShowPaste(false)}>
+            <div className="bg-white rounded-t-2xl md:rounded-lg max-w-2xl w-full max-h-[95vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                <h2 className="text-lg font-bold">📝 Plaud文字起こしを貼付</h2>
+                <button onClick={() => !submitting && setShowPaste(false)} className="text-gray-400 hover:text-gray-700 text-xl">×</button>
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-xs text-gray-500">
+                  Plaudアプリで生成した要約・文字起こしをそのまま貼付してください。AIが自動でナレッジ／コンテキスト／タスクに分類します。
+                </p>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">タイトル（任意）</label>
+                  <input
+                    value={pasteTitle}
+                    onChange={e => setPasteTitle(e.target.value)}
+                    placeholder="例: 5/8 朝の振り返り"
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">本文（必須）</label>
+                  <textarea
+                    value={pasteContent}
+                    onChange={e => setPasteContent(e.target.value)}
+                    rows={12}
+                    placeholder="Plaudの要約や文字起こしをそのままペースト..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                    autoFocus
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">{pasteContent.length} 文字</p>
+                </div>
+              </div>
+              <div className="p-4 border-t border-gray-200 flex gap-2 justify-end sticky bottom-0 bg-white">
+                <button
+                  onClick={() => !submitting && setShowPaste(false)}
+                  disabled={submitting}
+                  className="px-4 py-2 rounded text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!pasteContent.trim()) { alert('本文を入力してください'); return }
+                    setSubmitting(true)
+                    try {
+                      const r = await fetch('/api/plaud-webhook', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          transcript: pasteContent.trim(),
+                          title: pasteTitle.trim() || null,
+                        }),
+                      })
+                      const d = await r.json()
+                      if (!r.ok) {
+                        alert('送信失敗: ' + (d.error || ''))
+                        return
+                      }
+                      setPasteTitle('')
+                      setPasteContent('')
+                      setShowPaste(false)
+                      // AI分類は非同期。少し待ってから再取得
+                      setTimeout(() => load(), 3000)
+                      alert('送信しました。AI分類は数秒〜数十秒で完了します。リロードで承認待ちに表示されます。')
+                    } finally {
+                      setSubmitting(false)
+                    }
+                  }}
+                  disabled={submitting || !pasteContent.trim()}
+                  className="px-4 py-2 rounded text-sm bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 font-medium"
+                >
+                  {submitting ? '送信中…' : 'AIに分類させて承認待ちへ'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
