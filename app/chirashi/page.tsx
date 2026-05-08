@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 
 // ============================================================
 // Types
@@ -109,7 +110,22 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-function loadAll(): ChirashiData[] {
+// Supabase APIから取得（フォールバック：localStorage）
+async function loadAllRemote(): Promise<{ rowId: string; payload: ChirashiData }[]> {
+  try {
+    const r = await fetch('/api/flyers?business_id=seitai');
+    const d = await r.json();
+    if (!Array.isArray(d.items)) return [];
+    return d.items.map((row: { id: string; data: ChirashiData; title: string; updated_at: string }) => ({
+      rowId: row.id,
+      payload: { ...row.data, id: row.id, title: row.title, updatedAt: row.updated_at },
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function loadLocalLegacy(): ChirashiData[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -117,10 +133,6 @@ function loadAll(): ChirashiData[] {
   } catch {
     return [];
   }
-}
-
-function saveAll(list: ChirashiData[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
 // ============================================================
@@ -131,26 +143,72 @@ export default function ChirashiBuilderPage() {
   const [data, setData] = useState<ChirashiData>({ ...DEFAULT_DATA, id: generateId(), title: '新しいチラシ', updatedAt: new Date().toISOString() });
   const [saved, setSaved] = useState<ChirashiData[]>([]);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [migrationDone, setMigrationDone] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setSaved(loadAll());
+  const refresh = useCallback(async () => {
+    const remote = await loadAllRemote();
+    setSaved(remote.map(r => r.payload));
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      await refresh();
+      // 旧localStorage残存データを一度だけクラウドへ移行
+      if (!migrationDone) {
+        const legacy = loadLocalLegacy();
+        if (legacy.length > 0) {
+          for (const item of legacy) {
+            try {
+              await fetch('/api/flyers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ business_id: 'seitai', title: item.title || '無題', data: item }),
+              });
+            } catch {}
+          }
+          // 移行完了マーカーをセット（再実行防止）
+          localStorage.setItem('chirashi-migrated', '1');
+          localStorage.removeItem(STORAGE_KEY);
+          await refresh();
+        }
+        setMigrationDone(true);
+      }
+    })();
+  }, [refresh, migrationDone]);
 
   const update = useCallback(<K extends keyof ChirashiData>(key: K, value: ChirashiData[K]) => {
     setData(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  const handleSave = () => {
-    const now = new Date().toISOString();
-    const updated = { ...data, updatedAt: now };
-    setData(updated);
-    const list = loadAll();
-    const idx = list.findIndex(d => d.id === updated.id);
-    if (idx >= 0) list[idx] = updated;
-    else list.push(updated);
-    saveAll(list);
-    setSaved(list);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const now = new Date().toISOString();
+      const updated = { ...data, updatedAt: now };
+      setData(updated);
+      // UUID形式かどうかで判定（既存DBレコードか新規か）
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id);
+      if (isUuid) {
+        await fetch(`/api/flyers?id=${data.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: updated.title, data: updated }),
+        });
+      } else {
+        const r = await fetch('/api/flyers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ business_id: 'seitai', title: updated.title, data: updated }),
+        });
+        const d = await r.json();
+        if (d.item?.id) setData({ ...updated, id: d.item.id });
+      }
+      await refresh();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleNew = () => {
@@ -163,10 +221,10 @@ export default function ChirashiBuilderPage() {
     setMode('edit');
   };
 
-  const handleDelete = (id: string) => {
-    const list = loadAll().filter(d => d.id !== id);
-    saveAll(list);
-    setSaved(list);
+  const handleDelete = async (id: string) => {
+    if (!confirm('このチラシを削除しますか？')) return;
+    await fetch(`/api/flyers?id=${id}`, { method: 'DELETE' });
+    await refresh();
   };
 
   const handlePrint = () => {
@@ -198,6 +256,11 @@ export default function ChirashiBuilderPage() {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto p-8">
+          <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
+            <Link href="/?biz=seitai" className="hover:text-gray-900">← 整体院タブへ戻る</Link>
+            <span>/</span>
+            <span>チラシ整理</span>
+          </div>
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">チラシビルダー</h1>
@@ -286,8 +349,8 @@ export default function ChirashiBuilderPage() {
             />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-              保存
+            <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50">
+              {saving ? '保存中…' : '保存'}
             </button>
             <button onClick={handlePrint} className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors">
               PDF出力

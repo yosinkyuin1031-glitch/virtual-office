@@ -1178,6 +1178,7 @@ const businessConfig: Record<BusinessId, {
       { id: 'reviews', label: '口コミ集客', icon: '⭐', keywords: [] },
       { id: 'meo-suite', label: 'MEO', icon: '📍', keywords: [] },
       { id: 'ads-suite', label: '広告リサーチ', icon: '🔍', keywords: [] },
+      { id: 'flyers', label: 'チラシ整理', icon: '📄', keywords: [] },
       { id: 'apps', label: 'アプリ', icon: '📱', keywords: [] },
     ],
     appGroups: [
@@ -1466,7 +1467,8 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
   const isReviewsChannel = currentChannel.id === 'reviews'
   const isMeoSuiteChannel = currentChannel.id === 'meo-suite'
   const isAdsSuiteChannel = currentChannel.id === 'ads-suite'
-  const isEmbeddedChannel = isReviewsChannel || isMeoSuiteChannel || isAdsSuiteChannel
+  const isFlyersChannel = currentChannel.id === 'flyers'
+  const isEmbeddedChannel = isReviewsChannel || isMeoSuiteChannel || isAdsSuiteChannel || isFlyersChannel
   const isSpecialChannel = isAppsChannel || isContextChannel || isTasksChannel || isSalesChannel || isEmbeddedChannel
 
   // Filter docs for current channel
@@ -1592,6 +1594,15 @@ function BusinessView({ businessId, setChatTarget }: { businessId: BusinessId; s
             tabs={[
               { id: 'research', label: '広告リサーチ', url: '/research', icon: '🔍', desc: '症状×地域でSerpAPIから広告出稿状況・関連質問を取得' },
               { id: 'analytics', label: '広告分析', url: '/ads', icon: '📈', desc: 'Meta/Google広告のCPC/CTR/CPA推移（API連携設定後に有効）' },
+            ]}
+          />
+        ) : isFlyersChannel ? (
+          <EmbeddedChannel
+            color={config.color}
+            title="📄 チラシ整理"
+            description="チラシの保管・新規作成・編集・PDF出力。複数チラシを一覧で管理"
+            tabs={[
+              { id: 'flyers', label: 'チラシ一覧・編集', url: '/chirashi', icon: '📄', desc: '保管中のチラシ一覧／新規作成／編集／PDF印刷出力（クラウド保存・端末跨ぎ可）' },
             ]}
           />
         ) : isAppsChannel ? (
