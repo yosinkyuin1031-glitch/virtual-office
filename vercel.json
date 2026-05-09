@@ -40,6 +40,10 @@
     "app/api/gbp/cron/route.ts": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "app/api/app-costs/sync/route.ts": {
+      "memory": 1024,
+      "maxDuration": 120
     }
   },
   "crons": [
@@ -58,6 +62,10 @@
     {
       "path": "/api/gbp/cron",
       "schedule": "30 21 * * *"
+    },
+    {
+      "path": "/api/app-costs/sync",
+      "schedule": "0 14 28 * *"
     }
   ]
 }

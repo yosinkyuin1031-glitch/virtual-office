@@ -158,7 +158,24 @@ export default function AppCostsPage() {
           <button onClick={() => setMonth(shiftMonth(month, 1))} className="px-3 py-1.5 rounded text-sm bg-white border border-gray-300 hover:bg-gray-100">→</button>
           <button onClick={() => setMonth(thisMonth())} className="px-3 py-1.5 rounded text-sm bg-white border border-gray-300 hover:bg-gray-100">今月</button>
           <button onClick={copyFromPrev} className="px-3 py-1.5 rounded text-sm bg-blue-50 border border-blue-300 text-blue-800 hover:bg-blue-100">前月から複製</button>
+          <button
+            onClick={async () => {
+              if (!confirm(`${month} の Vercel コストを実データから取得します。よろしいですか？`)) return
+              const r = await fetch(`/api/app-costs/sync?month=${month}`, { method: 'POST' })
+              const d = await r.json()
+              if (!r.ok) {
+                alert('同期失敗: ' + (d.error || ''))
+              } else {
+                alert(`同期完了：${d.apps_synced}/${d.total_apps}件\nVercel Pro按分：1アプリあたり ¥${(d.alloc_per_app_jpy || 0).toLocaleString('ja-JP')}/月`)
+                await load()
+              }
+            }}
+            className="px-3 py-1.5 rounded text-sm bg-green-50 border border-green-300 text-green-800 hover:bg-green-100"
+          >
+            🔄 Vercel実データ取得
+          </button>
         </div>
+        <p className="text-xs text-gray-500 mb-3">毎月28日 23:00 JST に Vercel から自動取得（手動でも更新可）。Supabase/Anthropic/ドメイン費用は別途手入力</p>
 
         {/* 合計 */}
         {data && (
