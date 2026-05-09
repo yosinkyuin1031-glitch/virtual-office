@@ -2382,7 +2382,17 @@ export default function VirtualOffice() {
               onClick={() => setSidebarOpen(false)}
             >
               <span className="text-base">💰</span>
-              <span>API費用</span>
+              <span>AIオフィスAPI費用</span>
+            </Link>
+
+            {/* アプリ月額コスト */}
+            <Link
+              href="/app-costs"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">📊</span>
+              <span>外部アプリ月額</span>
             </Link>
 
             {/* ビジョンリンク */}
