@@ -30,15 +30,24 @@ const EXTERNAL_APPS = [
 const VERCEL_PRO_USD = 20  // Pro plan base
 const USD_TO_JPY = 155
 
-// Vercel API: プロジェクトIDをプロジェクト名から解決
+// Vercel API: プロジェクトIDをプロジェクト名から解決（全ページ取得）
 async function resolveProjectIds(token: string, teamId: string): Promise<Record<string, string>> {
-  const res = await fetch(`https://api.vercel.com/v9/projects?teamId=${teamId}&limit=100`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!res.ok) throw new Error(`Vercel projects ${res.status}`)
-  const json = await res.json()
   const map: Record<string, string> = {}
-  for (const p of json.projects || []) map[p.name] = p.id
+  let until: number | undefined
+  for (let page = 0; page < 10; page++) {
+    const params = new URLSearchParams({ teamId, limit: '100' })
+    if (until) params.set('until', String(until))
+    const res = await fetch(`https://api.vercel.com/v9/projects?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error(`Vercel projects ${res.status}`)
+    const json = await res.json()
+    const projects = json.projects || []
+    for (const p of projects) map[p.name] = p.id
+    const next = json.pagination?.next
+    if (!next || projects.length === 0) break
+    until = next
+  }
   return map
 }
 
