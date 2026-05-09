@@ -10,6 +10,7 @@ interface AppCost {
   category: string
   status: string
   icon: string
+  user?: string
   cost_id: string | null
   vercel_jpy: number
   supabase_jpy: number
@@ -41,10 +42,9 @@ interface Resp {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  'btob-saas': '🏪 BtoB SaaS',
-  'clinic-app': '🏥 整体院アプリ',
-  'houmon-app': '🏠 訪問鍼灸アプリ',
-  'diagnostic': '🔬 診断ツール',
+  'BtoB販売': '🏪 BtoB販売（多数の購入者向け）',
+  'C-cure（清水先生）': '🤝 C-cure 受託（清水先生）',
+  '個別カスタム': '🎯 個別カスタム案件',
 }
 
 function thisMonth(): string {
@@ -233,7 +233,8 @@ export default function AppCostsPage() {
                                 <span>{app.icon}</span>
                                 <div>
                                   <div className="font-medium text-sm">{app.name}</div>
-                                  {app.url && <a href={app.url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 hover:underline truncate inline-block max-w-[120px]">{app.url.replace(/^https?:\/\//, '').slice(0, 25)}</a>}
+                                  {app.user && <div className="text-[10px] text-gray-500">{app.user}</div>}
+                                  {app.url && <a href={app.url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 hover:underline truncate inline-block max-w-[140px]">{app.url.replace(/^https?:\/\//, '').slice(0, 30)}</a>}
                                 </div>
                               </div>
                             </td>

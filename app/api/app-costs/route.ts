@@ -9,14 +9,43 @@ const supabase = createClient(
 
 export const runtime = 'nodejs'
 
-// 外部展開対象のカテゴリ（販売中・販売予定）
-const EXTERNAL_CATEGORIES = ['btob-saas', 'clinic-app', 'houmon-app', 'diagnostic']
+// 外部利用アプリ（他者が使うアプリのみ・自院運用は対象外）
+type ExternalApp = { id: string; name: string; url: string | null; category: string; icon: string; user: string }
+const EXTERNAL_APPS: ExternalApp[] = [
+  // BtoB販売（誰でも購入可能）
+  { id: 'customer-mgmt', name: 'Clinic Core', url: 'https://customer-mgmt.vercel.app', category: 'BtoB販売', icon: '👥', user: '山口先生・石川先生・他' },
+  { id: 'kensa-saas', name: 'カラダマップ（検査シートSaaS）', url: 'https://kensa-sheet-app.vercel.app', category: 'BtoB販売', icon: '🔬', user: '水田先生・モニター' },
+  { id: 'ai-master', name: '治療家AIマスター', url: 'https://ai-master.vercel.app', category: 'BtoB販売', icon: '🧠', user: 'BtoB' },
+  { id: 'ai-tools', name: '整体院AIツール', url: 'https://seitai-ai-tools.vercel.app', category: 'BtoB販売', icon: '🤖', user: 'BtoB' },
+  { id: 'meo-winner', name: 'MEO勝ち上げくん', url: 'https://meo-kachiagekun.vercel.app', category: 'BtoB販売', icon: '🏆', user: 'モニター10名' },
+  { id: 'meo-checker-dist', name: 'MEOチェッカー（配布用）', url: 'https://meo-checker-three.vercel.app', category: 'BtoB販売', icon: '📦', user: 'モニター配布' },
+  { id: 'line-delivery', name: 'LINE配信アプリ', url: 'https://line-delivery.vercel.app', category: 'BtoB販売', icon: '📨', user: 'BtoB' },
+  { id: 'heatscope', name: 'HeatScope', url: 'https://heatscope.vercel.app', category: 'BtoB販売', icon: '🔥', user: '8サイト計測中' },
+  { id: 'training-clinic', name: 'トレクリ（TrainingClinic）', url: 'https://training-clinic-app.vercel.app', category: 'BtoB販売', icon: '💪', user: '川口先生' },
+  { id: 'vision-clinic', name: 'VisionClinic', url: null, category: 'BtoB販売', icon: '👁️', user: '二葉先生（共同開発）' },
+
+  // C-cure 受託案件（清水先生）
+  { id: 'ccure-monshin', name: 'C-cure 問診票', url: 'https://headache-monshin.vercel.app', category: 'C-cure（清水先生）', icon: '📋', user: '清水先生＋受講生' },
+  { id: 'ccure-headache-diagnosis', name: 'C-cure 頭痛診断', url: 'https://headache-diagnosis.vercel.app', category: 'C-cure（清水先生）', icon: '🤕', user: '清水先生＋受講生' },
+  { id: 'ccure-headache-note', name: 'C-cure 頭痛ダイアリー', url: 'https://headache-note.vercel.app', category: 'C-cure（清水先生）', icon: '📔', user: '清水先生＋受講生' },
+
+  // 個別カスタム
+  { id: 'tiktok-recipe', name: 'TikTokレシピリサーチ', url: 'https://tiktok-recipe-research.vercel.app', category: '個別カスタム', icon: '🍳', user: '1クライアント専用' },
+]
 
 function externalApps() {
-  return products
-    .filter(p => EXTERNAL_CATEGORIES.includes(p.category) && p.status !== 'planned')
-    .map(p => ({ id: p.id, name: p.name, url: p.url || null, category: p.category, status: p.status, icon: p.icon }))
+  return EXTERNAL_APPS.map(a => ({
+    id: a.id,
+    name: a.name,
+    url: a.url,
+    category: a.category,
+    status: 'active',
+    icon: a.icon,
+    user: a.user,
+  }))
 }
+// products は使わないが import 警告回避のため一度参照
+void products.length
 
 export async function GET(req: NextRequest) {
   try {
