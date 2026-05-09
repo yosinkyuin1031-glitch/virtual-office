@@ -56,8 +56,9 @@ async function generatePostText(keyword: string, videoTitle: string | null, vide
 【出力】
 本文のみ。冒頭挨拶を含む。動画リンクがある場合は末尾の独立行に貼る。`
 
+  // 単純な投稿生成 → Haiku（コスト1/3）。品質低下時のみ Sonnet に戻す
   const res = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   })

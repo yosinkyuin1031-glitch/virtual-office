@@ -2375,6 +2375,16 @@ export default function VirtualOffice() {
               <span>コンテキスト</span>
             </Link>
 
+            {/* 費用レポートリンク */}
+            <Link
+              href="/cost"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="text-base">💰</span>
+              <span>API費用</span>
+            </Link>
+
             {/* ビジョンリンク */}
             <Link
               href="/vision"

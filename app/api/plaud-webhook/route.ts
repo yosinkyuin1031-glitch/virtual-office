@@ -59,8 +59,9 @@ category は type ごと：
   "reasoning": "（なぜこの分類にしたか30字以内）"
 }`
 
+  // Plaud分類（JSONを返すだけの単純判定） → Haiku
   const res = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 2048,
     messages: [{ role: 'user', content: prompt }],
   })

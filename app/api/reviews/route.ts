@@ -163,8 +163,9 @@ async function handleGenerate(reviewId: string) {
   const llmo = pickLlmoKeywords(review.review_text, pool)
   const prompt = buildReplyPrompt(review.review_text, review.rating || 5, review.author_name, llmo)
 
+  // 口コミ返信（120〜220字） → Haiku（コスト1/3）
   const res = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   })
