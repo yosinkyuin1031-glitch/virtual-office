@@ -275,23 +275,36 @@ export default function ReviewsPage() {
                   )}
 
                   <div className="bg-white border border-gray-200 rounded p-3">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="text-xs text-gray-500">院長返信（AI生成）</span>
-                      {rev.llmo_keywords && (
-                        <div className="flex flex-wrap gap-1 text-xs">
-                          {[
-                            ...(rev.llmo_keywords.symptoms || []),
-                            ...(rev.llmo_keywords.areas || []),
-                            ...(rev.llmo_keywords.strengths || []),
-                          ]
-                            .slice(0, 5)
-                            .map((k, i) => (
-                              <span key={i} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
-                                {k}
-                              </span>
-                            ))}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {rev.llmo_keywords && (
+                          <div className="hidden sm:flex flex-wrap gap-1 text-xs">
+                            {[
+                              ...(rev.llmo_keywords.symptoms || []),
+                              ...(rev.llmo_keywords.areas || []),
+                              ...(rev.llmo_keywords.strengths || []),
+                            ]
+                              .slice(0, 5)
+                              .map((k, i) => (
+                                <span key={i} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                                  {k}
+                                </span>
+                              ))}
+                          </div>
+                        )}
+                        {(editingId === rev.id ? editText : rev.reply_text) && (
+                          <button
+                            onClick={() =>
+                              copy(rev.id, editingId === rev.id ? editText : (rev.reply_text || ''))
+                            }
+                            className="px-3 py-1 rounded text-xs font-medium bg-green-600 hover:bg-green-500 text-white"
+                            title="返信文をコピー"
+                          >
+                            {copiedId === rev.id ? '✓ コピー済' : '📋 コピー'}
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {editingId === rev.id ? (
