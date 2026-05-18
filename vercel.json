@@ -44,6 +44,10 @@
     "app/api/app-costs/sync/route.ts": {
       "memory": 1024,
       "maxDuration": 120
+    },
+    "app/api/reviews/route.ts": {
+      "memory": 1024,
+      "maxDuration": 300
     }
   },
   "crons": [
