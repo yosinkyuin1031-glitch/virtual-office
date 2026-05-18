@@ -18,6 +18,9 @@ interface Review {
   reply_generated_at: string | null
   llmo_keywords: { symptoms?: string[]; areas?: string[]; strengths?: string[] } | null
   owner_note: string | null
+  owner_response_text: string | null
+  owner_response_date: string | null
+  last_synced_at: string | null
 }
 
 interface Summary {
@@ -48,6 +51,7 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState<string | null>(null)
   const [bulkGen, setBulkGen] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -80,6 +84,27 @@ export default function ReviewsPage() {
       await load()
     } finally {
       setGenerating(null)
+    }
+  }
+
+  const gmbSync = async () => {
+    if (!confirm('Googleマップから最新の口コミと返信状態を取得します（SerpAPIを使用）。よろしいですか？')) return
+    setSyncing(true)
+    try {
+      const r = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'gmb-sync', max_pages: 5 }),
+      })
+      const d = await r.json()
+      if (!r.ok) {
+        alert('同期失敗: ' + (d.error || ''))
+      } else {
+        alert(`同期完了\n取得: ${d.fetched || 0}件 / 新規: ${d.inserted || 0}件 / 更新: ${d.updated || 0}件`)
+      }
+      await load()
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -167,9 +192,9 @@ export default function ReviewsPage() {
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
             <Stat label="総件数" value={summary.total} />
             <Stat label="平均★" value={summary.avgRating.toFixed(2)} />
-            <Stat label="未生成" value={summary.unreplied} highlight={summary.unreplied > 0 ? 'amber' : undefined} />
+            <Stat label="未応答" value={summary.unreplied} highlight={summary.unreplied > 0 ? 'amber' : undefined} />
             <Stat label="AI下書き" value={summary.draft} highlight={summary.draft > 0 ? 'yellow' : undefined} />
-            <Stat label="承認済" value={summary.approved} highlight="blue" />
+            <Stat label="GMB返信済" value={summary.posted} highlight="blue" />
             <Stat label="低評価(≤3)" value={summary.low} highlight={summary.low > 0 ? 'red' : undefined} />
           </div>
         )}
@@ -184,18 +209,25 @@ export default function ReviewsPage() {
               }`}
             >
               {f === 'all' && '全件'}
-              {f === 'unreplied' && '未対応'}
-              {f === 'replied' && '対応済'}
+              {f === 'unreplied' && 'GMB未応答'}
+              {f === 'replied' && 'GMB返信済'}
               {f === 'low' && '低評価'}
             </button>
           ))}
           <div className="ml-auto flex gap-2">
             <button
+              onClick={gmbSync}
+              disabled={syncing}
+              className="px-4 py-1.5 rounded text-sm bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50"
+            >
+              {syncing ? 'GMB同期中…' : 'GMBから最新を同期'}
+            </button>
+            <button
               onClick={bulkGenerate}
               disabled={bulkGen}
               className="px-4 py-1.5 rounded text-sm bg-purple-600 hover:bg-purple-500 disabled:opacity-50"
             >
-              {bulkGen ? '一括生成中…' : '未生成を一括AI生成（最大20）'}
+              {bulkGen ? '一括生成中…' : '未応答を一括AI生成（最大20）'}
             </button>
             <button onClick={load} className="px-3 py-1.5 rounded text-sm bg-gray-50 border border-gray-300 hover:bg-gray-100">
               更新
@@ -212,6 +244,7 @@ export default function ReviewsPage() {
             {reviews.map((rev) => {
               const status = (rev.reply_status as ReplyStatus) || 'unreplied'
               const stCfg = STATUS_LABEL[status]
+              const hasGmbReply = !!(rev.owner_response_text && rev.owner_response_text.trim())
               return (
                 <div key={rev.id} className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">
@@ -222,10 +255,24 @@ export default function ReviewsPage() {
                         <span className="text-xs text-gray-500">{rev.review_date || ''}</span>
                       </div>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded ${stCfg.color}`}>{stCfg.label}</span>
+                    <div className="flex items-center gap-1">
+                      {hasGmbReply ? (
+                        <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">GMB返信済</span>
+                      ) : (
+                        <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700">GMB未応答</span>
+                      )}
+                      <span className={`text-xs px-2 py-1 rounded ${stCfg.color}`}>{stCfg.label}</span>
+                    </div>
                   </div>
 
                   <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3 leading-relaxed">{rev.review_text}</p>
+
+                  {hasGmbReply && (
+                    <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-900">
+                      <div className="font-medium mb-1">Google側オーナー返信（取得済）</div>
+                      <p className="whitespace-pre-wrap leading-relaxed">{rev.owner_response_text}</p>
+                    </div>
+                  )}
 
                   <div className="bg-white border border-gray-200 rounded p-3">
                     <div className="flex items-center justify-between mb-2">

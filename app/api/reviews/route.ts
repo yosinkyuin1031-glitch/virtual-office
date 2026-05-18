@@ -12,9 +12,11 @@ export const maxDuration = 60
 
 // 大口神経整体院 固定（Phase1）
 const OGUCHI_CLINIC_ID = 'clinic-1773989199882'
+const OGUCHI_USER_ID = '99b75413-b76c-4097-94f7-f72b51e3dc6d'
 const OGUCHI_CLINIC_NAME = '大口神経整体院'
 const OGUCHI_OWNER = '大口陽平'
 const OGUCHI_AREA = '大阪市住吉区長居'
+const OGUCHI_GMB_DATA_ID = '0x6000d99429535143:0x98bcc1becda9ccb4'
 const REPLY_SIGNATURE = '大阪市　長居駅【重症症状専門整体院】大口神経整体院'
 
 // LLMO/MEOキーワードは office_keyword_settings から取得（編集可）。フォールバック用の最小デフォルト。
@@ -123,8 +125,9 @@ async function handleList(req: NextRequest) {
     .order('fetched_at', { ascending: false })
     .limit(limit)
 
-  if (filter === 'unreplied') q = q.or('reply_status.is.null,reply_status.eq.unreplied')
-  if (filter === 'replied') q = q.in('reply_status', ['approved', 'posted'])
+  // 未対応 = Google側で未応答（owner_response_text が空）。reply_status は問わない
+  if (filter === 'unreplied') q = q.or('owner_response_text.is.null,owner_response_text.eq.')
+  if (filter === 'replied') q = q.not('owner_response_text', 'is', null).neq('owner_response_text', '')
   if (filter === 'low') q = q.lte('rating', 3)
 
   const { data, error } = await q
@@ -133,15 +136,17 @@ async function handleList(req: NextRequest) {
   // サマリー
   const { data: all } = await supabase
     .from('meo_clinic_reviews')
-    .select('rating, reply_status')
+    .select('rating, reply_status, owner_response_text')
     .eq('clinic_id', clinicId)
+  const hasGoogleReply = (r: { owner_response_text?: string | null }) =>
+    typeof r.owner_response_text === 'string' && r.owner_response_text.trim().length > 0
   const summary = {
     total: all?.length || 0,
     avgRating: all && all.length > 0 ? all.reduce((s, r) => s + (r.rating || 0), 0) / all.length : 0,
-    unreplied: (all || []).filter((r) => !r.reply_status || r.reply_status === 'unreplied').length,
-    draft: (all || []).filter((r) => r.reply_status === 'draft').length,
-    approved: (all || []).filter((r) => r.reply_status === 'approved').length,
-    posted: (all || []).filter((r) => r.reply_status === 'posted').length,
+    unreplied: (all || []).filter((r) => !hasGoogleReply(r)).length,
+    draft: (all || []).filter((r) => r.reply_status === 'draft' && !hasGoogleReply(r)).length,
+    approved: (all || []).filter((r) => r.reply_status === 'approved' && !hasGoogleReply(r)).length,
+    posted: (all || []).filter((r) => hasGoogleReply(r)).length,
     low: (all || []).filter((r) => (r.rating || 5) <= 3).length,
   }
 
@@ -189,18 +194,21 @@ async function handleGenerate(reviewId: string) {
 }
 
 async function handleBulkGenerate(clinicId: string) {
+  // Google側でまだオーナー返信していない口コミだけを対象にする
   const { data: targets } = await supabase
     .from('meo_clinic_reviews')
-    .select('id')
+    .select('id, ai_reply_draft')
     .eq('clinic_id', clinicId)
-    .or('reply_status.is.null,reply_status.eq.unreplied')
+    .or('owner_response_text.is.null,owner_response_text.eq.')
     .order('fetched_at', { ascending: false })
     .limit(20)
 
-  if (!targets || targets.length === 0) return NextResponse.json({ ok: true, generated: 0, message: '未返信なし' })
+  // 既にAI下書きがあるものは再生成しない（手動で再生成ボタンから実行）
+  const filtered = (targets || []).filter((t) => !t.ai_reply_draft)
+  if (filtered.length === 0) return NextResponse.json({ ok: true, generated: 0, message: '未返信なし' })
 
   let count = 0
-  for (const t of targets) {
+  for (const t of filtered) {
     try {
       await handleGenerate(t.id)
       count++
@@ -209,6 +217,104 @@ async function handleBulkGenerate(clinicId: string) {
     }
   }
   return NextResponse.json({ ok: true, generated: count })
+}
+
+// =================== GMB同期: SerpAPI で Google 側の口コミ＋オーナー返信を取り込む ===================
+interface SerpReview {
+  review_id?: string
+  user?: { name?: string }
+  rating?: number
+  date?: string
+  iso_date?: string
+  snippet?: string
+  response?: { snippet?: string; date?: string; iso_date?: string }
+}
+
+async function fetchSerpReviews(dataId: string, apiKey: string, maxPages: number): Promise<SerpReview[]> {
+  const all: SerpReview[] = []
+  let nextPageToken: string | undefined
+  for (let page = 0; page < maxPages; page++) {
+    const params = new URLSearchParams({
+      engine: 'google_maps_reviews',
+      data_id: dataId,
+      hl: 'ja',
+      api_key: apiKey,
+      sort_by: 'newestFirst',
+    })
+    if (nextPageToken) params.set('next_page_token', nextPageToken)
+    const res = await fetch(`https://serpapi.com/search.json?${params}`)
+    if (!res.ok) throw new Error(`SerpAPI ${res.status}: ${await res.text()}`)
+    const json = await res.json()
+    const revs: SerpReview[] = json.reviews || []
+    if (revs.length === 0) break
+    all.push(...revs)
+    nextPageToken = json.serpapi_pagination?.next_page_token
+    if (!nextPageToken) break
+  }
+  return all
+}
+
+async function handleGmbSync(clinicId: string, maxPages: number) {
+  const serpKey = process.env.SERPAPI_KEY
+  if (!serpKey) return NextResponse.json({ error: 'SERPAPI_KEY missing' }, { status: 500 })
+
+  const reviews = await fetchSerpReviews(OGUCHI_GMB_DATA_ID, serpKey, maxPages)
+  if (reviews.length === 0) return NextResponse.json({ ok: true, fetched: 0, message: '口コミ取得0件' })
+
+  // 既存口コミを取得（review_text で照合）
+  const { data: existing } = await supabase
+    .from('meo_clinic_reviews')
+    .select('id, review_text, review_id_external')
+    .eq('clinic_id', clinicId)
+  const byText = new Map<string, { id: string; review_id_external: string | null }>()
+  const byExtId = new Map<string, { id: string; review_id_external: string | null }>()
+  for (const r of existing || []) {
+    if (r.review_text) byText.set(r.review_text, { id: r.id, review_id_external: r.review_id_external })
+    if (r.review_id_external) byExtId.set(r.review_id_external, { id: r.id, review_id_external: r.review_id_external })
+  }
+
+  const now = new Date().toISOString()
+  let updated = 0
+  let inserted = 0
+
+  for (const r of reviews) {
+    const text = (r.snippet || '').trim()
+    if (text.length < 5) continue
+    const ownerText = (r.response?.snippet || '').trim()
+    const ownerDate = r.response?.iso_date || r.response?.date || null
+    const extId = r.review_id || null
+
+    const match = (extId && byExtId.get(extId)) || byText.get(text)
+    if (match) {
+      await supabase
+        .from('meo_clinic_reviews')
+        .update({
+          owner_response_text: ownerText || null,
+          owner_response_date: ownerDate,
+          review_id_external: extId || match.review_id_external,
+          last_synced_at: now,
+        })
+        .eq('id', match.id)
+      updated++
+    } else {
+      await supabase.from('meo_clinic_reviews').insert({
+        user_id: OGUCHI_USER_ID,
+        clinic_id: clinicId,
+        author_name: r.user?.name || null,
+        rating: r.rating ? Math.round(r.rating) : null,
+        review_text: text,
+        review_date: r.date || null,
+        source: 'google',
+        review_id_external: extId,
+        owner_response_text: ownerText || null,
+        owner_response_date: ownerDate,
+        last_synced_at: now,
+      })
+      inserted++
+    }
+  }
+
+  return NextResponse.json({ ok: true, fetched: reviews.length, inserted, updated })
 }
 
 // =================== PATCH: 返信編集・ステータス更新 ===================
@@ -252,6 +358,11 @@ export async function POST(req: NextRequest) {
     if (action === 'bulk-generate') {
       const clinicId = body.clinic_id || OGUCHI_CLINIC_ID
       return await handleBulkGenerate(clinicId)
+    }
+    if (action === 'gmb-sync') {
+      const clinicId = body.clinic_id || OGUCHI_CLINIC_ID
+      const maxPages = Math.min(Math.max(parseInt(body.max_pages) || 3, 1), 10)
+      return await handleGmbSync(clinicId, maxPages)
     }
     return NextResponse.json({ error: 'unknown action' }, { status: 400 })
   } catch (e) {
