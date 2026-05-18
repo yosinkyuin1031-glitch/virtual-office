@@ -52,10 +52,14 @@ export default function ReviewsPage() {
   const [generating, setGenerating] = useState<string | null>(null)
   const [bulkGen, setBulkGen] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editText, setEditText] = useState('')
+  const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const currentText = (rev: Review) =>
+    drafts[rev.id] !== undefined ? drafts[rev.id] : (rev.reply_text || '')
+  const isDirty = (rev: Review) =>
+    drafts[rev.id] !== undefined && drafts[rev.id] !== (rev.reply_text || '')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -125,23 +129,23 @@ export default function ReviewsPage() {
     }
   }
 
-  const startEdit = (rev: Review) => {
-    setEditingId(rev.id)
-    setEditText(rev.reply_text || '')
-  }
-
-  const saveEdit = async (id: string, status?: ReplyStatus) => {
+  const saveDraft = async (id: string, status?: ReplyStatus) => {
+    const text = drafts[id]
+    if (text === undefined) return
     setSavingId(id)
     try {
-      const body: Record<string, unknown> = { reply_text: editText }
+      const body: Record<string, unknown> = { reply_text: text }
       if (status) body.reply_status = status
       await fetch(`/api/reviews?id=${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      setEditingId(null)
-      setEditText('')
+      setDrafts((d) => {
+        const next = { ...d }
+        delete next[id]
+        return next
+      })
       await load()
     } finally {
       setSavingId(null)
@@ -293,11 +297,9 @@ export default function ReviewsPage() {
                               ))}
                           </div>
                         )}
-                        {(editingId === rev.id ? editText : rev.reply_text) && (
+                        {currentText(rev) && (
                           <button
-                            onClick={() =>
-                              copy(rev.id, editingId === rev.id ? editText : (rev.reply_text || ''))
-                            }
+                            onClick={() => copy(rev.id, currentText(rev))}
                             className="px-3 py-1 rounded text-xs font-medium bg-green-600 hover:bg-green-500 text-white"
                             title="返信文をコピー"
                           >
@@ -307,108 +309,104 @@ export default function ReviewsPage() {
                       </div>
                     </div>
 
-                    {editingId === rev.id ? (
-                      <>
-                        <textarea
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                          className="w-full h-32 bg-white border border-gray-300 rounded p-2 text-sm"
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => saveEdit(rev.id, 'approved')}
-                            disabled={savingId === rev.id}
-                            className="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
-                          >
-                            保存して承認
-                          </button>
-                          <button
-                            onClick={() => saveEdit(rev.id)}
-                            disabled={savingId === rev.id}
-                            className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50"
-                          >
-                            下書き保存
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingId(null)
-                              setEditText('')
-                            }}
-                            className="px-3 py-1 rounded text-sm bg-gray-50 hover:bg-gray-100"
-                          >
-                            キャンセル
-                          </button>
-                        </div>
-                      </>
+                    {rev.reply_text || drafts[rev.id] !== undefined ? (
+                      <textarea
+                        value={currentText(rev)}
+                        onChange={(e) => setDrafts((d) => ({ ...d, [rev.id]: e.target.value }))}
+                        className="w-full min-h-40 bg-white border border-gray-300 rounded p-2 text-sm leading-relaxed"
+                        placeholder="返信文を入力…"
+                      />
                     ) : (
-                      <>
-                        {rev.reply_text ? (
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{rev.reply_text}</p>
-                        ) : (
-                          <p className="text-xs text-gray-500 italic">未生成。「AI生成」で作成してください。</p>
-                        )}
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {!rev.reply_text && (
+                      <p className="text-xs text-gray-500 italic">未生成。「AI生成」で作成するか、下のテキスト欄から手書きできます。</p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {!rev.reply_text && drafts[rev.id] === undefined && (
+                        <>
+                          <button
+                            onClick={() => generate(rev.id)}
+                            disabled={generating === rev.id}
+                            className="px-3 py-1 rounded text-sm bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white"
+                          >
+                            {generating === rev.id ? '生成中…' : 'AI生成'}
+                          </button>
+                          <button
+                            onClick={() => setDrafts((d) => ({ ...d, [rev.id]: '' }))}
+                            className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700"
+                          >
+                            手書きで作成
+                          </button>
+                        </>
+                      )}
+                      {(rev.reply_text || drafts[rev.id] !== undefined) && (
+                        <>
+                          {isDirty(rev) && (
+                            <>
+                              <button
+                                onClick={() => saveDraft(rev.id, 'approved')}
+                                disabled={savingId === rev.id}
+                                className="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                              >
+                                保存して承認
+                              </button>
+                              <button
+                                onClick={() => saveDraft(rev.id)}
+                                disabled={savingId === rev.id}
+                                className="px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50"
+                              >
+                                {savingId === rev.id ? '保存中…' : '保存'}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setDrafts((d) => {
+                                    const next = { ...d }
+                                    delete next[rev.id]
+                                    return next
+                                  })
+                                }
+                                className="px-3 py-1 rounded text-sm bg-gray-50 hover:bg-gray-100"
+                              >
+                                変更を破棄
+                              </button>
+                            </>
+                          )}
+                          {!isDirty(rev) && rev.reply_text && (
                             <button
                               onClick={() => generate(rev.id)}
                               disabled={generating === rev.id}
-                              className="px-3 py-1 rounded text-sm bg-purple-600 hover:bg-purple-500 disabled:opacity-50"
+                              className="px-3 py-1 rounded text-sm bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white"
                             >
-                              {generating === rev.id ? '生成中…' : 'AI生成'}
+                              {generating === rev.id ? 'AI再生成中…' : 'AIで再生成'}
                             </button>
                           )}
-                          {rev.reply_text && (
-                            <>
-                              <button
-                                onClick={() => generate(rev.id)}
-                                disabled={generating === rev.id}
-                                className="px-3 py-1 rounded text-sm bg-purple-700 hover:bg-purple-600 disabled:opacity-50"
-                              >
-                                {generating === rev.id ? '再生成中…' : '再生成'}
-                              </button>
-                              <button
-                                onClick={() => copy(rev.id, rev.reply_text || '')}
-                                className="px-3 py-1 rounded text-sm bg-green-700 hover:bg-green-600"
-                              >
-                                {copiedId === rev.id ? 'コピー完了' : 'コピー'}
-                              </button>
-                              <button
-                                onClick={() => startEdit(rev)}
-                                className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200 text-gray-700"
-                              >
-                                編集
-                              </button>
-                              {status !== 'approved' && status !== 'posted' && (
-                                <button
-                                  onClick={() => updateStatus(rev.id, 'approved')}
-                                  disabled={savingId === rev.id}
-                                  className="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
-                                >
-                                  承認
-                                </button>
-                              )}
-                              {status !== 'posted' && (
-                                <button
-                                  onClick={() => updateStatus(rev.id, 'posted')}
-                                  disabled={savingId === rev.id}
-                                  className="px-3 py-1 rounded text-sm bg-green-700 hover:bg-green-600 disabled:opacity-50"
-                                >
-                                  投稿済にする
-                                </button>
-                              )}
-                            </>
+                          {!isDirty(rev) && status !== 'approved' && status !== 'posted' && rev.reply_text && (
+                            <button
+                              onClick={() => updateStatus(rev.id, 'approved')}
+                              disabled={savingId === rev.id}
+                              className="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                            >
+                              承認
+                            </button>
                           )}
-                          <a
-                            href="https://business.google.com/reviews"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-3 py-1 rounded text-sm bg-gray-50 border border-gray-300 hover:bg-gray-100 ml-auto"
-                          >
-                            GBPで返信→
-                          </a>
-                        </div>
-                      </>
-                    )}
+                          {!isDirty(rev) && status !== 'posted' && rev.reply_text && (
+                            <button
+                              onClick={() => updateStatus(rev.id, 'posted')}
+                              disabled={savingId === rev.id}
+                              className="px-3 py-1 rounded text-sm bg-green-700 hover:bg-green-600 text-white disabled:opacity-50"
+                            >
+                              投稿済にする
+                            </button>
+                          )}
+                        </>
+                      )}
+                      <a
+                        href="https://business.google.com/reviews"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1 rounded text-sm bg-gray-50 border border-gray-300 hover:bg-gray-100 ml-auto"
+                      >
+                        GBPで返信→
+                      </a>
+                    </div>
                   </div>
                 </div>
               )
