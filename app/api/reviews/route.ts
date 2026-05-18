@@ -148,9 +148,14 @@ async function handleList(req: NextRequest) {
     .order('fetched_at', { ascending: false })
     .limit(limit)
 
-  // 未対応 = Google側で未応答（owner_response_text が空）。reply_status は問わない
-  if (filter === 'unreplied') q = q.or('owner_response_text.is.null,owner_response_text.eq.')
-  if (filter === 'replied') q = q.not('owner_response_text', 'is', null).neq('owner_response_text', '')
+  // 未対応 = GMB側で未返信 かつ ローカルでも投稿済マークがついていない
+  // 返信済 = GMB側で返信あり または ローカルで投稿済マーク済み
+  if (filter === 'unreplied') {
+    q = q.or('owner_response_text.is.null,owner_response_text.eq.').neq('reply_status', 'posted')
+  }
+  if (filter === 'replied') {
+    q = q.or('reply_status.eq.posted,and(owner_response_text.not.is.null,owner_response_text.neq.)')
+  }
   if (filter === 'low') q = q.lte('rating', 3)
 
   const { data, error } = await q
@@ -163,13 +168,15 @@ async function handleList(req: NextRequest) {
     .eq('clinic_id', clinicId)
   const hasGoogleReply = (r: { owner_response_text?: string | null }) =>
     typeof r.owner_response_text === 'string' && r.owner_response_text.trim().length > 0
+  const isHandled = (r: { reply_status?: string | null; owner_response_text?: string | null }) =>
+    r.reply_status === 'posted' || hasGoogleReply(r)
   const summary = {
     total: all?.length || 0,
     avgRating: all && all.length > 0 ? all.reduce((s, r) => s + (r.rating || 0), 0) / all.length : 0,
-    unreplied: (all || []).filter((r) => !hasGoogleReply(r)).length,
-    draft: (all || []).filter((r) => r.reply_status === 'draft' && !hasGoogleReply(r)).length,
-    approved: (all || []).filter((r) => r.reply_status === 'approved' && !hasGoogleReply(r)).length,
-    posted: (all || []).filter((r) => hasGoogleReply(r)).length,
+    unreplied: (all || []).filter((r) => !isHandled(r)).length,
+    draft: (all || []).filter((r) => r.reply_status === 'draft' && !isHandled(r)).length,
+    approved: (all || []).filter((r) => r.reply_status === 'approved' && !isHandled(r)).length,
+    posted: (all || []).filter((r) => isHandled(r)).length,
     low: (all || []).filter((r) => (r.rating || 5) <= 3).length,
   }
 
@@ -217,17 +224,18 @@ async function handleGenerate(reviewId: string) {
 }
 
 async function handleBulkGenerate(clinicId: string) {
-  // Google側でまだオーナー返信していない口コミだけを対象にする
+  // Google側未返信 かつ AI下書きまだ無いものを SQL 側で直接抽出
   const { data: targets } = await supabase
     .from('meo_clinic_reviews')
-    .select('id, ai_reply_draft')
+    .select('id')
     .eq('clinic_id', clinicId)
     .or('owner_response_text.is.null,owner_response_text.eq.')
+    .is('ai_reply_draft', null)
+    .order('review_iso_date', { ascending: false, nullsFirst: false })
     .order('fetched_at', { ascending: false })
     .limit(20)
 
-  // 既にAI下書きがあるものは再生成しない（手動で再生成ボタンから実行）
-  const filtered = (targets || []).filter((t) => !t.ai_reply_draft)
+  const filtered = targets || []
   if (filtered.length === 0) return NextResponse.json({ ok: true, generated: 0, message: '未返信なし' })
 
   let count = 0
