@@ -122,6 +122,7 @@ async function handleList(req: NextRequest) {
     .from('meo_clinic_reviews')
     .select('*')
     .eq('clinic_id', clinicId)
+    .order('review_iso_date', { ascending: false, nullsFirst: false })
     .order('fetched_at', { ascending: false })
     .limit(limit)
 
@@ -226,6 +227,7 @@ interface SerpReview {
   rating?: number
   date?: string
   iso_date?: string
+  iso_date_of_last_edit?: string
   snippet?: string
   response?: { snippet?: string; date?: string; iso_date?: string }
 }
@@ -284,6 +286,7 @@ async function handleGmbSync(clinicId: string, maxPages: number) {
     const ownerDate = r.response?.iso_date || r.response?.date || null
     const extId = r.review_id || null
 
+    const reviewIso = r.iso_date || null
     const match = (extId && byExtId.get(extId)) || byText.get(text)
     if (match) {
       await supabase
@@ -291,6 +294,7 @@ async function handleGmbSync(clinicId: string, maxPages: number) {
         .update({
           owner_response_text: ownerText || null,
           owner_response_date: ownerDate,
+          review_iso_date: reviewIso,
           review_id_external: extId || match.review_id_external,
           last_synced_at: now,
         })
@@ -304,6 +308,7 @@ async function handleGmbSync(clinicId: string, maxPages: number) {
         rating: r.rating ? Math.round(r.rating) : null,
         review_text: text,
         review_date: r.date || null,
+        review_iso_date: reviewIso,
         source: 'google',
         review_id_external: extId,
         owner_response_text: ownerText || null,
