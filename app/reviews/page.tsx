@@ -94,7 +94,7 @@ export default function ReviewsPage() {
       const r = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'gmb-sync', max_pages: 5 }),
+        body: JSON.stringify({ action: 'gmb-sync', max_pages: 20 }),
       })
       const d = await r.json()
       if (!r.ok) {

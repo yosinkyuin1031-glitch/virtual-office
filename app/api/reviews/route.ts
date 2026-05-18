@@ -361,7 +361,7 @@ export async function POST(req: NextRequest) {
     }
     if (action === 'gmb-sync') {
       const clinicId = body.clinic_id || OGUCHI_CLINIC_ID
-      const maxPages = Math.min(Math.max(parseInt(body.max_pages) || 3, 1), 10)
+      const maxPages = Math.min(Math.max(parseInt(body.max_pages) || 20, 1), 25)
       return await handleGmbSync(clinicId, maxPages)
     }
     return NextResponse.json({ error: 'unknown action' }, { status: 400 })
