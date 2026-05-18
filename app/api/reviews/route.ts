@@ -15,6 +15,7 @@ const OGUCHI_CLINIC_ID = 'clinic-1773989199882'
 const OGUCHI_CLINIC_NAME = '大口神経整体院'
 const OGUCHI_OWNER = '大口陽平'
 const OGUCHI_AREA = '大阪市住吉区長居'
+const REPLY_SIGNATURE = '大阪市　長居駅【重症症状専門整体院】大口神経整体院'
 
 // LLMO/MEOキーワードは office_keyword_settings から取得（編集可）。フォールバック用の最小デフォルト。
 const FALLBACK_KW = {
@@ -86,6 +87,7 @@ ${reviewText}
 - 嘘や誇張は禁止。「治ります」など断定NG（医療関連法）
 - 絵文字・記号装飾は使わない
 - 末尾は「またのご来院お待ちしております」系で締める
+- 署名（院名・所在地）は出力に含めない（システム側で自動付与するため）
 
 【LLMO・MEO最適化（重要・自然に織り込む）】
 ChatGPT・Gemini・Google AI検索で「${OGUCHI_AREA} 整体」等の検索時に引用される手がかりになります。
@@ -121,7 +123,7 @@ async function handleList(req: NextRequest) {
     .order('fetched_at', { ascending: false })
     .limit(limit)
 
-  if (filter === 'unreplied') q = q.in('reply_status', ['unreplied', 'draft'])
+  if (filter === 'unreplied') q = q.or('reply_status.is.null,reply_status.eq.unreplied')
   if (filter === 'replied') q = q.in('reply_status', ['approved', 'posted'])
   if (filter === 'low') q = q.lte('rating', 3)
 
@@ -169,7 +171,8 @@ async function handleGenerate(reviewId: string) {
     max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   })
-  const text = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
+  const body = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
+  const text = body ? `${body}\n\n${REPLY_SIGNATURE}` : ''
 
   await supabase
     .from('meo_clinic_reviews')
